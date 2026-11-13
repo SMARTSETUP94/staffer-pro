@@ -65,3 +65,5 @@
 - Logistics form requests: emails_entrants rows via token-gated service-role RPCs; poller never creates steps.
 
 
+- Every AI call goes through src/lib/ai/fournisseur.server.ts (appelerIAJson / appelerIAZod): model per usage in MODELES_PAR_USAGE, Claude via native Messages, Gemini fallback only on 429/5xx/invalid output, one ia_appels log row per call without content; so model changes and cost tracking stay in one place.
+- Logistics extraction post-processing (hours, duration, year from receipt, known places, atelier steps unchecked unless mentioned) lives in pure helpers (extraction-regles.ts, suggestions-email.ts) applied both at ingestion and on display; queue triage is a pure rule set (tri-file.ts) applied by admin-confirmed batches that only dismiss with a reason.

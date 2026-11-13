@@ -1,5 +1,14 @@
 # Roadmap
 
+## Logistique + Claude — 13 novembre
+- [x] M-L0, M-L1, M-L2, M-L2b appliquées ; module IA commun ; banc 1.
+- [x] Claude partout : Haiku 4.5 (tri, extraction, jalonnements, import planning, assistant étapes, fiche client, mail client), Sonnet 5 (documents fournisseurs, images devis, notes de frais) ; Gemini en secours.
+- [x] L1 : règles heures/durée/année/lieux, pièces jointes log@ lues, étapes atelier décochées, exemples proches ; banc 2 (Haiku retenu) ; 7 alias de lieux sûrs.
+- [x] L2 : règles de tri + écran admin « Reclasser la file » (bilan, confirmation) ; non lancé sur données réelles.
+- [ ] Reclassement réel de la file : attend l'accord d'un admin.
+- [ ] Images des devis : plafond 0,10 € incompatible avec Sonnet au-delà de ~6 images ; décision de Gabin attendue.
+- [ ] M-L3 : texte à présenter pour relecture, puis L3/L4.
+
 ## Conditions de paiement clients — 11 novembre
 - [x] Compléter uniquement les 144 conditions NULL non fusionnées ; trace ajoutée, 90 conditions et remarques existantes préservées, empreinte de tous les autres champs identique hors updated_at.
 - [x] Défaut de colonne seul appliqué ; création préremplie et six choix modifiables conservés. 11 tests verts, création puis modification/relecture à l’écran et mobile 390 px vérifiées sans erreur ; fiches d’essai retirées, rien publié.
