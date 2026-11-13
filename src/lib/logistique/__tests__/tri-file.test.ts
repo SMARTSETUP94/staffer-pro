@@ -16,6 +16,8 @@ describe("tri de la file logistique", () => {
     expect(proposerTri({ subject: "Emballage + chargement : 6073" })).toBeNull();
     expect(proposerTri({ subject: "TR: Livraison 12 mai - Roland Garros" })).toBeNull();
     expect(proposerTri({ subject: "RE: loges roland garros" })).toBeNull();
+    expect(proposerTri({ subject: "[La Centrale du Verre] Disponible en retrait - Dépôt" })).toBeNull();
+    expect(proposerTri({ subject: "RE: [Monvitrage.fr] Message d'un client" })).toBeNull();
   });
   it("le bilan compte par lot et garde le reste", () => {
     const b = bilanTri([

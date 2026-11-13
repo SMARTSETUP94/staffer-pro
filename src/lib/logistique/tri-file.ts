@@ -11,7 +11,9 @@ export const GROUPES_TRI: Record<GroupeTri, { categorie: "fournisseur_suivi" | "
   notification_autre: { categorie: "autre", motif: "classé sans suite : notification automatique", libelle: "Autres notifications automatiques" },
 };
 
-const FOURNISSEUR = /\[(la centrale du verre|etoffe\.com|monvitrage\.fr)\]|mon ?vitrage|^ctn - commande|bricoflor|richardson|accuse reception de votre commande|confirmation de commande|votre commande (est prête|\d+)|commande \S+ est en transit|exp[ée]dition en|votre colis|mise en fabrication|en cours de fabrication|disponible en retrait/i;
+const FOURNISSEUR = /\[(la centrale du verre|etoffe\.com|monvitrage\.fr)\]|mon ?vitrage|^ctn - commande|bricoflor|accuse reception de votre commande|confirmation de commande|votre commande \d+|commande \S+ est en transit|exp[ée]dition (en|de votre)|votre colis|mise en fabrication|en cours de fabrication/i;
+/** Un retrait ou un enlèvement à organiser reste à traiter à la main (appro possible). */
+const RETRAIT = /retrait|enl[eè]vement/i;
 const RELANCE = /smart restructuring.*(relance|facture de stockage)/i;
 const TEAMS = /a envoyé un message$|sent a message$|vous a mentionné dans/i;
 const AUTRE = /^vérifiez votre itinéraire/i;
@@ -22,7 +24,8 @@ export function proposerTri(e: { subject?: string | null; from_email?: string | 
   const dom = (e.from_email ?? "").split("@")[1] ?? "";
   if (RELANCE.test(s)) return "relance_facture";
   if (DOMAINES_TEAMS.test(dom) || TEAMS.test(s)) return "notification_teams";
-  if (FOURNISSEUR.test(s)) return "fournisseur_suivi";
+  const reponse = /^\s*(re|tr|fw|fwd)\s*:/i.test(e.subject ?? "");
+  if (!reponse && !RETRAIT.test(s) && FOURNISSEUR.test(s)) return "fournisseur_suivi";
   if (AUTRE.test(s)) return "notification_autre";
   return null;
 }
