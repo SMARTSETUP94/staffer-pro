@@ -3798,6 +3798,7 @@ export type Database = {
           internet_message_id: string | null
           message_id_outlook: string
           metadata_ia: Json
+          motif_classement: string | null
           opportunite_id: string | null
           raw_payload: Json | null
           received_at: string
@@ -3833,6 +3834,7 @@ export type Database = {
           internet_message_id?: string | null
           message_id_outlook: string
           metadata_ia?: Json
+          motif_classement?: string | null
           opportunite_id?: string | null
           raw_payload?: Json | null
           received_at: string
@@ -3868,6 +3870,7 @@ export type Database = {
           internet_message_id?: string | null
           message_id_outlook?: string
           metadata_ia?: Json
+          motif_classement?: string | null
           opportunite_id?: string | null
           raw_payload?: Json | null
           received_at?: string
@@ -10271,6 +10274,7 @@ export type Database = {
         | "pub"
         | "autre"
         | "logistique"
+        | "fournisseur_suivi"
       email_statut: "pending_review" | "validated" | "dismissed"
       etape_logistique_origine: "jalonnement" | "retroplanning" | "manuel"
       etape_logistique_statut: "propose" | "valide" | "fait" | "annule"
@@ -10629,6 +10633,7 @@ export const Constants = {
         "pub",
         "autre",
         "logistique",
+        "fournisseur_suivi",
       ],
       email_statut: ["pending_review", "validated", "dismissed"],
       etape_logistique_origine: ["jalonnement", "retroplanning", "manuel"],

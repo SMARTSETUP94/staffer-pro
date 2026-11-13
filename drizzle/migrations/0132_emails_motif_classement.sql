@@ -1,0 +1,1 @@
+ALTER TABLE public.emails_entrants ADD COLUMN IF NOT EXISTS motif_classement text CHECK (motif_classement IS NULL OR length(motif_classement) <= 300);
