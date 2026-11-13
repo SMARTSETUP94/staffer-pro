@@ -573,6 +573,7 @@ export type Database = {
       }
       affaire_etapes_logistiques: {
         Row: {
+          a_partir_de: boolean | null
           acces: string | null
           affaire_id: string
           besoins_postes: Json
@@ -586,12 +587,14 @@ export type Database = {
           created_by: string | null
           date_debut: string
           date_fin: string | null
+          duree_minutes: number | null
           equipe: string | null
           heure_debut: string | null
           heure_fin: string | null
           horaire_libre: string | null
           id: string
           immatriculation_libre: string | null
+          lieu_douteux: boolean | null
           lieu_id: string | null
           lieu_libre: string | null
           nb_chefs_equipe: number
@@ -613,6 +616,7 @@ export type Database = {
           vehicule_id: string | null
         }
         Insert: {
+          a_partir_de?: boolean | null
           acces?: string | null
           affaire_id: string
           besoins_postes?: Json
@@ -626,12 +630,14 @@ export type Database = {
           created_by?: string | null
           date_debut: string
           date_fin?: string | null
+          duree_minutes?: number | null
           equipe?: string | null
           heure_debut?: string | null
           heure_fin?: string | null
           horaire_libre?: string | null
           id?: string
           immatriculation_libre?: string | null
+          lieu_douteux?: boolean | null
           lieu_id?: string | null
           lieu_libre?: string | null
           nb_chefs_equipe?: number
@@ -653,6 +659,7 @@ export type Database = {
           vehicule_id?: string | null
         }
         Update: {
+          a_partir_de?: boolean | null
           acces?: string | null
           affaire_id?: string
           besoins_postes?: Json
@@ -666,12 +673,14 @@ export type Database = {
           created_by?: string | null
           date_debut?: string
           date_fin?: string | null
+          duree_minutes?: number | null
           equipe?: string | null
           heure_debut?: string | null
           heure_fin?: string | null
           horaire_libre?: string | null
           id?: string
           immatriculation_libre?: string | null
+          lieu_douteux?: boolean | null
           lieu_id?: string | null
           lieu_libre?: string | null
           nb_chefs_equipe?: number
@@ -3789,6 +3798,7 @@ export type Database = {
           internet_message_id: string | null
           message_id_outlook: string
           metadata_ia: Json
+          motif_classement: string | null
           opportunite_id: string | null
           raw_payload: Json | null
           received_at: string
@@ -3824,6 +3834,7 @@ export type Database = {
           internet_message_id?: string | null
           message_id_outlook: string
           metadata_ia?: Json
+          motif_classement?: string | null
           opportunite_id?: string | null
           raw_payload?: Json | null
           received_at: string
@@ -3859,6 +3870,7 @@ export type Database = {
           internet_message_id?: string | null
           message_id_outlook?: string
           metadata_ia?: Json
+          motif_classement?: string | null
           opportunite_id?: string | null
           raw_payload?: Json | null
           received_at?: string
@@ -5200,6 +5212,57 @@ export type Database = {
           },
         ]
       }
+      ia_appels: {
+        Row: {
+          code_http: number | null
+          cout_estime: number | null
+          created_at: string
+          duree_ms: number | null
+          id: string
+          jetons_entree: number | null
+          jetons_sortie: number | null
+          modele: string
+          motif_secours: string | null
+          run_id: string | null
+          secours: boolean
+          statut: string
+          usage: string
+          user_id: string | null
+        }
+        Insert: {
+          code_http?: number | null
+          cout_estime?: number | null
+          created_at?: string
+          duree_ms?: number | null
+          id?: string
+          jetons_entree?: number | null
+          jetons_sortie?: number | null
+          modele: string
+          motif_secours?: string | null
+          run_id?: string | null
+          secours?: boolean
+          statut: string
+          usage: string
+          user_id?: string | null
+        }
+        Update: {
+          code_http?: number | null
+          cout_estime?: number | null
+          created_at?: string
+          duree_ms?: number | null
+          id?: string
+          jetons_entree?: number | null
+          jetons_sortie?: number | null
+          modele?: string
+          motif_secours?: string | null
+          run_id?: string | null
+          secours?: boolean
+          statut?: string
+          usage?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ia_feedback_logistique: {
         Row: {
           commentaire: string | null
@@ -5397,6 +5460,38 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      lieux_alias: {
+        Row: {
+          alias: string
+          created_at: string
+          created_by: string | null
+          id: string
+          lieu_id: string
+        }
+        Insert: {
+          alias: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lieu_id: string
+        }
+        Update: {
+          alias?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lieu_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lieux_alias_lieu_id_fkey"
+            columns: ["lieu_id"]
+            isOneToOne: false
+            referencedRelation: "lieux"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       logistique_parametres: {
         Row: {
@@ -9454,6 +9549,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      ia_appels_purger: { Args: never; Returns: number }
       import_clients_bulk: { Args: { payload: Json }; Returns: Json }
       import_devis_atomique:
         | {
@@ -10178,6 +10274,7 @@ export type Database = {
         | "pub"
         | "autre"
         | "logistique"
+        | "fournisseur_suivi"
       email_statut: "pending_review" | "validated" | "dismissed"
       etape_logistique_origine: "jalonnement" | "retroplanning" | "manuel"
       etape_logistique_statut: "propose" | "valide" | "fait" | "annule"
@@ -10536,6 +10633,7 @@ export const Constants = {
         "pub",
         "autre",
         "logistique",
+        "fournisseur_suivi",
       ],
       email_statut: ["pending_review", "validated", "dismissed"],
       etape_logistique_origine: ["jalonnement", "retroplanning", "manuel"],

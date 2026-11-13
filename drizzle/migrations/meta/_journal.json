@@ -904,6 +904,34 @@
       "when": 1794600023197,
       "tag": "0128_devis_note_commentaires_historique",
       "breakpoints": true
+    },
+    {
+      "idx": 129,
+      "version": "7",
+      "when": 1794611300686,
+      "tag": "0129_ia_appels",
+      "breakpoints": true
+    },
+    {
+      "idx": 130,
+      "version": "7",
+      "when": 1794611530440,
+      "tag": "0130_lieux_alias_etapes_horaires",
+      "breakpoints": true
+    },
+    {
+      "idx": 131,
+      "version": "7",
+      "when": 1794611544351,
+      "tag": "0131_email_categorie_fournisseur_suivi",
+      "breakpoints": true
+    },
+    {
+      "idx": 132,
+      "version": "7",
+      "when": 1794611547913,
+      "tag": "0132_emails_motif_classement",
+      "breakpoints": true
     }
   ]
 }

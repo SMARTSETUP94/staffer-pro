@@ -1,0 +1,1 @@
+ALTER TYPE public.email_categorie ADD VALUE IF NOT EXISTS 'fournisseur_suivi';

@@ -5,7 +5,6 @@
  */
 import { lireGabaritLogistique } from "@/lib/logistique/gabarit-demande";
 
-const AI_GW = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MAX_BODY = 8000;
 
 export type SharedSource = "logistique" | "devis";
@@ -78,7 +77,7 @@ export function bodyToPlainText(content: string | null | undefined, contentType?
   return t.slice(0, MAX_BODY);
 }
 
-export async function classifySharedEmail(key: string, input: ClassifyInput, source: SharedSource, exemples = ""): Promise<SharedCls> {
+export function construireClassification(input: ClassifyInput, source: SharedSource, exemples = "") {
   const hint =
     source === "devis"
       ? "Cet email arrive sur devis@setup.paris, la boîte des demandes clients : privilégie 'opportunite' sauf évidence contraire. "
@@ -102,24 +101,9 @@ export async function classifySharedEmail(key: string, input: ClassifyInput, sou
     "IMPORTANT : seule la demande la plus récente (haut du mail, avant « De : / From: / Le … a écrit ») crée des échéances ; l'historique cité sert uniquement de contexte et ne génère aucune échéance. " +
     "Tableau vide si aucune échéance. Réponds STRICTEMENT en JSON." + (source === "logistique" ? exemples : "");
   const text = bodyToPlainText(input.body, input.bodyContentType) || input.bodyPreview || "";
-  const res = await fetch(AI_GW, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, "X-Lovable-AIG-SDK": "raw-fetch" },
-    body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
-      messages: [
-        { role: "system", content: sys },
-        {
-          role: "user",
-          content: `Expéditeur: ${input.fromName ?? ""} <${input.fromEmail ?? ""}>\nSujet: ${input.subject ?? ""}\nCorps:\n${text}`,
-        },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "email_classification",
-          strict: true,
-          schema: {
+  const recu = input.receivedAt ? ` (reçu le ${input.receivedAt.slice(0, 10)} : l'année des dates sans année se déduit de cette date de réception)` : "";
+  const contenu = `Expéditeur: ${input.fromName ?? ""} <${input.fromEmail ?? ""}>\nSujet: ${input.subject ?? ""}${recu}\nCorps:\n${text}`;
+  const schema = {
             type: "object",
             additionalProperties: false,
             properties: {
@@ -162,15 +146,15 @@ export async function classifySharedEmail(key: string, input: ClassifyInput, sou
               },
             },
             required: ["categorie", "confiance", "metier", "poste_devine", "nom", "prenom", "resume", "opp_client", "opp_projet", "opp_taille", "opp_date_evenement", "opp_lieu", "opp_besoins", "echeances"],
-          },
-        },
-      },
-    }),
-  });
-  if (!res.ok) throw new Error(`AI ${res.status}: ${(await res.text()).slice(0, 200)}`);
-  const j = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
-  const cls = JSON.parse(j.choices?.[0]?.message?.content ?? "{}") as SharedCls;
-  return appliquerGabarit(cls, input, source);
+          };
+  return { systeme: sys, contenu, schema };
+}
+
+export async function classifySharedEmail(key: string, input: ClassifyInput, source: SharedSource, exemples = "", modele?: string): Promise<SharedCls> {
+  const { appelerIAJson } = await import("@/lib/ai/fournisseur.server");
+  const c = construireClassification(input, source, exemples);
+  const r = await appelerIAJson<SharedCls>(key, { usage: source === "logistique" ? "extraction_logistique" : "tri_mails", systeme: c.systeme, contenu: c.contenu, schema: c.schema, nomSchema: "email_classification", modele });
+  return appliquerGabarit(r.data, input, source);
 }
 
 /** Le gabarit lu sans IA est prioritaire sur les échéances de l'IA (log@ uniquement). */
