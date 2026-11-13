@@ -8,7 +8,6 @@ import { BirthdaysHeaderIcon } from "./header/BirthdaysHeaderIcon";
 import { CommandPalette } from "./CommandPalette";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
-import { Toaster } from "@/components/ui/sonner";
 import { FeedbackButton } from "./feedback/FeedbackButton";
 import { ProfileIncompleteBanner } from "./onboarding/ProfileIncompleteBanner";
 import { RoleSwitcher } from "./atoms/RoleSwitcher";
@@ -49,7 +48,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </div>
       </div>
       <FeedbackButton />
-      <Toaster richColors position="top-right" />
     </SidebarProvider>
   );
 }
