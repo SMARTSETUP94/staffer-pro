@@ -3091,6 +3091,7 @@ export type Database = {
           mime: string | null
           ordre: number
           size_bytes: number | null
+          source_document_id: string | null
           storage_path: string
           thumb_path: string | null
           uploaded_at: string
@@ -3109,6 +3110,7 @@ export type Database = {
           mime?: string | null
           ordre?: number
           size_bytes?: number | null
+          source_document_id?: string | null
           storage_path: string
           thumb_path?: string | null
           uploaded_at?: string
@@ -3127,6 +3129,7 @@ export type Database = {
           mime?: string | null
           ordre?: number
           size_bytes?: number | null
+          source_document_id?: string | null
           storage_path?: string
           thumb_path?: string | null
           uploaded_at?: string
@@ -3612,6 +3615,7 @@ export type Database = {
           body_preview: string | null
           candidature_id: string | null
           categorie_ia: Database["public"]["Enums"]["email_categorie"] | null
+          classement_pj: Json | null
           client_a_identifier: boolean
           client_id: string | null
           confiance_ia: number | null
@@ -3646,6 +3650,7 @@ export type Database = {
           body_preview?: string | null
           candidature_id?: string | null
           categorie_ia?: Database["public"]["Enums"]["email_categorie"] | null
+          classement_pj?: Json | null
           client_a_identifier?: boolean
           client_id?: string | null
           confiance_ia?: number | null
@@ -3680,6 +3685,7 @@ export type Database = {
           body_preview?: string | null
           candidature_id?: string | null
           categorie_ia?: Database["public"]["Enums"]["email_categorie"] | null
+          classement_pj?: Json | null
           client_a_identifier?: boolean
           client_id?: string | null
           confiance_ia?: number | null
@@ -9169,6 +9175,10 @@ export type Database = {
         Returns: undefined
       }
       email_domain: { Args: { p: string }; Returns: string }
+      emails_classement_pj_enregistrer: {
+        Args: { _affaire_id: string; _bilan: Json; _email_id: string }
+        Returns: undefined
+      }
       etape_for_metier: {
         Args: { metier: string }
         Returns: Database["public"]["Enums"]["fabrication_etape_type"]
