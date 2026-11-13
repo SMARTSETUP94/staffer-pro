@@ -173,6 +173,23 @@ export const Route = createFileRoute("/api/public/hooks/poll-shared-inboxes")({
         } catch (e) {
           report.outlook = { error: (e as Error).message };
         }
+        // Relance du classement des pièces jointes : uniquement l'affaire déjà rattachée, auteur déjà inscrit
+        // dans la trace (jamais choisi ici), au plus 3 tentatives, 5 demandes par passage. Outlook en lecture seule.
+        try {
+          const { doitRelancer } = await import("@/lib/pieces-jointes-classement");
+          const { classerPiecesJointes } = await import("@/lib/server-fns/classement-pj.server");
+          const { data: rows } = await supa.from("emails_entrants").select("id,opportunite_id,classement_pj")
+            .eq("source_boite", "devis").not("opportunite_id", "is", null).eq("classement_pj->>etat", "a_reprendre").limit(20);
+          const relances = (rows ?? []).filter((r: any) => doitRelancer(r)).slice(0, 5);
+          const out: Record<string, string> = {};
+          for (const r of relances as any[]) {
+            try { out[r.id] = (await classerPiecesJointes(supa, r.id, r.classement_pj.rattache_par, { essais: 1 })).bilan.etat; }
+            catch (e) { out[r.id] = `erreur: ${(e as Error).message.slice(0, 120)}`; }
+          }
+          report.classement_pj = out;
+        } catch (e) {
+          report.classement_pj = { error: (e as Error).message };
+        }
         return Response.json({ ok: true, report });
       },
     },

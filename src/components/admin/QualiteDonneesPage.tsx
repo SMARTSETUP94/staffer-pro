@@ -8,6 +8,7 @@ import { useQualite } from "@/hooks/use-qualite";
 import { listesQualite, EMPLOYES_PROTEGES } from "@/lib/qualite-listes";
 import { normalizeName } from "@/lib/string-normalize";
 import { PageHeader } from "@/components/PageHeader";
+import { RepriseClassementPj } from "@/components/admin/RepriseClassementPj";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -97,6 +98,7 @@ export function QualiteDonneesPage() {
         <details className="border-t pt-4"><summary className="cursor-pointer text-sm font-medium">Journal des corrections terrain</summary>{query.data.employes.filter(e=>Array.isArray(e.historique_qualite)&&e.historique_qualite.length>0&&matches(nom(e))).map(e=><div key={e.id} className="py-3"><p className="font-medium">{nom(e)}</p><pre className="max-h-60 overflow-auto whitespace-pre-wrap break-all text-xs text-muted-foreground">{JSON.stringify(e.historique_qualite,null,2)}</pre></div>)}</details>
       </TabsContent>
       <TabsContent value="commercial" className="space-y-6 pt-4">
+        <RepriseClassementPj />
         <Groupe titre="Opportunités sans CA estimé" count={listes.sansCa.length}>{listes.sansCa.filter(x=>matches(x.affaire.numero,x.affaire.nom)).map(x=><Ligne key={x.affaire.id} actions={<SaisieCa proposition={x.proposition} onApply={n=>propose("Enregistrer le CA estimé",`${x.affaire.numero} · ${x.affaire.nom} : ${euros(n)} HT`,()=>appel(supabase.rpc("qualite_definir_ca",{_affaire:x.affaire.id,_ca:n})))}/>}><p>{x.affaire.numero} · {x.affaire.nom}</p><p className="text-muted-foreground">{x.devis?`Dernier devis ${x.devis.numero} · net HT ${euros(x.proposition)}`:"Aucun devis : montant à saisir"}</p></Ligne>)}</Groupe>
         <Groupe titre="Chargé d’affaires ou prochaine action à compléter" count={listes.sansSuivi.length}>{listes.sansSuivi.filter(a=>matches(a.numero,a.nom)).map(a=><Ligne key={a.id} actions={<Button asChild size="sm" variant="outline"><Link to="/affaires/$affaireId/opportunite" params={{affaireId:a.id}}>Ouvrir la fiche</Link></Button>}><p>{a.numero} · {a.nom}</p><p className="text-muted-foreground">{!a.charge_affaires_id?"Chargé d’affaires manquant":"Chargé d’affaires renseigné"} · {!query.data.actions.some(x=>x.affaire_id===a.id&&x.prochaine_action_due_le)?"Prochaine action non datée":"Action datée"}</p></Ligne>)}</Groupe>
         <Groupe titre="Demandes clients à rattacher" count={listes.demandes.length}>{listes.demandes.filter(e=>matches(e.subject,e.from_email,e.from_name)).map(e=><Ligne key={e.id} actions={<Choix label="Choisir le client" items={query.data.clients.filter(c=>c.actif)} onChange={id=>propose("Rattacher la demande",`${e.subject??"Demande"} → ${query.data?.clients.find(c=>c.id===id)?.nom}. Statut conservé.`,()=>appel(supabase.rpc("qualite_rattacher_demande",{_email:e.id,_client:id})))}/>}><p>{e.subject??"Sans objet"}</p><p className="text-muted-foreground">{e.from_name??e.from_email} · {date(e.received_at)} · {e.statut}</p></Ligne>)}</Groupe>

@@ -44,7 +44,8 @@ export async function runWrite(context: McpAppContext, name: WriteName, args: Re
         _diff: safeDiff(prepared.before, prepared.after),
       });
       if (error) throw new ToolError("Confirmation indisponible");
-      return { ...compactResult(data), ...(data?.error ? { isError: true } : {}) };
+      const classement = !data?.error ? await classerApresRattachement(context, name, args) : undefined;
+      return { ...compactResult(classement ? { ...data, classement_pieces_jointes: classement } : data), ...(data?.error ? { isError: true } : {}) };
     }
     const preview = await prepare();
     const { data, error } = await context.db.rpc("mcp_write_preview", {
@@ -58,4 +59,17 @@ export async function runWrite(context: McpAppContext, name: WriteName, args: Re
     if (audit.error) throw new ToolError("Journal indisponible : écriture interrompue");
     return { ...compactResult({ error: error instanceof ToolError ? error.message : "Écriture indisponible", statut: "refused" }), isError: true };
   }
+}
+/** Après un rattachement confirmé : classe les pièces jointes des demandes nommées dans l'affaire rattachée (droits de l'appelant). */
+async function classerApresRattachement(context: McpAppContext, name: WriteName, args: Record<string, unknown>) {
+  const ids = name === "traiter_demande" && args.action === "rattacher" ? (args.email_ids as string[] | undefined)
+    : name === "creer_opportunite" ? (args.email_ids as string[] | undefined) : undefined;
+  if (!ids?.length) return undefined;
+  const { classerPiecesJointes } = await import("@/lib/server-fns/classement-pj.server");
+  const out: Record<string, string> = {};
+  for (const id of ids.slice(0, 20)) {
+    try { out[id] = (await classerPiecesJointes(context.db, id, context.userId)).bilan.etat; }
+    catch { out[id] = "non classé (à reprendre depuis la demande)"; }
+  }
+  return out;
 }

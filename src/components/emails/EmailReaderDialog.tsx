@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ClientEmailSuggestion } from "@/components/emails/ClientEmailSuggestion";
 import { SaveEmailDocumentDialog } from "@/components/emails/SaveEmailDocumentDialog";
+import { ClassementPjTrace } from "@/components/emails/ClassementPjTrace";
 import { estFormulaire, resumeFormulaire } from "@/lib/logistique/formulaire-resume";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -62,7 +63,7 @@ export function EmailReaderDialog({ email, onClose, clientReply = false, affaire
         </div>
         {formulaire
           ? <FichiersFormulaire chemins={Array.isArray(meta["fichiers"]) ? (meta["fichiers"] as string[]) : []} />
-          : <AttachmentsList emailId={email.id} clientReply={clientReply} affaireId={affaireId} />}
+          : <><ClassementPjTrace emailId={email.id} /><AttachmentsList emailId={email.id} clientReply={clientReply} affaireId={affaireId} /></>}
         </div>
       </DialogContent>
     </Dialog>

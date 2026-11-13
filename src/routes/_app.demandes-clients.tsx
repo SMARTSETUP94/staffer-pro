@@ -1,4 +1,5 @@
 import { ClientCombobox } from "@/components/clients/ClientCombobox";
+import { lancerClassementPj } from "@/components/emails/ClassementPjTrace";
 import { AffaireCombobox } from "@/components/planning/AffaireCombobox";
 import { useAffairesPourLogistique } from "@/hooks/use-etapes-logistiques";
 import { FolderInput } from "lucide-react";
@@ -257,6 +258,7 @@ function ClasserDialog({ email, onClose, onDone }: { email: Row; onClose: () => 
     setSaving(false);
     if (error) return toast.error("Classement impossible", { description: error.message });
     toast.success("Mail classé dans l'affaire");
+    void lancerClassementPj(email.id);
     onDone();
   }
   return (
@@ -415,6 +417,7 @@ function CreateOppDialog({ email, onClose, onDone }: { email: Row; onClose: () =
       await supabase.from("emails_entrants")
         .update({ opportunite_id: opp.id, statut: "validated", categorie_ia: "opportunite" })
         .eq("id", email.id);
+      void lancerClassementPj(email.id);
     }
     setSaving(false);
     toast.success(`Opportunité ${code} ajoutée au pipeline`);
