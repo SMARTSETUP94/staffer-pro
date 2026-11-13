@@ -44,8 +44,8 @@ describe("images des devis par l'IA", () => {
     expect(controlerAvantAppel(5, { appels: 1, cout: 0.01 })).toMatch(/5 propositions/);
     expect(controlerAvantAppel(0, { appels: 1, cout: 0.11 })).toMatch(/plafond/);
     expect(controlerAvantAppel(0, { appels: 5, cout: 0.05 })).toMatch(/4 appels/);
-    // Avec Claude Sonnet 5 et un plafond de 0,10 €, une douzaine d'images passe, 36 non.
-    expect(controlerAvantAppel(4, estimerCout(12, 2000))).toBeNull();
+    // Avec Claude Sonnet 5 et un plafond de 0,10 €, six images passent, 36 non (le prévisionnel compte 4 000 jetons de sortie par appel).
+    expect(controlerAvantAppel(4, estimerCout(6, 2000))).toBeNull();
     expect(controlerAvantAppel(0, estimerCout(36, 2000))).toMatch(/plafond/);
     expect(estimerCout(31, 0).appels).toBe(2);
   });
