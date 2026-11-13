@@ -260,21 +260,29 @@ export type Database = {
         Row: {
           affaire_id: string
           categorie: string | null
+          categorie_source: string | null
           deleted_at: string | null
           deleted_by: string | null
+          derive_type: string | null
           description: string | null
+          document_parent_id: string | null
+          empreinte_sha256: string | null
+          extraction: Json | null
           fabrication_objet_id: string | null
           filename: string
           id: string
           mime_type: string
           mission_phase: string | null
           nom_fichier: string | null
+          nom_lisible: string | null
           objet_id: string | null
+          page: number | null
           prise_le: string | null
           source_attachment_id: string | null
           source_email_id: string | null
           storage_path: string
           taille_bytes: number
+          texte_page: string | null
           updated_at: string
           uploaded_at: string
           uploaded_by: string
@@ -282,21 +290,29 @@ export type Database = {
         Insert: {
           affaire_id: string
           categorie?: string | null
+          categorie_source?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
+          derive_type?: string | null
           description?: string | null
+          document_parent_id?: string | null
+          empreinte_sha256?: string | null
+          extraction?: Json | null
           fabrication_objet_id?: string | null
           filename: string
           id?: string
           mime_type: string
           mission_phase?: string | null
           nom_fichier?: string | null
+          nom_lisible?: string | null
           objet_id?: string | null
+          page?: number | null
           prise_le?: string | null
           source_attachment_id?: string | null
           source_email_id?: string | null
           storage_path: string
           taille_bytes: number
+          texte_page?: string | null
           updated_at?: string
           uploaded_at?: string
           uploaded_by: string
@@ -304,21 +320,29 @@ export type Database = {
         Update: {
           affaire_id?: string
           categorie?: string | null
+          categorie_source?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
+          derive_type?: string | null
           description?: string | null
+          document_parent_id?: string | null
+          empreinte_sha256?: string | null
+          extraction?: Json | null
           fabrication_objet_id?: string | null
           filename?: string
           id?: string
           mime_type?: string
           mission_phase?: string | null
           nom_fichier?: string | null
+          nom_lisible?: string | null
           objet_id?: string | null
+          page?: number | null
           prise_le?: string | null
           source_attachment_id?: string | null
           source_email_id?: string | null
           storage_path?: string
           taille_bytes?: number
+          texte_page?: string | null
           updated_at?: string
           uploaded_at?: string
           uploaded_by?: string
@@ -343,6 +367,13 @@ export type Database = {
             columns: ["affaire_id"]
             isOneToOne: false
             referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_documents_document_parent_id_fkey"
+            columns: ["document_parent_id"]
+            isOneToOne: false
+            referencedRelation: "affaire_documents"
             referencedColumns: ["id"]
           },
           {
@@ -8452,6 +8483,15 @@ export type Database = {
           status: string
           user_id: string
         }[]
+      }
+      affaire_document_categoriser: {
+        Args: {
+          _categorie: string
+          _id: string
+          _nom_lisible: string
+          _source: string
+        }
+        Returns: boolean
       }
       annuler_contrat_intermittent: {
         Args: { p_contrat_id: string; p_motif?: string }
