@@ -65,8 +65,8 @@ const DEFAUTS: Parametres = {
 };
 
 export function param(p: Parametres | undefined, cle: string): number {
-  const v = p?.[cle];
-  return typeof v === "number" && Number.isFinite(v) ? v : Number(v ?? DEFAUTS[cle] ?? 0) || DEFAUTS[cle] || 0;
+  const v = Number(p?.[cle]);
+  return p?.[cle] != null && Number.isFinite(v) ? v : (DEFAUTS[cle] ?? 0);
 }
 
 // ---------- dates ----------
