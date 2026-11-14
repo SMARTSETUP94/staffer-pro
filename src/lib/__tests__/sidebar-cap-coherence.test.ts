@@ -19,7 +19,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const ROUTES_DIR = path.resolve(__dirname, "../../routes");
-const SIDEBAR_FILE = path.resolve(__dirname, "../../components/AppSidebar.tsx");
+const SIDEBAR_FILE = path.resolve(__dirname, "../sidebar-navigation.ts");
 
 type SidebarItem = { url: string; caps: string[] };
 
