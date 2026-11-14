@@ -14,11 +14,12 @@ export function indicateurQualite(etapes: EtapeQualite[], feedbacks: FeedbackQua
     const p = Array.isArray(f.propose) ? (f.propose as any[]) : []; const r = Array.isArray(f.retenu) ? (f.retenu as any[]) : [];
     const pc = new Map(p.map((x) => [cle(x), x]));
     proposees += p.length;
+    // Les anciennes corrections n'enregistraient pas l'heure proposée : elles ne comptent pas pour les heures.
+    const avecHeures = p.some((x) => x && typeof x === "object" && "heure_debut" in x);
     for (const x of r) {
       const y = pc.get(cle(x));
       if (y) gardees++;
-      // Les anciennes corrections n'enregistraient pas l'heure proposée : elles ne comptent pas.
-      if (x?.heure_debut && y && "heure_debut" in y) { heuresAttendues++; if (y && String(y.heure_debut ?? "").slice(0, 5) === String(x.heure_debut).slice(0, 5)) heuresJustes++; }
+      if (avecHeures && x?.heure_debut) { heuresAttendues++; if (y && String(y.heure_debut ?? "").slice(0, 5) === String(x.heure_debut).slice(0, 5)) heuresJustes++; }
     }
   }
   return {
