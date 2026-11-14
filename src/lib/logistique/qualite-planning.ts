@@ -17,7 +17,8 @@ export function indicateurQualite(etapes: EtapeQualite[], feedbacks: FeedbackQua
     for (const x of r) {
       const y = pc.get(cle(x));
       if (y) gardees++;
-      if (x?.heure_debut) { heuresAttendues++; if (y && String(y.heure_debut ?? "").slice(0, 5) === String(x.heure_debut).slice(0, 5)) heuresJustes++; }
+      // Les anciennes corrections n'enregistraient pas l'heure proposée : elles ne comptent pas.
+      if (x?.heure_debut && y && "heure_debut" in y) { heuresAttendues++; if (y && String(y.heure_debut ?? "").slice(0, 5) === String(x.heure_debut).slice(0, 5)) heuresJustes++; }
     }
   }
   return {

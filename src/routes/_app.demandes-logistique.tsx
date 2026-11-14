@@ -291,7 +291,7 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
       setConsigne("");
     } catch (e) { toast.error((e as Error).message); } finally { setAssisting(false); }
   }
-  const [initial] = useState(() => lines.map((l) => ({ type: l.type, date: l.date, contenu: l.contenu, lieu: l.lieu || null })));
+  const [initial] = useState(() => lines.map((l) => ({ type: l.type, date: l.date, contenu: l.contenu, lieu: l.lieu || null, heure_debut: l.hDebut || null, heure_fin: l.hFin || null })));
   const [q, setQ] = useState("");
   const [withOpps, setWithOpps] = useState(false);
   const [vehicules, setVehicules] = useState<Veh[]>([]);
