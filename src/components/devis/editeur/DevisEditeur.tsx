@@ -28,6 +28,8 @@ import { ExportPdfDialog, EnvoiEmailDialog } from "@/components/devis/DevisPdfEn
 import { ProgbatExportDialog, EnregistrerTransfertDialog } from "@/components/devis/ProgbatTransfert";
 import { libelleNumeroProgbat, libelleStatutDevis, NUMERO_PROGBAT_PROVISOIRE_RE } from "@/lib/devis/progbat-export";
 import { BibliothequeDialog } from "./BibliothequeDialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ChevronDown, MoreHorizontal } from "lucide-react";
 import { SupprimerDevisDialog, SUPPRESSION_REFUSEE, devisSupprimable } from "@/components/devis/SupprimerDevis";
 import { useAutosave } from "./useAutosave";
 import { ancrePoste as ancreDe } from "@/lib/devis/editeur-lisibilite";
@@ -256,6 +258,51 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
         {d.client && <span className="max-w-64 truncate text-sm text-foreground" title={d.client.nom}>{d.client.nom}</span>}
         <DevisStatutBadge statut={st} label={libelleStatutDevis(st, d.devis.numero_progbat, d.devis.date_envoi, STATUT_LABEL)} />{infoClaude && <BadgeClaude />}
         <span className="ml-auto text-sm text-muted-foreground">Total HT <strong className="text-base tabular-nums text-foreground">{eur(calc.remise !== 0 ? calc.net_ht : calc.total_ht)}</strong>{calc.remise !== 0 && <span className="text-xs"> (net)</span>}</span>
+        {!d.devis.est_modele && (() => {
+          const v = d.droits.valider, e = d.droits.ecrire, aff = !!d.devis.affaire_id, nonSigne = !d.devis.signe_vers_fabrication_le;
+          const valideOuEnvoye = ["valide", "transfere"].includes(st);
+          const peutEnvoyer = (st === "valide" || (st === "transfere" && !!d.devis.numero_progbat && !d.devis.date_envoi)) && v && aff;
+          const ouvrirEnvoi = () => { setEnvoiDate(new Date().toISOString().slice(0, 10)); setEnvoiDlg(true); };
+          const cta = (st === "brouillon" || st === "a_valider") && v ? <Button size="sm" onClick={() => void changerStatut("valide")}><CheckCircle2 className="mr-1 h-3.5 w-3.5" />Valider le devis</Button>
+            : st === "brouillon" && e ? <Button size="sm" onClick={() => void changerStatut("a_valider")}>Soumettre à validation</Button>
+            : peutEnvoyer ? <Button size="sm" onClick={ouvrirEnvoi}><Mail className="mr-1 h-3.5 w-3.5" />Marquer envoyé</Button>
+            : valideOuEnvoye && v && aff && nonSigne ? <Button size="sm" onClick={() => void clientSigne()}><PenLine className="mr-1 h-3.5 w-3.5" />Client signé</Button>
+            : null;
+          return (<>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild><Button size="sm" variant="outline">Statut<ChevronDown className="ml-1 h-3.5 w-3.5" /></Button></DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60">
+                <DropdownMenuLabel>Changer le statut</DropdownMenuLabel>
+                {st === "a_valider" && e && <DropdownMenuItem onClick={() => void changerStatut("brouillon")}>Brouillon</DropdownMenuItem>}
+                {st === "brouillon" && e && <DropdownMenuItem onClick={() => void changerStatut("a_valider")}>À valider</DropdownMenuItem>}
+                {(st === "brouillon" || st === "a_valider") && v && <DropdownMenuItem onClick={() => void changerStatut("valide")}>Validé</DropdownMenuItem>}
+                {peutEnvoyer && <DropdownMenuItem onClick={ouvrirEnvoi}>Envoyé au client…</DropdownMenuItem>}
+                {st === "transfere" && NUMERO_PROGBAT_PROVISOIRE_RE.test(d.devis.numero_progbat ?? "") && v && <DropdownMenuItem onClick={() => setTrDlg(true)}>Numéro définitif ProGBat…</DropdownMenuItem>}
+                {valideOuEnvoye && v && aff && nonSigne && <DropdownMenuItem onClick={() => void clientSigne()}>Client signé</DropdownMenuItem>}
+                {["valide", "transfere", "signe"].includes(st) && v && nonSigne && <DropdownMenuItem onClick={() => void signer()}>Devis signé → créer la fabrication</DropdownMenuItem>}
+                {["a_valider", "valide", "transfere"].includes(st) && v && <DropdownMenuItem className="text-destructive" onClick={() => void changerStatut("refuse")}>Refusé</DropdownMenuItem>}
+                {st !== "brouillon" && e && <><DropdownMenuSeparator /><DropdownMenuItem onClick={() => void nouvelleVersion()}>Réviser (nouvelle version en brouillon)</DropdownMenuItem></>}
+                {st === "transfere" && d.devis.date_envoi && <p className="px-2 py-1 text-xs text-muted-foreground">Envoyé le {new Date(d.devis.date_envoi).toLocaleDateString("fr-FR")}</p>}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {cta}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild><Button size="sm" variant="outline" aria-label="Actions et exports"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Exports et partage</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => setVueClient(true)}><Eye className="mr-2 h-4 w-4" />Vue client</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPdfDlg(true)}><FileDown className="mr-2 h-4 w-4" />Exporter en PDF</DropdownMenuItem>
+                {v && aff && <DropdownMenuItem disabled={!valideOuEnvoye} onClick={() => setMailDlg(true)}><Mail className="mr-2 h-4 w-4" />Envoyer par email{!valideOuEnvoye && " (après validation)"}</DropdownMenuItem>}
+                {aff && <DropdownMenuItem disabled={!valideOuEnvoye} onClick={() => setPgDlg(true)}><FileDown className="mr-2 h-4 w-4" />Vers ProGBat{!valideOuEnvoye && " (après validation)"}</DropdownMenuItem>}
+                <DropdownMenuSeparator />
+                {st !== "brouillon" && e && <DropdownMenuItem onClick={() => void nouvelleVersion()}>Nouvelle version</DropdownMenuItem>}
+                {d.droits.parametres && <DropdownMenuItem onClick={() => { setModele({ nom: d.devis.libelle ?? "", categorie: "", description: "" }); setModeleDlg(true); }}>Enregistrer comme modèle</DropdownMenuItem>}
+                {e && <><DropdownMenuSeparator /><DropdownMenuItem className="text-destructive" disabled={!devisSupprimable(st) || !peutSupprimer.data} onClick={() => setSupprDlg(true)}><Trash2 className="mr-2 h-4 w-4" />Supprimer le devis</DropdownMenuItem>
+                  {!devisSupprimable(st) && <p className="px-2 py-1 text-xs text-muted-foreground">{SUPPRESSION_REFUSEE}</p>}</>}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>);
+        })()}
         <Button size="sm" variant="outline" onClick={() => setPleinEcran((p) => !p)} title={pleinEcran ? "Quitter le plein écran (Échap)" : "Plein écran"}>
           {pleinEcran ? <Minimize2 className="mr-1 h-3.5 w-3.5" /> : <Maximize2 className="mr-1 h-3.5 w-3.5" />}{pleinEcran ? "Quitter" : "Plein écran"}
         </Button>
@@ -443,45 +490,6 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
                 </ul>
               </div>
             )}
-            <div className="flex flex-col gap-2 border-t pt-3">
-              {st === "brouillon" && d.droits.ecrire && !d.devis.est_modele && <Button variant="outline" onClick={() => void changerStatut("a_valider")}>Soumettre à validation</Button>}
-              {st === "a_valider" && d.droits.ecrire && <Button variant="ghost" onClick={() => void changerStatut("brouillon")}>Repasser en brouillon</Button>}
-              {(st === "brouillon" || st === "a_valider") && d.droits.valider && !d.devis.est_modele && <Button onClick={() => void changerStatut("valide")}>Valider</Button>}
-              {!d.devis.est_modele && st !== "brouillon" && d.droits.ecrire && <Button variant="outline" onClick={() => void nouvelleVersion()}>Nouvelle version</Button>}
-              {(st === "valide" || (st === "transfere" && !!d.devis.numero_progbat && !d.devis.date_envoi)) && d.droits.valider && !d.devis.est_modele && d.devis.affaire_id && (
-                <Button onClick={() => { setEnvoiDate(new Date().toISOString().slice(0, 10)); setEnvoiDlg(true); }}>Marquer envoyé au client</Button>
-              )}
-              {st === "transfere" && NUMERO_PROGBAT_PROVISOIRE_RE.test(d.devis.numero_progbat ?? "") && d.droits.valider && !d.devis.est_modele && (
-                <Button variant="outline" onClick={() => setTrDlg(true)}>Numéro définitif ProGBat…</Button>
-              )}
-              {st === "transfere" && d.devis.date_envoi && <p className="text-xs text-muted-foreground">Envoyé le {new Date(d.devis.date_envoi).toLocaleDateString("fr-FR")}</p>}
-              {["valide", "transfere"].includes(st) && d.droits.valider && !d.devis.est_modele && d.devis.affaire_id && !d.devis.signe_vers_fabrication_le && (
-                <Button onClick={() => void clientSigne()}><PenLine className="mr-1 h-4 w-4" />Client signé</Button>
-              )}
-              {["valide", "transfere", "signe"].includes(st) && d.droits.valider && !d.devis.est_modele && !d.devis.signe_vers_fabrication_le && (
-                <Button variant={st === "signe" ? "default" : "outline"} onClick={() => void signer()}>Devis signé → créer la fabrication</Button>
-              )}
-              {["a_valider", "valide", "transfere"].includes(st) && d.droits.valider && <Button variant="ghost" className="text-destructive" onClick={() => void changerStatut("refuse")}>Marquer refusé</Button>}
-              <Button variant="outline" onClick={() => setVueClient(true)}><Eye className="mr-1 h-4 w-4" />Vue client</Button>
-              {!d.devis.est_modele && <Button variant="outline" onClick={() => setPdfDlg(true)}><FileDown className="mr-1 h-4 w-4" />Exporter en PDF</Button>}
-              {!d.devis.est_modele && d.droits.valider && d.devis.affaire_id && (
-                <Button variant="outline" disabled={!["valide", "transfere"].includes(st)} title={!["valide", "transfere"].includes(st) ? "Réservé aux devis validés ; sur un brouillon, seul le PDF « PROJET » est disponible" : undefined}
-                  onClick={() => setMailDlg(true)}><Mail className="mr-1 h-4 w-4" />Envoyer par email</Button>
-              )}
-              {!d.devis.est_modele && d.droits.parametres && <Button variant="ghost" onClick={() => { setModele({ nom: d.devis.libelle ?? "", categorie: "", description: "" }); setModeleDlg(true); }}>Enregistrer comme modèle</Button>}
-              {!d.devis.est_modele && d.devis.affaire_id && (
-                <Button variant="outline" disabled={!["valide", "transfere"].includes(st)} title={!["valide", "transfere"].includes(st) ? "Réservé aux devis validés" : undefined}
-                  onClick={() => setPgDlg(true)}><FileDown className="mr-1 h-4 w-4" />Vers ProGBat</Button>
-              )}
-              {!d.devis.est_modele && d.droits.ecrire && (
-                <>
-                  <Button variant="ghost" className="text-destructive" disabled={!devisSupprimable(st) || !peutSupprimer.data}
-                    onClick={() => setSupprDlg(true)}><Trash2 className="mr-1 h-4 w-4" />Supprimer le devis</Button>
-                  {!devisSupprimable(st) ? <p className="text-xs text-muted-foreground">{SUPPRESSION_REFUSEE}</p>
-                    : peutSupprimer.data === false && <p className="text-xs text-muted-foreground">Suppression réservée à l'auteur du devis, au chargé d'affaires ou à un admin.</p>}
-                </>
-              )}
-            </div>
             </div>}
             {ong === "heures" && <HeuresMetier hm={calc.heures_metier} />}
             {ong === "couts" && d.droits.couts && <CoutsBloc dec={calc.decomposition} net={calc.net_ht} manquants={calc.couts_manquants} compact lienLibre={lienLibre} />}
