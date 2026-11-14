@@ -65,3 +65,4 @@
 - Logistics form requests: emails_entrants rows via token-gated service-role RPCs; poller never creates steps.
 
 
+- The opportunity planning (/planning-opportunites) is read-only and separate from real workload: one SECURITY DEFINER reader opportunites_planning_lire (capability-gated, prices masked without devis.couts) plus the pure helper src/lib/opportunites/planning-previsionnel.ts; its parameters live as opp_plan_* keys in devis_parametres, so probable and real load never mix.
