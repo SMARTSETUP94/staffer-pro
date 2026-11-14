@@ -109,9 +109,9 @@ export function PlanningPrevisionnel({ data, aujourdhui }: { data: PlanningData;
       <Legende />
 
       <div className="overflow-x-auto rounded-xl border border-border bg-card">
-        <div className="min-w-[900px]">
+        <div className="min-w-[760px] sm:min-w-[900px]">
           <div className="sticky top-0 z-10 flex border-b border-border bg-card text-[10px] text-muted-foreground">
-            <div className="w-56 shrink-0 px-3 py-2 font-semibold uppercase tracking-wide">Opportunité</div>
+            <div className="w-36 shrink-0 sm:w-56 px-3 py-2 font-semibold uppercase tracking-wide">Opportunité</div>
             <div className="relative flex-1">
               <div className="flex h-full">
                 {semainesCols.map((s) => <div key={s} className="flex-1 border-l border-border px-1 py-2">{fmtJJMM(s)}</div>)}
@@ -139,7 +139,7 @@ export function PlanningPrevisionnel({ data, aujourdhui }: { data: PlanningData;
                   return (
                     <button type="button" key={o.affaire_id} onClick={() => setSelection(o.affaire_id)}
                       className={cn("flex w-full border-b border-border text-left hover:bg-muted/30", selection === o.affaire_id && "bg-primary/5")}>
-                      <div className="w-56 shrink-0 px-3 py-1.5">
+                      <div className="w-36 shrink-0 sm:w-56 px-3 py-1.5">
                         <p className="truncate text-xs font-semibold">{o.numero} <span className="font-normal">{titre(o)}</span></p>
                         <p className={cn("truncate text-[10px]", sig.niveau === "hors_delai" ? "text-destructive" : sig.niveau === "proche" ? "text-su-orange" : "text-muted-foreground")}>{sig.libelle}</p>
                       </div>

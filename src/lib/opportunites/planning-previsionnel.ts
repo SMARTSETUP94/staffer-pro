@@ -22,6 +22,8 @@ export interface MateriauDevis {
   fournisseur: string | null;
   quantite: number;
   prix_achat: number | null;
+  /** Faux pour les lots / lignes sans prix d'achat : non consolidés. */
+  a_prix?: boolean;
 }
 
 export interface OppPlanning {
@@ -115,6 +117,8 @@ export function joursOuvresAvant(iso: string, n: number, p?: Parametres): string
 }
 
 // ---------- périodes ----------
+export const consolidable = (m: MateriauDevis) => m.a_prix !== false;
+
 export interface Periodes {
   client: { debut: string; fin: string };
   fabrication: { debut: string; fin: string; semaines: number; source: "devis" | "taille" | "taille_vide" };
@@ -147,7 +151,7 @@ export function calculerPeriodes(o: OppPlanning, p?: Parametres): Periodes | nul
   const n = param(p, "opp_plan_echantillons_jours");
   const echDebut = joursOuvresAvant(fabDebut, n, p);
   const echFin = joursOuvresAvant(fabDebut, 1, p);
-  const commande = o.materiaux.length > 0 ? ajouterJours(fabDebut, -param(p, "opp_plan_commande_jours")) : null;
+  const commande = o.materiaux.some(consolidable) ? ajouterJours(fabDebut, -param(p, "opp_plan_commande_jours")) : null;
   return {
     client: { debut, fin: finClient < debut ? debut : finClient },
     fabrication: { debut: fabDebut, fin: fabFin, semaines, source },
@@ -220,6 +224,7 @@ export function regrouperMateriaux(
     const sem = lundi(per.commande);
     const num = o.numero ?? "?";
     for (const m of o.materiaux) {
+      if (!consolidable(m)) continue;
       const q = Number(m.quantite) || 0;
       if (q === 0) continue;
       const cle = cleMateriau(m);

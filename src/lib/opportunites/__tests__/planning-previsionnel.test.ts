@@ -86,6 +86,12 @@ describe("matériaux à commander", () => {
     const r = regrouperMateriaux([base({ ...o1, materiaux: [{ ...mat(5), prix_achat: null }] })], undefined, { statuts: ["presque_gagne"] });
     expect(r.lignes[0].achatHT).toBeNull();
   });
+  it("lots sans prix non consolidés et sans commande", () => {
+    const lot = { ...mat(3, "bloc", "lot"), prix_achat: 0, a_prix: false };
+    const o = base({ ...o1, materiaux: [lot] });
+    expect(regrouperMateriaux([o], undefined, { statuts: ["presque_gagne"] }).lignes).toHaveLength(0);
+    expect(calculerPeriodes(o)!.commande).toBeNull();
+  });
   it("à défaut d'identifiant, même désignation et unité", () => {
     const a = { materiau_id: null, designation: "Tasseau  Sapin", unite: "ml", fournisseur: null, quantite: 2, prix_achat: null };
     const r = regrouperMateriaux([base({ ...o1, materiaux: [a, { ...a, designation: "tasseau sapin" }] })], undefined, { statuts: ["presque_gagne"] });
