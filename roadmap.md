@@ -1,5 +1,10 @@
 # Roadmap
 
+## Devis — cinq statuts et pipeline (14 novembre)
+- [x] Retirer « À finaliser » de l'éditeur et des filtres ; conserver les anciens états lisibles comme brouillons.
+- [ ] Présenter puis faire approuver la migration : plus de passage à l'étude dès création ; finalisation → à l'étude ; envoi → envoyé ; soumission Claude reste brouillon, droits conservés.
+- [ ] Après approbation, appliquer et tester les transitions en base sur données d'essai seulement ; rien publié.
+
 ## Menu — 14 novembre (lot validé)
 - [x] Liste unique par capacités ; notes de frais en pied ; comparaison avant/après de dix profils : seul ajout Lieux admin.
 - [x] Vues Chantiers Fiches/Liste et Demandes/Jalonnements, URL conservées.

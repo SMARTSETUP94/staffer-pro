@@ -21,6 +21,7 @@ import { libelleNumeroProgbat, libelleStatutDevis } from "@/lib/devis/progbat-ex
 import { SupprimerDevisDialog, SUPPRESSION_REFUSEE, devisSupprimable } from "@/components/devis/SupprimerDevis";
 import { useModelesDevis } from "@/components/devis/useModelesDevis";
 import { ExportPdfDialog } from "@/components/devis/DevisPdfEnvoi";
+import { STATUTS_DEVIS_VISIBLES, statutDevisVisible } from "@/lib/devis/statuts";
 
 export const Route = createFileRoute("/_app/devis-staffing/")({
   beforeLoad: () => requireCapability("devis.view"),
@@ -43,7 +44,7 @@ type Row = {
   charge_affaires_id: string | null; charge_affaires_nom: string | null; numero_progbat: string | null; date_envoi: string | null;
 };
 
-const STATUTS: DevisStatut[] = ["brouillon", "a_valider", "valide", "transfere", "signe", "refuse"];
+const STATUTS = STATUTS_DEVIS_VISIBLES;
 
 function DevisGlobal() {
   const on = useFeatureFlag("devis_staffing_v1");
@@ -69,7 +70,7 @@ function DevisGlobal() {
   const rows = useMemo(() => {
     const t = q.trim().toLowerCase();
     return (liste.data ?? []).filter((r) =>
-      (!statuts.length || statuts.includes(r.statut_redaction)) &&
+      (!statuts.length || statuts.some((s) => s === statutDevisVisible(r.statut_redaction))) &&
       (!ca || r.charge_affaires_id === ca) &&
       (!t || [r.numero, r.affaire_numero, r.affaire_nom, r.client_nom].some((x) => x?.toLowerCase().includes(t))));
   }, [liste.data, q, statuts, ca]);
