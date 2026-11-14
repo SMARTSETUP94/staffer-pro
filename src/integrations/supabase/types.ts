@@ -609,6 +609,10 @@ export type Database = {
           proposition_id: string | null
           responsable: string | null
           sens: string | null
+          source_email_id: string | null
+          source_fichier: string | null
+          source_jalonnement_id: string | null
+          source_type: string | null
           statut: Database["public"]["Enums"]["etape_logistique_statut"]
           trajet_id: string | null
           type: Database["public"]["Enums"]["etape_logistique_type"]
@@ -652,6 +656,10 @@ export type Database = {
           proposition_id?: string | null
           responsable?: string | null
           sens?: string | null
+          source_email_id?: string | null
+          source_fichier?: string | null
+          source_jalonnement_id?: string | null
+          source_type?: string | null
           statut?: Database["public"]["Enums"]["etape_logistique_statut"]
           trajet_id?: string | null
           type: Database["public"]["Enums"]["etape_logistique_type"]
@@ -695,6 +703,10 @@ export type Database = {
           proposition_id?: string | null
           responsable?: string | null
           sens?: string | null
+          source_email_id?: string | null
+          source_fichier?: string | null
+          source_jalonnement_id?: string | null
+          source_type?: string | null
           statut?: Database["public"]["Enums"]["etape_logistique_statut"]
           trajet_id?: string | null
           type?: Database["public"]["Enums"]["etape_logistique_type"]
@@ -735,6 +747,20 @@ export type Database = {
             columns: ["lieu_id"]
             isOneToOne: false
             referencedRelation: "lieux"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_etapes_logistiques_source_email_id_fkey"
+            columns: ["source_email_id"]
+            isOneToOne: false
+            referencedRelation: "emails_entrants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affaire_etapes_logistiques_source_jalonnement_id_fkey"
+            columns: ["source_jalonnement_id"]
+            isOneToOne: false
+            referencedRelation: "jalonnements"
             referencedColumns: ["id"]
           },
           {
@@ -9657,6 +9683,85 @@ export type Database = {
           taille: Database["public"]["Enums"]["opportunite_taille"]
           typologie_future: string
         }[]
+      }
+      logistique_etape_proposee_valide: {
+        Args: { _e: Json }
+        Returns: {
+          a_partir_de: boolean | null
+          acces: string | null
+          affaire_id: string
+          besoins_postes: Json
+          caces_autre_requis: string | null
+          caces_requis: string[]
+          calcul_regle: string | null
+          commentaire_equipe: string | null
+          contact_id: string | null
+          contenu: string | null
+          created_at: string
+          created_by: string | null
+          date_debut: string
+          date_fin: string | null
+          duree_minutes: number | null
+          equipe: string | null
+          heure_debut: string | null
+          heure_fin: string | null
+          horaire_libre: string | null
+          id: string
+          immatriculation_libre: string | null
+          lieu_douteux: boolean | null
+          lieu_id: string | null
+          lieu_libre: string | null
+          nb_chefs_equipe: number
+          nb_personnes: number | null
+          nb_vehicules: number | null
+          note: string | null
+          origine: Database["public"]["Enums"]["etape_logistique_origine"]
+          outlook_event_id: string | null
+          outlook_synced_at: string | null
+          permis_requis: string[]
+          photos_optionnelles: boolean
+          proposition_id: string | null
+          responsable: string | null
+          sens: string | null
+          source_email_id: string | null
+          source_fichier: string | null
+          source_jalonnement_id: string | null
+          source_type: string | null
+          statut: Database["public"]["Enums"]["etape_logistique_statut"]
+          trajet_id: string | null
+          type: Database["public"]["Enums"]["etape_logistique_type"]
+          updated_at: string
+          vehicule_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "affaire_etapes_logistiques"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      logistique_etapes_doublons: {
+        Args: { _affaire_id: string; _etapes: Json }
+        Returns: Json
+      }
+      logistique_valider_demande: {
+        Args: {
+          _affaire_id: string
+          _email_id: string
+          _etapes: Json
+          _feedback?: Json
+        }
+        Returns: Json
+      }
+      logistique_valider_jalonnement: {
+        Args: {
+          _affaire_id: string
+          _etapes: Json
+          _jalonnement_id: string
+          _rattacher?: string[]
+          _termine?: boolean
+        }
+        Returns: Json
       }
       materiau_proposer: {
         Args: { _devis_materiau_id: string; _p?: Json }
