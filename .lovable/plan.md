@@ -1,65 +1,66 @@
-# Lot « Demandes logistiques et planning » + passage à Claude
+# Onglet « Opportunités » — planning prévisionnel (lecture seule)
 
-Plan seulement. Aucune migration, aucun code, aucune donnée touchés. Chaque migration passera par l'outil de migration **et attendra l'approbation** avant application (rappel 0128 pris en compte).
+Principe : onglet à part, aucune écriture dans `affaires`, `devis`, `devis_*`, `opportunite_actions`. Aucun chiffre ne passe vers le pilotage, l'atelier ou la logistique, et aucun n'en vient. Aucune somme d'heures, aucune comparaison à la capacité.
 
-## Ce qui a été vérifié aujourd'hui (code)
-- **La passerelle Lovable AI propose Claude** : `anthropic/claude-sonnet-5` (extraction), `anthropic/claude-haiku-4-5` (tri), `anthropic/claude-opus-5` disponible. La politique de l'espace autorise ces modèles sur l'API Messages. **Aucune clé `ANTHROPIC_API_KEY` n'est nécessaire** ; facturation sur les crédits de l'espace, journal dans l'onglet IA. Si Gabin préfère quand même sa propre clé, je la demanderai par le formulaire de secret.
-- Appels IA actuels (11 fichiers), modèles mélangés :
-  - Gemini 3 Flash : tri des boîtes (`shared-inbox-classify.ts`, `poll-smart-inbox.ts`), images des devis (`images-ia`).
-  - GPT-6 Astra : assistant étapes logistiques, jalonnements, documents fournisseurs, import planning, notes de frais, enrichissement client, suggestion de mail client.
-  - Le constat « Gemini partout » est donc partiel : l'extraction logistique tourne aujourd'hui sur GPT-6 Astra.
-- `ia_feedback_logistique` est lue dans `src/lib/logistique/ia-feedback.ts` ; son usage réel dans la consigne est **à confirmer en étape 0** (non affirmé).
-- Les chiffres du constat (27 cas, ~150 mails, 293 étapes, jalonnement 16-22 nov, 15 étapes du 12/11) seront relus en base en étape 0 ; aucun n'est repris ici comme vérifié.
+## Constats vérifiés en base (14/11)
+- Probabilités : `devis_parametres` (clé/valeur datée `date_effet`) : `proba_presque_gagne` 80, `proba_a_l_etude` 40, `proba_envoye` 30, `proba_a_faire` 10.
+- `affaires` porte `date_montage`, `date_demontage`, `date_evenement_debut/fin`, `taille`, `archived_at`, `statut_opportunite`, `typologie`, `charge_affaires_id`.
+- Tailles présentes : tres_petit, petit, moyen, gros (+ vides). La valeur `tres_gros` existe dans le type : durée par défaut à décider (proposition 8 sem.).
+- `devis_materiaux` : materiau_id, designation, fournisseur, unite, quantite, prix_achat, supprime_le.
+- Fonctions existantes réutilisables : `devis_calculer_interne`, `devis_heures_be`, `devis_charge_be`, `pipeline_indicateurs`. Droits existants : `section.pipeline_opportunites`, `opportunites.read.all` / `.read.mine`, `devis.couts`.
 
-## Découpage livrable
+## L1 — Base (migration additive, montrée avant application)
+**Paramètres, sans nouvelle table** : ajouter les clés dans `devis_parametres` (même mécanisme daté que `proba_*`, déjà modifiable par un admin) pour éviter une table en doublon :
+`opp_plan_echantillons_jours` 5, `opp_plan_commande_jours` 3, `opp_plan_equipe_type` 4, `opp_plan_heures_semaine` 35, `opp_plan_duree_tres_petit/petit/moyen/gros/tres_gros` 1/2/4/6/8 sem., `opp_plan_fermeture_debut` 24/12, `opp_plan_fermeture_fin` 01/01, `opp_plan_seuil_complet_heures` (heures minimales pour juger un devis « assez complet », proposition : > 0 h de fabrication).
+Les valeurs sont saisies via la page de paramètres devis existante (nouvelle section « Planning opportunités »).
+Si Gabin préfère une table dédiée, l'alternative est `opportunites_planning_parametres` (une ligne, admin seul).
 
-### Étape 0 — Relevé (lecture seule)
-Relire en base les 27 cas, la file `pending_review` par expéditeur/boîte, les étapes de la semaine 16-20/11, le jalonnement et la lecture de `ia_feedback_logistique`. Livrable : tableau de constat corrigé.
+**Nouveau droit** : `opportunites.planning.view`, accordé par défaut à admin, commercial, bureau_etude, et aux responsables projet (rôle chef_chantier). Jamais aux rôles atelier, poseur, ecran_atelier.
 
-### Étape 1 — L0 : module IA unique + banc d'essai (livrée en premier)
-- Module serveur unique `src/lib/ai/fournisseur.server.ts` : `appelerIA({ usage, systeme, contenu, schema })`.
-  - Constante `MODELES_PAR_USAGE` : `extraction_logistique`, `jalonnement`, `documents_fournisseurs`, `images_devis` → Sonnet 5 ; `tri_mails` → Haiku 4.5 ; secours → `google/gemini-3-flash-preview`.
-  - Appels Claude en flux (API Messages), sortie JSON stricte via outil unique, schéma validé côté serveur ; contenu des mails/PJ toujours dans un bloc « données », jamais dans la consigne.
-  - Secours Gemini uniquement sur 5xx / 429 épuisé / réponse invalide ; jamais sur refus ou 403. Trace du basculement.
-  - Journal par appel (nouvelle table `ia_appels`, M-L0) : usage, modèle, secours oui/non, durée, jetons, coût estimé, statut, run id. Aucun contenu stocké.
-- **Banc d'essai** (script serveur admin, non exposé) : rejoue les 27 cas + ~15 mails de tri déjà validés avec Gemini, GPT-6 Astra (référence actuelle) et Claude. Score par champ (date, type, lieu, heures, nb étapes, affaire), coût, durée. Rapport en Markdown dans Files.
-- **Bascule seulement après lecture du rapport par Gabin.** Les autres usages (notes de frais, enrichissement client, mail client) passent par le module mais gardent leur modèle tant que Gabin ne demande pas leur changement.
+**Fonction `opportunites_planning_lire(_debut date, _fin date, _charge_affaires_id uuid)`**, SECURITY DEFINER, `REVOKE EXECUTE FROM PUBLIC, anon`, `GRANT authenticated` :
+- refuse sans `opportunites.planning.view` ; applique la règle de portée existante (`read.all` sinon `read.mine`) ;
+- périmètre : typologie prototype, statut hors gagne/perdu/termine, `archived_at` nul, numéros 9440 et 9462 exclus ;
+- devis de référence : le plus récent non supprimé (lu via `devis_peut_lire`) ; montant = `montant_ht` sinon `net_ht` de `devis_calculer_interne` ;
+- heures de fabrication : réutilise le calcul d'heures de `devis_heures_be` / `devis_charge_be` (part fabrication, hors BE) ;
+- retourne les dates brutes et les paramètres ; le calcul des périodes est fait par un module pur côté écran (testable, une seule règle) ;
+- matériaux : désignation, quantité, unité, fournisseur, materiau_id ; `prix_achat` et montant à NULL sans `devis.couts` ;
+- prochaine action : dernière `opportunite_actions` à venir.
+Lecture seule : `STABLE`, aucune écriture.
 
-### Étape 2 — L1 : extraction
-- Champs `heure_debut`, `heure_fin`, `a_partir_de` (booléen), `duree_minutes` ; la durée calcule l'heure de fin, jamais dans la note ; `heure_fin 00:00` refusée sauf nuit explicite.
-- Dates : année déduite de la date de réception (fonction pure testée) ; date < réception − 30 j → signalée, non proposée.
-- Lieu : rapprochement pur sur `lieux`, adresses favorites, lieu de l'affaire et table d'alias (M-L1 : `lieux_alias`, admin seulement) → `lieu_id` si sûr, sinon `lieu_libre` + drapeau.
-- Affaire par numéro (4/6/9XXX) puis client/projet (helper existant `suggest-affaire.ts`).
-- Lecture des PJ déjà classées (texte de pages du lot images, `classement_pj`).
-- Conditionnement / chargement atelier proposés **décochés** sauf mention.
-- 5 à 8 corrections passées les plus proches (`ia_feedback_logistique`) injectées comme exemples.
+## L2 — Onglet et calendrier
+- Onglet « Planning » dans `/opportunites` (route dédiée `/opportunites/planning`), réservé au nouveau droit.
+- Blocs en haut : « À dater » (sans montage ni événement) et « Date passée, à clore », pastilles vers l'opportunité.
+- Groupes Presque gagné, À l'étude, Devis envoyé, À faire (replié), tri par date de montage. Filtre chargé d'affaires (sélecteur cherchable). Fenêtre 16 semaines / 6 mois, précédent / suivant, ligne « Aujourd'hui », fermeture grisée.
+- Barres : échantillons orange plein, fabrication hachurée, période client pleine (couleur du groupe), trait de limite de signature rouge / orange / vert avec étiquette, caddie le jour de commande si le devis a de la matière.
+- Mobile 390 px : liste par groupe avec dates en texte, défilement horizontal du calendrier.
 
-### Étape 3 — L2 : tri
-- Nouvelle valeur `fournisseur_suivi` ajoutée à `email_categorie` (M-L2, additif) ; règles d'expéditeurs connus + Haiku.
-- Écran admin « Reclasser la file » : bilan par catégorie proposée avec exemples, case par lot, confirmation admin → statut `dismissed` + motif « classé sans suite : … ». Aucun lancement sur données réelles sans accord.
+## L3 — Fiche à droite
+Numéro, intitulé, client, statut et probabilité, montant (droit coûts), alerte de signature, phases datées, date de commande, matériaux (achat avec droit coûts, colonne stock), prochaine action, boutons « Ouvrir l'opportunité » et « Ouvrir le devis ».
 
-### Étape 4 — L3 : planning
-- Validation → étapes avec `proposition_id` / `source_email_id` / `jalonnement_id` ; jalonnement → `planifie` + nombre d'étapes (RPC existante étendue, corps relu avant redéfinition).
-- Doublons avant création (même affaire, date, type, horaires ±2 h) : Fusionner / Ignorer / Créer quand même.
-- Suggestion de véhicule (volume mentionné × capacité × conflits), jamais affectée automatiquement.
-- Responsable rapproché d'un employé actif, texte libre conservé si doute ; effectif et postes.
-- **Jalonnement 16-22 nov** : proposer un rapprochement ligne à ligne avec les 15 étapes existantes (affaire + date + type), affiché en bilan ; **aucune écriture avant accord de Gabin**.
+## L4 — Matériaux à commander
+- Regroupement : même materiau_id et unité, sinon même désignation (normalisée) et unité. Une colonne par semaine (lundi de la date de commande), total, achat HT (droit coûts), stock.
+- Numéros d'opportunités sous chaque matériau et chaque semaine. Cases par probabilité (À faire décochée), bascule « Toutes / Opportunité sélectionnée ». Quantités non pondérées. Lignes sans prix (lots, locations, prestataires) non consolidées, visibles seulement dans la fiche.
 
-### Étape 5 — L4 : mesure
-Carte « Qualité IA logistique » dans l'écran Demandes logistiques : part des champs corrigés par semaine et par champ, lue depuis `ia_feedback_logistique` via une fonction de lecture admin/logistique.
+## L5 — Stock
+Colonne « non suivi » et bandeau : l'application Stock ne compte que quelques mouvements, aucune liaison dans ce lot.
 
-## Migrations prévues (texte complet montré dans l'outil avant chaque application)
-- **M-L0** `ia_appels` : table + GRANT (service_role ALL, authenticated SELECT admin via RLS) + RLS.
-- **M-L1** `lieux_alias` (alias, lieu_id) + colonnes nullables `a_partir_de`, `duree_minutes`, `lieu_douteux` sur `affaire_etapes_logistiques`.
-- **M-L2** valeur d'enum `fournisseur_suivi` ; colonne `motif_classement` nullable sur `emails_entrants`.
-- **M-L3** colonnes nullables d'origine sur les étapes si absentes (vérifié en étape 0), redéfinition explicite des RPC de validation depuis leur corps actuel ; nouvelles SECURITY DEFINER avec `REVOKE EXECUTE FROM PUBLIC, anon`.
-
-## Coûts estimés (à confirmer par le banc)
-Banc : ~45 cas × 3 modèles, moins de 2 € au total. Production : Sonnet ~0,01–0,03 € par demande, Haiku < 0,002 € par mail trié.
+## Règles de calcul (module pur `src/lib/opportunites/planning-previsionnel.ts`)
+- Jours ouvrés lundi-vendredi, fermeture de fin d'année exclue.
+- Client : montage → démontage, sinon événement début → fin.
+- Fabrication : se termine la veille ouvrée du montage ; durée = ceil(heures ÷ (équipe × 35)), minimum 1 semaine, sinon durée selon taille.
+- Échantillons : 5 jours ouvrés juste avant la fabrication ; limite de signature = leur début.
+- Commande : 3 jours ouvrés avant la fabrication.
+- Pastille signature : dépassée rouge (« Signature hors délai (n j) »), ≤ 7 j orange, sinon vert (« À signer d'ici le JJ/MM »).
 
 ## Tests
-Fonctions pures testées : année de date, détection > 30 j, heures/durée, alias de lieu, doublons, choix véhicule, secours IA (statuts). Essais sur données d'essai retirées ensuite ; écrans 390 et 1366 px.
+- Jours ouvrés, fermeture 24/12 → 01/01, limite, commande, durée par heures et par taille, regroupement matériaux, masquage des prix.
+- Recette sur les données du jour : 9516 ONFW27 (attendu maquette : échantillons 05/12 → 11/12, fabrication 12/12 → 15/01, client 16/01 → 24/01, commande 09/12), 9495 hors délai, total OSB 18 semaine du 07/12. Écarts éventuels expliqués (ex. jours ouvrés ou fermeture).
+- Essai base : compte atelier refusé, compte sans `devis.couts` sans prix.
+- Écrans vérifiés à 390 et 1366 px. Rien publié.
 
-## Questions pour Gabin
-1. Passerelle Lovable (sans clé) plutôt que clé Anthropic propre : d'accord ?
-2. Notes de frais, enrichissement client et mail client : rester sur GPT-6 Astra ou passer aussi à Claude ?
+## Points à trancher par Gabin
+1. Paramètres dans `devis_parametres` (proposé) ou table dédiée.
+2. Durée pour la taille « très gros » (proposé 8 semaines) et pour une taille vide (proposé 4, comme « moyen »).
+3. Critère « devis assez complet » (proposé : heures de fabrication > 0).
+4. Commande : 3 jours ouvrés ou calendaires (la recette 09/12 vs fabrication 12/12 suggère calendaires ; à confirmer).
+5. Rôles qui reçoivent le droit de lecture.
