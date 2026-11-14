@@ -1,5 +1,10 @@
 # Roadmap
 
+## Menu — 14 novembre (lot validé)
+- [ ] Liste unique par capacités ; notes de frais en pied ; comparaison avant/après par rôle.
+- [ ] Vues Chantiers Fiches/Liste et Demandes/Jalonnements, URL conservées.
+- [ ] Tests de cohérence et contrôles connectés 390/1366 ; aucune migration/publication.
+
 ## Logistique + Claude — 13 novembre
 - [x] M-L0, M-L1, M-L2, M-L2b appliquées ; module IA commun ; banc 1.
 - [x] Claude partout : Haiku 4.5 (tri, extraction, jalonnements, import planning, assistant étapes, fiche client, mail client), Sonnet 5 (documents fournisseurs, images devis, notes de frais) ; Gemini en secours.
