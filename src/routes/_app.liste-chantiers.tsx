@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { requireCapability } from "@/lib/capability-guard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ChantiersVueSwitch } from "@/components/affaire/ChantiersVueSwitch";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AffaireResponsablePicker } from "@/components/affaire/AffaireResponsablePicker";
@@ -118,12 +119,15 @@ function ListeChantiers() {
 
   return (
     <div className="space-y-5 p-6">
-      <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
         <h1 className="text-3xl font-bold">Liste des chantiers</h1>
         <p className="text-sm text-muted-foreground">
           {rows.length} chantiers et opportunités · 4XXX / 6XXX / 9XXX
           {nbArchives > 0 ? ` · ${nbArchives} archivé${nbArchives > 1 ? "s" : ""}` : ""}
         </p>
+        </div>
+        <ChantiersVueSwitch vue="liste" />
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Input placeholder="N°, nom, client, lieu…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-sm" />
