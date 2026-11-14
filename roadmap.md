@@ -1,9 +1,9 @@
 # Roadmap
 
 ## Menu — 14 novembre (lot validé)
-- [ ] Liste unique par capacités ; notes de frais en pied ; comparaison avant/après par rôle.
-- [ ] Vues Chantiers Fiches/Liste et Demandes/Jalonnements, URL conservées.
-- [ ] Tests de cohérence et contrôles connectés 390/1366 ; aucune migration/publication.
+- [x] Liste unique par capacités ; notes de frais en pied ; comparaison avant/après de dix profils : seul ajout Lieux admin.
+- [x] Vues Chantiers Fiches/Liste et Demandes/Jalonnements, URL conservées.
+- [x] 15 tests de cohérence/droits et contrôles admin connectés 390/1366 ; aucune erreur navigateur, build OK ; aucune migration/publication. Comparaison des autres rôles sur matrice, pas en sessions individuelles.
 
 ## Logistique + Claude — 13 novembre
 - [x] M-L0, M-L1, M-L2, M-L2b appliquées ; module IA commun ; banc 1.
