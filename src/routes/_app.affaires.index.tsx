@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Loader2, ArrowRight, Pencil, RotateCcw, ArrowUp, ArrowDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCapability } from "@/hooks/use-capability";
+import { ChantiersVueSwitch } from "@/components/affaire/ChantiersVueSwitch";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -365,14 +366,17 @@ function AffairesPage() {
       <PageHeader
         number="02"
         eyebrow="Données / Affaires"
-        title="Affaires"
+        title="Chantiers"
         description={`${rows.filter((r) => r.statut === "en_cours").length} en cours sur ${rows.length} fiche(s).`}
         actions={
-          canManageAffaires && (
+          <>
+          <ChantiersVueSwitch vue="fiches" />
+          {canManageAffaires && (
             <Button onClick={openCreate} className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
               <Plus className="mr-2 h-4 w-4" /> Nouvelle affaire
             </Button>
-          )
+          )}
+          </>
         }
       />
 
