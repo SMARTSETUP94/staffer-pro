@@ -18,7 +18,7 @@ const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp", "image/gif"];
  */
 export const uploadAvatarServer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => {
+  .validator((input: unknown) => {
     if (!(input instanceof FormData)) {
       throw new Error("FormData attendu (champ 'file').");
     }
