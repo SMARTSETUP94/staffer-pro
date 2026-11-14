@@ -58,6 +58,7 @@ import { Route as AppPlanningRouteImport } from './routes/_app.planning'
 import { Route as AppPlanningAtelierRouteImport } from './routes/_app.planning-atelier'
 import { Route as AppPlanningBeRouteImport } from './routes/_app.planning-be'
 import { Route as AppPlanningGeneralRouteImport } from './routes/_app.planning-general'
+import { Route as AppPlanningOpportunitesRouteImport } from './routes/_app.planning-opportunites'
 import { Route as AppPlanningPilotageRouteImport } from './routes/_app.planning-pilotage'
 import { Route as AppQuiEstOuRouteImport } from './routes/_app.qui-est-ou'
 import { Route as AppRoadmapRouteImport } from './routes/_app.roadmap'
@@ -392,6 +393,11 @@ const AppPlanningBeRoute = AppPlanningBeRouteImport.update({
 const AppPlanningGeneralRoute = AppPlanningGeneralRouteImport.update({
   id: '/planning-general',
   path: '/planning-general',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPlanningOpportunitesRoute = AppPlanningOpportunitesRouteImport.update({
+  id: '/planning-opportunites',
+  path: '/planning-opportunites',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPlanningPilotageRoute = AppPlanningPilotageRouteImport.update({
@@ -921,6 +927,7 @@ export interface FileRoutesByFullPath {
   '/planning-atelier': typeof AppPlanningAtelierRoute
   '/planning-be': typeof AppPlanningBeRoute
   '/planning-general': typeof AppPlanningGeneralRoute
+  '/planning-opportunites': typeof AppPlanningOpportunitesRoute
   '/planning-pilotage': typeof AppPlanningPilotageRoute
   '/qui-est-ou': typeof AppQuiEstOuRoute
   '/roadmap': typeof AppRoadmapRoute
@@ -1056,6 +1063,7 @@ export interface FileRoutesByTo {
   '/planning-atelier': typeof AppPlanningAtelierRoute
   '/planning-be': typeof AppPlanningBeRoute
   '/planning-general': typeof AppPlanningGeneralRoute
+  '/planning-opportunites': typeof AppPlanningOpportunitesRoute
   '/planning-pilotage': typeof AppPlanningPilotageRoute
   '/qui-est-ou': typeof AppQuiEstOuRoute
   '/roadmap': typeof AppRoadmapRoute
@@ -1195,6 +1203,7 @@ export interface FileRoutesById {
   '/_app/planning-atelier': typeof AppPlanningAtelierRoute
   '/_app/planning-be': typeof AppPlanningBeRoute
   '/_app/planning-general': typeof AppPlanningGeneralRoute
+  '/_app/planning-opportunites': typeof AppPlanningOpportunitesRoute
   '/_app/planning-pilotage': typeof AppPlanningPilotageRoute
   '/_app/qui-est-ou': typeof AppQuiEstOuRoute
   '/_app/roadmap': typeof AppRoadmapRoute
@@ -1336,6 +1345,7 @@ export interface FileRouteTypes {
     | '/planning-atelier'
     | '/planning-be'
     | '/planning-general'
+    | '/planning-opportunites'
     | '/planning-pilotage'
     | '/qui-est-ou'
     | '/roadmap'
@@ -1471,6 +1481,7 @@ export interface FileRouteTypes {
     | '/planning-atelier'
     | '/planning-be'
     | '/planning-general'
+    | '/planning-opportunites'
     | '/planning-pilotage'
     | '/qui-est-ou'
     | '/roadmap'
@@ -1609,6 +1620,7 @@ export interface FileRouteTypes {
     | '/_app/planning-atelier'
     | '/_app/planning-be'
     | '/_app/planning-general'
+    | '/_app/planning-opportunites'
     | '/_app/planning-pilotage'
     | '/_app/qui-est-ou'
     | '/_app/roadmap'
@@ -2060,6 +2072,13 @@ declare module '@tanstack/react-router' {
       path: '/planning-general'
       fullPath: '/planning-general'
       preLoaderRoute: typeof AppPlanningGeneralRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/planning-opportunites': {
+      id: '/_app/planning-opportunites'
+      path: '/planning-opportunites'
+      fullPath: '/planning-opportunites'
+      preLoaderRoute: typeof AppPlanningOpportunitesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/planning-pilotage': {
@@ -2842,6 +2861,7 @@ interface AppRouteChildren {
   AppPlanningAtelierRoute: typeof AppPlanningAtelierRoute
   AppPlanningBeRoute: typeof AppPlanningBeRoute
   AppPlanningGeneralRoute: typeof AppPlanningGeneralRoute
+  AppPlanningOpportunitesRoute: typeof AppPlanningOpportunitesRoute
   AppPlanningPilotageRoute: typeof AppPlanningPilotageRoute
   AppQuiEstOuRoute: typeof AppQuiEstOuRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
@@ -2940,6 +2960,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPlanningAtelierRoute: AppPlanningAtelierRoute,
   AppPlanningBeRoute: AppPlanningBeRoute,
   AppPlanningGeneralRoute: AppPlanningGeneralRoute,
+  AppPlanningOpportunitesRoute: AppPlanningOpportunitesRoute,
   AppPlanningPilotageRoute: AppPlanningPilotageRoute,
   AppQuiEstOuRoute: AppQuiEstOuRoute,
   AppRoadmapRoute: AppRoadmapRoute,

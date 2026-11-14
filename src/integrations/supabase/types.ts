@@ -9939,6 +9939,7 @@ export type Database = {
         Args: { _objet_id: string }
         Returns: boolean
       }
+      opportunites_planning_lire: { Args: never; Returns: Json }
       pipeline_indicateurs: {
         Args: {
           _affaire_ids?: string[]

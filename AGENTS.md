@@ -32,8 +32,8 @@
 - Expense report status filtering uses pure filterNotesByStatus; totals use all owned reports.
 
 - Keep the per-job logistics calendar in a dedicated dialog component using the existing logistics hooks and EtapeDialog; shared reads and edits stay consistent with the main planning.
-- Derive occupied calendar dates with the pure calendrierChantier helper; this keeps multi-day coverage and empty-day filtering testable without UI snapshots.
-- Keep client email suggestions in a dedicated opt-in reader section and authenticated server function reading the email under RLS; this isolates drafting from logistics and never sends email automatically.
+- Occupied calendar dates come from the pure calendrierChantier helper (testable).
+- Client email suggestions: opt-in reader section + authenticated server fn under RLS; never sends email.
 - New client email drafting uses server-only Responses SDK helpers and shared output validation; this keeps credentials private and the generated result consistent between server and UI.
 - Legal client prefill uses a dedicated review dialog and the existing authenticated enrichment function; preserve the stored SIRET and derive its SIREN to avoid losing establishment information.
 - Store the legal company leader in the clients record and share its reviewed enrichment across both client editors; this keeps legal identity separate from contact records.- Expense reports (notes_de_frais) keep status transitions and authorship in the DB guard trigger; the UI never sets validator fields, so the audit trail cannot be bypassed.
@@ -58,10 +58,11 @@
 - /dispos calls only dispos_public_* definer RPCs; tables stay RLS-only.
 - Logistics date changes move linked non-imported assignments transactionally through a table trigger; invalid shortened periods fail atomically, covering UI and RPC paths without copying historical rows.
 - Weekly planning imports use reviewed document extraction and a transactional, chantier-locked RPC over existing logistics stages and assignments; provenance stays on assignments so renamed files cannot create duplicate interventions or overwrite human corrections.
-- Weekly planning filters and Excel block rows use pure client helpers over the authorized weekly reader; exports load spreadsheet code lazily and prepare a Blob before the download click to preserve mobile user activation.
+- Weekly planning filters/Excel rows are pure helpers over the authorized reader; exports lazy-load and build the Blob before the click (mobile activation).
 - Forwarded client requests use one pure Outlook header resolver across ingestion, reanalysis and backfill; receipt mailbox defines source, original receipt time and transfer headers are preserved, and historical smart rows require mailbox identity proof before reclassification.
 - smart@ is no longer polled (cron removed, route returns 410); Demandes clients reads devis@ only, and unproven pending smart@ requests are soft-dismissed by the pure doitEcarterSmart rule so nothing is deleted.
 - The logistics planning is one page (/logistique) with Étapes, Équipes, Personnes and a read-only chef tab; /logistique/equipes only redirects there. Alerts, qualified needs, WhatsApp texts, team copy and filters are pure helpers in src/lib/logistique/planning-semaine.ts so every view and the tests share one rule set.
 - Logistics form requests: emails_entrants rows via token-gated service-role RPCs; poller never creates steps.
 
 
+- Opportunity planning is read-only, separate from real load: reader opportunites_planning_lire + pure src/lib/opportunites/planning-previsionnel.ts; params are opp_plan_* keys in devis_parametres.
