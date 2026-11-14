@@ -45,7 +45,7 @@ export function DoublonChoix({ doublons, choix, onChoix }: { doublons: Doublon[]
 export function HoraireAvertissement({ debut, fin }: { debut?: string | null; fin?: string | null }) {
   const a = avertissementHoraire(debut, fin);
   if (!a) return null;
-  return <p className={`flex items-center gap-1 text-[11px] ${a.niveau === "refus" ? "text-destructive" : a.niveau === "alerte" ? "text-warning-foreground" : "text-muted-foreground"}`}><AlertTriangle className="h-3 w-3" />{a.texte}</p>;
+  return <p className={`flex items-center gap-1 text-[11px] ${a.niveau === "refus" ? "text-destructive" : a.niveau === "alerte" ? "text-warning" : "text-muted-foreground"}`}><AlertTriangle className="h-3 w-3" />{a.texte}</p>;
 }
 
 export function ResponsableRapproche({ texte, employes }: { texte?: string | null; employes: EmployeActif[] }) {
