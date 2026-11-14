@@ -228,7 +228,7 @@ function Fiche({ o, p, couts, aujourdhui }: { o: OppPlanning; p: Parametres; cou
         <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Matériaux du devis</p>
         {o.materiaux.length === 0 ? <p className="text-sm text-muted-foreground">Aucun.</p> : (
           <table className="w-full text-xs">
-            <thead><tr className="text-left text-muted-foreground"><th className="py-1">Désignation</th><th className="text-right">Qté</th><th>Fournisseur</th>{couts && <th className="text-right">Achat</th>}<th>Stock</th></tr></thead>
+            <thead><tr className="text-left text-muted-foreground"><th className="py-1">Désignation</th><th className="text-right">Qté</th><th>Fournisseur</th>{couts && <th className="text-right">Achat</th>}</tr></thead>
             <tbody>{materiauxFiche(o).map((m, i) => (
               <tr key={i} className="border-t border-border align-top">
                 <td className="py-1 pr-2">{texte(m.designation)}{m.a_prix === false && <span className="text-muted-foreground"> (sans prix, non consolidé)</span>}</td>
