@@ -264,7 +264,6 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
           const peutEnvoyer = (st === "valide" || (st === "transfere" && !!d.devis.numero_progbat && !d.devis.date_envoi)) && v && aff;
           const ouvrirEnvoi = () => { setEnvoiDate(new Date().toISOString().slice(0, 10)); setEnvoiDlg(true); };
           const cta = (st === "brouillon" || st === "a_valider") && v ? <Button size="sm" onClick={() => void changerStatut("valide")}><CheckCircle2 className="mr-1 h-3.5 w-3.5" />Finaliser le devis</Button>
-            : st === "brouillon" && e ? <Button size="sm" onClick={() => void changerStatut("a_valider")}>Demander la finalisation</Button>
             : peutEnvoyer ? <Button size="sm" onClick={ouvrirEnvoi}><Mail className="mr-1 h-3.5 w-3.5" />Marquer envoyé</Button>
             : valideOuEnvoye && v && aff && nonSigne ? <Button size="sm" onClick={() => void clientSigne()}><PenLine className="mr-1 h-3.5 w-3.5" />Client signé</Button>
             : null;
@@ -274,7 +273,6 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               <DropdownMenuContent align="end" className="w-60">
                 <DropdownMenuLabel>Changer le statut</DropdownMenuLabel>
                 {st === "a_valider" && e && <DropdownMenuItem onClick={() => void changerStatut("brouillon")}>Brouillon</DropdownMenuItem>}
-                {st === "brouillon" && e && !v && <DropdownMenuItem onClick={() => void changerStatut("a_valider")}>Demander la finalisation</DropdownMenuItem>}
                 {(st === "brouillon" || st === "a_valider") && v && <DropdownMenuItem onClick={() => void changerStatut("valide")}>Finalisé</DropdownMenuItem>}
                 {peutEnvoyer && <DropdownMenuItem onClick={ouvrirEnvoi}>Envoyé…</DropdownMenuItem>}
                 {st === "transfere" && NUMERO_PROGBAT_PROVISOIRE_RE.test(d.devis.numero_progbat ?? "") && v && <DropdownMenuItem onClick={() => setTrDlg(true)}>Numéro définitif ProGBat…</DropdownMenuItem>}

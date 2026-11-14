@@ -77,7 +77,7 @@ export function usePatchCache(id: string) {
 }
 
 export const STATUT_LABEL: Record<DevisStatut, string> = {
-  brouillon: "Brouillon", a_valider: "À finaliser", valide: "Finalisé", transfere: "Envoyé", signe: "Signé", refuse: "Refusé",
+  brouillon: "Brouillon", a_valider: "Brouillon", valide: "Finalisé", transfere: "Envoyé", signe: "Signé", refuse: "Refusé",
 };
 export const TYPE_LABEL: Record<LigneType, string> = {
   zone: "Zone", objet: "Objet", commentaire: "Commentaire", chapitre_suivi: "Suivi et plans",
