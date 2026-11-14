@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronRight as Chevron, Info, ShoppingCart } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronRight as Chevron, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -235,7 +235,6 @@ function Fiche({ o, p, couts, aujourdhui }: { o: OppPlanning; p: Parametres; cou
                 <td className="whitespace-nowrap text-right">{qte(m.quantite)} {m.unite}</td>
                 <td className="pl-2">{m.fournisseur ?? "—"}</td>
                 {couts && <td className="text-right">{eur(m.achat)}</td>}
-                <td className="pl-2 text-muted-foreground">non suivi</td>
               </tr>))}</tbody>
           </table>
         )}
@@ -268,10 +267,7 @@ function MateriauxACommander({ data, opps, selection }: { data: PlanningData; op
   return (
     <section className="space-y-3">
       <h2 className="text-lg font-semibold">Matériaux à commander</h2>
-      <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-        <span>Stock non suivi : l'application Stock ne compte encore que quelques mouvements, elle n'est pas reliée à ce planning. Quantités non pondérées par la probabilité ; lots, locations et prestataires visibles seulement dans la fiche.</span>
-      </div>
+      <p className="text-xs text-muted-foreground">Quantités non pondérées par la probabilité ; lots, locations et prestataires visibles seulement dans la fiche.</p>
       <div className="flex flex-wrap items-center gap-4">
         {GROUPES.map((g) => (
           <div key={g} className="flex items-center gap-1.5">
@@ -293,11 +289,10 @@ function MateriauxACommander({ data, opps, selection }: { data: PlanningData; op
               {semaines.map((s) => <th key={s} className="px-2 py-2 text-right">Sem. {fmtJJMM(s)}</th>)}
               <th className="px-2 py-2 text-right">Total</th>
               {data.couts && <th className="px-2 py-2 text-right">Achat HT</th>}
-              <th className="px-2 py-2">Stock</th>
             </tr>
           </thead>
           <tbody>
-            {lignes.length === 0 && <tr><td colSpan={semaines.length + 4} className="px-3 py-4 text-center text-muted-foreground">Aucun matériau à commander pour cette sélection.</td></tr>}
+            {lignes.length === 0 && <tr><td colSpan={semaines.length + 3} className="px-3 py-4 text-center text-muted-foreground">Aucun matériau à commander pour cette sélection.</td></tr>}
             {lignes.map((l) => (
               <tr key={l.cle} className="border-t border-border align-top">
                 <td className="px-3 py-1.5"><p className="font-medium">{texte(l.designation)}</p><p className="text-[10px] text-muted-foreground">{l.numeros.join(", ")}</p></td>
@@ -306,7 +301,6 @@ function MateriauxACommander({ data, opps, selection }: { data: PlanningData; op
                 ))}
                 <td className="whitespace-nowrap px-2 py-1.5 text-right font-semibold">{qte(l.total)} {l.unite}</td>
                 {data.couts && <td className="px-2 py-1.5 text-right">{eur(l.achatHT)}</td>}
-                <td className="px-2 py-1.5 text-muted-foreground">non suivi</td>
               </tr>
             ))}
           </tbody>
