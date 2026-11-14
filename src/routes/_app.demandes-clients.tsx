@@ -2,7 +2,7 @@ import { ClientCombobox } from "@/components/clients/ClientCombobox";
 import { lancerClassementPj } from "@/components/emails/ClassementPjTrace";
 import { AffaireCombobox } from "@/components/planning/AffaireCombobox";
 import { useAffairesPourLogistique } from "@/hooks/use-etapes-logistiques";
-import { FolderInput } from "lucide-react";
+import { Check, FolderInput } from "lucide-react";
 import { suggererParMotsCles, codesRecents } from "@/lib/emails/suggestion-affaires";
 import { EmailReaderDialog } from "@/components/emails/EmailReaderDialog";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -246,8 +246,12 @@ function ClasserDialog({ email, onClose, onDone }: { email: Row; onClose: () => 
   const parMots = useMemo(() => suggererParMotsCles(texte, affaires), [texte, affaires]);
   const recents = useMemo(() => codesRecents(affaires), [affaires]);
   const chip = (a: { id: string; numero: string; nom: string }) => (
-    <Button key={a.id} type="button" size="sm" variant={affaireId === a.id ? "default" : "outline"} className="h-auto py-1 text-left" onClick={() => setAffaireId(a.id)}>
-      <b className="mr-1">{a.numero}</b>{a.nom}
+    <Button key={a.id} type="button" variant="ghost" aria-pressed={affaireId === a.id}
+      className={`h-auto min-h-12 w-full min-w-0 justify-start gap-3 rounded-none px-3 py-2.5 text-left whitespace-normal ${affaireId === a.id ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary" : ""}`}
+      onClick={() => setAffaireId(a.id)}>
+      <span className="shrink-0 font-mono text-xs font-semibold">{a.numero}</span>
+      <span className="min-w-0 flex-1 break-words text-sm leading-5">{a.nom}</span>
+      <Check className={`shrink-0 ${affaireId === a.id ? "opacity-100" : "opacity-0"}`} />
     </Button>
   );
   async function save() {
@@ -263,24 +267,29 @@ function ClasserDialog({ email, onClose, onDone }: { email: Row; onClose: () => 
   }
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Classer dans une affaire existante</DialogTitle>
-          <DialogDescription>{email.subject || "(sans objet)"} — aucune opportunité ne sera créée.</DialogDescription>
+      <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-2xl flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="shrink-0 border-b px-5 py-5 pr-12 text-left sm:px-6">
+          <DialogTitle className="leading-6">Classer dans une affaire existante</DialogTitle>
+          <DialogDescription className="break-words leading-5">{email.subject || "(sans objet)"}</DialogDescription>
         </DialogHeader>
+        <div className="min-h-0 min-w-0 space-y-5 overflow-y-auto px-5 py-5 sm:px-6">
+        <div className="min-w-0 space-y-2">
+          <Label>Affaire de destination</Label>
         {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> :
           <AffaireCombobox affaires={affaires} value={affaireId} onChange={setAffaireId} includeOpportunites includeClosed placeholder="N°, chantier, client ou lieu…" />}
+        </div>
         {!isLoading && (
-          <div className="space-y-2 text-sm">
-            <div><div className="mb-1 text-xs font-medium text-muted-foreground">Suggestions selon les mots clés</div>
-              <div className="flex flex-wrap gap-1.5">{parMots.length ? parMots.map((s) => chip(s.affaire)) : <span className="text-xs text-muted-foreground">Aucune correspondance</span>}</div></div>
-            <div><div className="mb-1 text-xs font-medium text-muted-foreground">Codes récents</div>
-              <div className="flex flex-wrap gap-1.5">{recents.map(chip)}</div></div>
+          <div className="min-w-0 space-y-5 text-sm">
+            <div><div className="mb-2 text-xs font-semibold text-muted-foreground">Suggestions selon les mots clés</div>
+              <div className="overflow-hidden rounded-md border divide-y">{parMots.length ? parMots.map((s) => chip(s.affaire)) : <p className="px-3 py-3 text-xs text-muted-foreground">Aucune correspondance</p>}</div></div>
+            <div><div className="mb-2 text-xs font-semibold text-muted-foreground">Codes récents</div>
+              <div className="overflow-hidden rounded-md border divide-y">{recents.map(chip)}</div></div>
           </div>
         )}
-        <DialogFooter>
+        </div>
+        <DialogFooter className="shrink-0 flex-row items-center justify-end gap-2 border-t bg-muted/30 px-5 py-4 sm:px-6">
           <Button variant="ghost" onClick={onClose}>Annuler</Button>
-          <Button disabled={!affaireId || saving} onClick={() => void save()}>{saving && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}Classer</Button>
+          <Button disabled={!affaireId || saving} onClick={() => void save()}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderInput className="h-4 w-4" />}Classer</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
