@@ -13,6 +13,8 @@ import { ETAPE_CLASSES, ETAPE_LABELS, ETAPE_TYPES, type EtapeType } from "@/lib/
 import { completerRetroplanning, DELAIS_DEFAUT, type EtapeProposee } from "@/lib/logistique/retroplanning";
 import { analyserJalonnementEmail, analyserJalonnementFichier, type JalonnementResult } from "@/lib/server-fns/jalonnement.functions";
 import { useAffairesPourLogistique, useInvalidateEtapes } from "@/hooks/use-etapes-logistiques";
+import { DoublonChoix, HoraireAvertissement, ResponsableRapproche, useEmployesActifs } from "@/components/logistique/SourceEtapes";
+import { avertissementHoraire, rapprocherResponsable, repartirSelonDoublons, type ChoixDoublon, type Doublon } from "@/lib/logistique/source-etapes";
 
 type Row = EtapeProposee & { keep: boolean; affaire_id: string };
 
@@ -98,24 +100,71 @@ export function JalonnementDialog({ open, onOpenChange, affaireId, email, saved,
     } finally { setBusy(false); }
   }
 
+  const employes = useEmployesActifs();
+  const [doublons, setDoublons] = useState<Doublon[]>([]);
+  const [choix, setChoix] = useState<Record<number, ChoixDoublon>>({});
+  const cleDoublons = JSON.stringify([target, rows.map((r) => [r.affaire_id, r.type, r.date_debut, r.heure_debut ?? ""])]);
+  // Doublons cherchés chantier par chantier (un jalonnement peut couvrir plusieurs chantiers).
+  useEffect(() => {
+    const t = setTimeout(async () => {
+      const groupes = new Map<string, number[]>();
+      rows.forEach((r, i) => { const a = r.affaire_id || target; if (a && r.date_debut) groupes.set(a, [...(groupes.get(a) ?? []), i]); });
+      const tous: Doublon[] = [];
+      for (const [a, idx] of groupes) {
+        const { data } = await supabase.rpc("logistique_etapes_doublons", { _affaire_id: a, _etapes: idx.map((i) => ({ type: rows[i].type, date_debut: rows[i].date_debut, heure_debut: rows[i].heure_debut || null })) });
+        for (const d of ((data ?? []) as unknown as Doublon[])) tous.push({ ...d, index: idx[d.index] });
+      }
+      setDoublons(tous);
+    }, 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cleDoublons]);
   const patch = (i: number, p: Partial<Row>) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...p } : r)));
 
   async function valider() {
-    const keep = rows.filter((r) => r.keep);
-    if (keep.some((r) => !(r.affaire_id || target))) return toast.error("Choisissez le chantier de chaque ligne (ou un chantier par défaut)");
-    const { data: u } = await supabase.auth.getUser();
-    const { error } = await supabase.from("affaire_etapes_logistiques").insert(keep.map((r) => ({
-      affaire_id: r.affaire_id || target, type: r.type, date_debut: r.date_debut, date_fin: r.date_fin || null,
-      heure_debut: r.heure_debut || null, heure_fin: r.heure_fin || null, lieu_libre: r.lieu || res?.lieu || null,
-      note: r.note, nb_personnes: r.nb_personnes ?? null, responsable: (r as { responsable?: string | null }).responsable ?? null, origine: r.origine, statut: "valide" as const, created_by: u.user?.id ?? null,
-      calcul_regle: r.origine === "retroplanning" ? r.note : null,
-    })));
-    if (error) return toast.error("Enregistrement impossible", { description: error.message });
-    if (savedId) {
-      await supabase.from("jalonnements").update({ statut: "planifie", affaire_id: target || keep[0]?.affaire_id || null, nb_etapes_planifiees: keep.length, updated_at: new Date().toISOString() }).eq("id", savedId);
-      onChanged?.();
+    const keepIdx = rows.map((r, i) => ({ r, i })).filter(({ r }) => r.keep);
+    if (keepIdx.some(({ r }) => !(r.affaire_id || target))) return toast.error("Choisissez le chantier de chaque ligne (ou un chantier par défaut)");
+    const refus = keepIdx.find(({ r }) => avertissementHoraire(r.heure_debut, r.heure_fin)?.niveau === "refus");
+    if (refus) return toast.error(`Étape du ${refus.r.date_debut} : heure de fin identique à l'heure de début`);
+    const rep = repartirSelonDoublons(rows.length, doublons.filter((d) => rows[d.index]?.keep), choix);
+    const payload = (r: Row) => ({
+      type: r.type, date_debut: r.date_debut, date_fin: r.date_fin || null, heure_debut: r.heure_debut || null, heure_fin: r.heure_fin || null,
+      lieu_libre: r.lieu || res?.lieu || null, note: r.note || null, nb_personnes: r.nb_personnes ?? null,
+      responsable: (() => { const t = (r as { responsable?: string | null }).responsable ?? null; return rapprocherResponsable(t, employes)?.nom ?? t; })(),
+      origine: r.origine, calcul_regle: r.origine === "retroplanning" ? r.note : null,
+    });
+    // Regroupement par chantier : une validation par chantier, le jalonnement reste ouvert jusqu'au dernier.
+    const groupes = new Map<string, { creer: Row[]; rattacher: string[] }>();
+    for (const { r, i } of keepIdx) {
+      const a = r.affaire_id || target;
+      const g = groupes.get(a) ?? { creer: [], rattacher: [] };
+      if (rep.aCreer.includes(i)) g.creer.push(r);
+      for (const d of doublons.filter((x) => x.index === i)) if (rep.aRattacher.includes(d.etape_id) && !g.rattacher.includes(d.etape_id)) g.rattacher.push(d.etape_id);
+      groupes.set(a, g);
     }
-    toast.success(`${keep.length} étape(s) ajoutée(s) au planning logistique`);
+    const liste = [...groupes.entries()].filter(([, g]) => g.creer.length + g.rattacher.length > 0);
+    let crees = 0; let ratt = 0;
+    try {
+      if (savedId) {
+        for (const [k, [a, g]] of liste.entries()) {
+          const { data, error } = await supabase.rpc("logistique_valider_jalonnement", { _jalonnement_id: savedId, _affaire_id: a, _etapes: g.creer.map(payload) as never, _rattacher: g.rattacher, _termine: k === liste.length - 1 });
+          if (error) throw new Error(error.message);
+          const d = data as { etape_ids?: string[]; rattachees?: number } | null;
+          crees += d?.etape_ids?.length ?? 0; ratt += d?.rattachees ?? 0;
+        }
+      } else {
+        // Analyse d'un mail sans jalonnement enregistré : étapes créées sous les droits de l'appelant, mail cité comme source.
+        const { data: u } = await supabase.auth.getUser();
+        const lignes = liste.flatMap(([a, g]) => g.creer.map((r) => ({ ...payload(r), affaire_id: a, statut: "valide" as const, created_by: u.user?.id ?? null,
+          ...(email ? { source_type: "email", source_email_id: email.emailId } : { source_type: "jalonnement" }) })));
+        if (lignes.length) { const { error } = await supabase.from("affaire_etapes_logistiques").insert(lignes as never); if (error) throw new Error(error.message); }
+        crees = lignes.length;
+      }
+    } catch (e) {
+      return toast.error("Enregistrement impossible", { description: (e as Error).message });
+    }
+    onChanged?.();
+    toast.success(`${crees} étape(s) ajoutée(s)${ratt ? `, ${ratt} rattachée(s)` : ""}${rep.ecartees.length - ratt > 0 ? ` · ${rep.ecartees.length} déjà au planning` : ""}`);
     invalidate();
     onOpenChange(false);
   }
@@ -180,6 +229,11 @@ export function JalonnementDialog({ open, onOpenChange, affaireId, email, saved,
                   <Input type="number" min={1} className="h-8 w-16" placeholder="Pers." aria-label="Nombre de personnes" value={r.nb_personnes ?? ""} onChange={(e) => patch(i, { nb_personnes: e.target.value ? Number(e.target.value) : null })} />
                   <Input className="h-8 min-w-40 flex-1" placeholder="Note" value={r.note ?? ""} onChange={(e) => patch(i, { note: e.target.value || null })} />
                   {r.origine === "retroplanning" && <span className="text-[11px] text-muted-foreground">calculé</span>}
+                  <div className="flex w-full flex-wrap items-center gap-x-3 pl-6">
+                    <HoraireAvertissement debut={r.heure_debut} fin={r.heure_fin} />
+                    <ResponsableRapproche texte={(r as { responsable?: string | null }).responsable} employes={employes} />
+                  </div>
+                  {r.keep && <div className="w-full pl-6"><DoublonChoix doublons={doublons.filter((d) => d.index === i)} choix={choix[i] ?? "fusionner"} onChoix={(c) => setChoix((m) => ({ ...m, [i]: c }))} /></div>}
                 </div>
               ))}
             </div>
