@@ -34,7 +34,7 @@
 - Keep the per-job logistics calendar in a dedicated dialog component using the existing logistics hooks and EtapeDialog; shared reads and edits stay consistent with the main planning.
 - Occupied calendar dates come from the pure calendrierChantier helper (testable).
 - Client email suggestions: opt-in reader section + authenticated server fn under RLS; never sends email.
-- New client email drafting uses server-only Responses SDK helpers and shared output validation; this keeps credentials private and the generated result consistent between server and UI.
+- New client email drafting goes through the server-only appelerIAZod (usage mail_client) and shared output validation (clientEmailSuggestionSchema); this keeps credentials private and the generated result consistent between server and UI.
 - Legal client prefill uses a dedicated review dialog and the existing authenticated enrichment function; preserve the stored SIRET and derive its SIREN to avoid losing establishment information.
 - Store the legal company leader in the clients record and share its reviewed enrichment across both client editors; this keeps legal identity separate from contact records.- Expense reports (notes_de_frais) keep status transitions and authorship in the DB guard trigger; the UI never sets validator fields, so the audit trail cannot be bypassed.
 - Legacy SECURITY DEFINER business RPCs start with mcp_assert_legacy_oauth_write and MCP previews check rights via mcp_preview_assert_affaire; OAuth tokens can only write inside the transaction-scoped dispatch context opened by mcp_execute_write_locked, so confirmations cannot be bypassed.
