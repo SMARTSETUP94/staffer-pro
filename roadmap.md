@@ -8,7 +8,8 @@
 - [ ] Reclassement réel de la file : attend l'accord d'un admin.
 - [x] Images des devis sur Haiku 4.5 (plafond 0,10 € inchangé) ; essai 9518 en mémoire : 9/9 sous le bon objet.
 - [ ] Lieux Canal One, Plateau Murat, Studio Lendit, Studio 128 : décision de Gabin.
-- [ ] M-L3 : SQL présenté, en attente de relecture ; puis code L3 et L4.
+- [x] M-L3 appliquée (0133) ; L3 écrans mail/jalonnement branchés ; L4 indicateur qualité.
+- [ ] Rattachement du jalonnement 16–22 nov : bilan prêt (18/18), attend un admin.
 
 ## Conditions de paiement clients — 11 novembre
 - [x] Compléter uniquement les 144 conditions NULL non fusionnées ; trace ajoutée, 90 conditions et remarques existantes préservées, empreinte de tous les autres champs identique hors updated_at.

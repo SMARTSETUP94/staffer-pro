@@ -19,6 +19,9 @@ import { EmailReaderDialog } from "@/components/emails/EmailReaderDialog";
 import { PiecesJointesMailSelection } from "@/components/logistique/PiecesJointesMailSelection";
 import { PageHeader } from "@/components/PageHeader";
 import { TriFileDialog } from "@/components/logistique/TriFileDialog";
+import { QualitePlanning } from "@/components/logistique/QualitePlanning";
+import { DoublonChoix, HoraireAvertissement, ResponsableRapproche, useDoublons, useEmployesActifs } from "@/components/logistique/SourceEtapes";
+import { avertissementHoraire, rapprocherResponsable, repartirSelonDoublons, type ChoixDoublon } from "@/lib/logistique/source-etapes";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -151,6 +154,7 @@ function DemandesLogistiquePage() {
           {isAdmin && <Button size="sm" variant="outline" onClick={() => setTriOuvert(true)}>Reclasser la file</Button>}
         </div>} />
       {isAdmin && <TriFileDialog open={triOuvert} onOpenChange={setTriOuvert} onDone={() => void load()} />}
+      <QualitePlanning />
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
         <TabsList>
           <TabsTrigger value="todo">À traiter <span className="ml-1.5 text-xs opacity-60">{lists.todo.length}</span></TabsTrigger>
@@ -229,7 +233,7 @@ function DemandesLogistiquePage() {
   );
 }
 
-type Line = { auto?: boolean; keep: boolean; date: string; type: EtapeType; contenu: string; hDebut: string; hFin: string; lieu: string; vehiculeId: string; nb?: string; commentaire?: string; responsable?: string; acces?: string; vehiculeTexte?: string; src?: Echeance };
+type Line = { auto?: boolean; keep: boolean; date: string; type: EtapeType; contenu: string; hDebut: string; hFin: string; lieu: string; vehiculeId: string; nb?: string; commentaire?: string; responsable?: string; acces?: string; vehiculeTexte?: string; vehiculeSuggere?: string; src?: Echeance };
 type Veh = { id: string; nom: string; immatriculation: string | null };
 
 function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires: Aff[]; onClose: () => void; onDone: () => void }) {
@@ -287,7 +291,7 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
       setConsigne("");
     } catch (e) { toast.error((e as Error).message); } finally { setAssisting(false); }
   }
-  const [initial] = useState(() => lines.map((l) => ({ type: l.type, date: l.date, contenu: l.contenu, lieu: l.lieu || null })));
+  const [initial] = useState(() => lines.map((l) => ({ type: l.type, date: l.date, contenu: l.contenu, lieu: l.lieu || null, heure_debut: l.hDebut || null, heure_fin: l.hFin || null })));
   const [q, setQ] = useState("");
   const [withOpps, setWithOpps] = useState(false);
   const [vehicules, setVehicules] = useState<Veh[]>([]);
@@ -299,9 +303,9 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
         // Véhicule écrit dans le mail → véhicule de la flotte ; sinon il reste dans le commentaire.
         setLines((ls) => ls.map((l) => {
           const v = (l.src && "vehicule_id" in l.src && flotte.find((f) => f.id === (l.src as { vehicule_id?: string }).vehicule_id)) || trouverVehicule(l.vehiculeTexte, flotte);
+          // Véhicule seulement suggéré : jamais affecté sans un clic.
           if (!v || l.vehiculeId) return l;
-          const sans = l.src ? commentaireEquipe({ ...l.src, acces: null, vehicule: null }, true) : l.commentaire;
-          return { ...l, vehiculeId: v.id, commentaire: sans || undefined };
+          return { ...l, vehiculeSuggere: v.id };
         }));
       });
   }, []);
@@ -312,38 +316,52 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
   const selected = affaires.find((a) => a.id === affaireId);
   const isHtml = (row.body_content_type ?? "").toLowerCase() === "html";
   const body = row.body_full ?? row.body_preview ?? "";
+  const employes = useEmployesActifs();
+  const doublons = useDoublons(affaireId, lines.map((l) => ({ type: l.type, date_debut: l.date, heure_debut: l.hDebut || null })));
+  const [choix, setChoix] = useState<Record<number, ChoixDoublon>>({});
   const upd = (i: number, p: Partial<Line>) => setLines((ls) => ls.map((l, j) => (j === i ? { ...l, ...p } : l)));
 
   async function save() {
-    const kept = lines.filter((l) => l.keep && /^\d{4}-\d{2}-\d{2}$/.test(l.date));
-    if (!affaireId || kept.length === 0) return toast.error("Choisissez un chantier et au moins une étape datée");
+    const keptIdx = lines.map((l, i) => ({ l, i })).filter(({ l }) => l.keep && /^\d{4}-\d{2}-\d{2}$/.test(l.date));
+    if (!affaireId || keptIdx.length === 0) return toast.error("Choisissez un chantier et au moins une étape datée");
+    const refus = keptIdx.find(({ l }) => avertissementHoraire(l.hDebut, l.hFin)?.niveau === "refus");
+    if (refus) return toast.error(`Étape du ${refus.l.date} : heure de fin identique à l'heure de début`);
+    // Doublons : « Fusionner » et « Ignorer » ne recréent pas l'étape déjà au planning.
+    const rep = repartirSelonDoublons(lines.length, doublons, choix);
+    const kept = keptIdx.filter(({ i }) => rep.aCreer.includes(i)).map(({ l }) => l);
     setSaving(true);
     const [{ data: lieux }, { data: alias }] = await Promise.all([
       supabase.from("lieux").select("id,label,adresse_complete").eq("actif", true),
       supabase.from("lieux_alias").select("alias,lieu_id"),
     ]);
-    const { error } = await supabase.from("affaire_etapes_logistiques").insert(kept.map((l) => {
-      const src = l.src as (Echeance & { duree_minutes?: number | null; a_partir_de?: boolean | null }) | undefined;
-      const lieu = rapprocherLieu(l.lieu, (lieux ?? []) as LieuConnu[], (alias ?? []) as AliasLieu[]);
-      return {
-      affaire_id: affaireId, type: l.type, date_debut: l.date,
-      heure_debut: l.hDebut || null, heure_fin: l.hFin || null,
-      a_partir_de: src?.a_partir_de ?? null, duree_minutes: src?.duree_minutes ?? null,
-      lieu_id: lieu.lieu_id, lieu_douteux: lieu.lieu_douteux,
-      lieu_libre: l.lieu.trim() || null, vehicule_id: l.vehiculeId || null,
-      nb_personnes: l.nb ? Number(l.nb) : null,
-      commentaire_equipe: l.commentaire?.trim() || null,
-      responsable: l.responsable?.trim() || null, acces: l.acces?.trim() || null,
-      statut: "valide" as const, origine: "jalonnement" as const,
-      note: `${l.contenu?.trim() ? `${l.contenu.trim()} — ` : ""}Depuis un email log@ : « ${(row.subject ?? "").slice(0, 120)} »`,
-    }; }));
+    const feedback = {
+      propose: initial,
+      retenu: keptIdx.map(({ l }) => ({ type: l.type, date: l.date, contenu: l.contenu, heure_debut: l.hDebut || null, heure_fin: l.hFin || null, lieu: l.lieu || null })),
+      commentaire: commentaire.trim() || null,
+    };
+    let error: { message: string } | null = null;
+    if (kept.length) {
+      const r = await supabase.rpc("logistique_valider_demande", { _email_id: row.id, _affaire_id: affaireId, _feedback: feedback as never, _etapes: kept.map((l) => {
+        const src = l.src as (Echeance & { duree_minutes?: number | null; a_partir_de?: boolean | null }) | undefined;
+        const lieu = rapprocherLieu(l.lieu, (lieux ?? []) as LieuConnu[], (alias ?? []) as AliasLieu[]);
+        const resp = rapprocherResponsable(l.responsable, employes);
+        return {
+          type: l.type, date_debut: l.date, heure_debut: l.hDebut || null, heure_fin: l.hFin || null,
+          a_partir_de: src?.a_partir_de ?? null, duree_minutes: src?.duree_minutes ?? null,
+          lieu_id: lieu.lieu_id, lieu_douteux: lieu.lieu_douteux, lieu_libre: l.lieu.trim() || null, vehicule_id: l.vehiculeId || null,
+          nb_personnes: l.nb ? Number(l.nb) : null, commentaire_equipe: l.commentaire?.trim() || null,
+          responsable: resp?.nom ?? (l.responsable?.trim() || null), acces: l.acces?.trim() || null, origine: "jalonnement",
+          note: `${l.contenu?.trim() ? `${l.contenu.trim()} — ` : ""}Depuis un email log@ : « ${(row.subject ?? "").slice(0, 120)} »`,
+        };
+      }) as never });
+      error = r.error;
+    } else {
+      // Tout est déjà au planning : on clôt seulement le mail et on garde la correction pour l'IA.
+      const u = await supabase.from("emails_entrants").update({ statut: "validated" }).eq("id", row.id);
+      error = u.error;
+      if (!error) await supabase.from("ia_feedback_logistique").insert({ email_id: row.id, email_subject: row.subject, ...feedback } as never);
+    }
     if (!error) {
-      await supabase.from("emails_entrants").update({ statut: "validated" }).eq("id", row.id);
-      await supabase.from("ia_feedback_logistique").insert({
-        email_id: row.id, email_subject: row.subject, propose: initial,
-        retenu: kept.map((l) => ({ type: l.type, date: l.date, contenu: l.contenu, heure_debut: l.hDebut || null, heure_fin: l.hFin || null, lieu: l.lieu || null })),
-        commentaire: commentaire.trim() || null,
-      });
       if (pjMail.length > 0) {
         const { saveEmailDocument } = await import("@/lib/server-fns/save-email-document.functions");
         let ok = 0; let ko = 0;
@@ -365,7 +383,7 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
     }
     setSaving(false);
     if (error) return toast.error("Ajout impossible", { description: error.message });
-    toast.success(`${kept.length} étape(s) ajoutée(s) au planning logistique`);
+    toast.success(`${kept.length} étape(s) ajoutée(s) au planning logistique${rep.ecartees.length ? ` · ${rep.ecartees.length} déjà présente(s), non recréée(s)` : ""}`);
     onDone();
   }
 
@@ -475,6 +493,14 @@ function PlanningDialog({ row, affaires, onClose, onDone }: { row: Row; affaires
                 <Input className="h-8 text-xs" placeholder="Chef d'équipe" aria-label="Responsable" value={l.responsable ?? ""} onChange={(e) => upd(i, { responsable: e.target.value })} />
                 <Input className="h-8 text-xs" placeholder="Accès / contraintes" aria-label="Accès" value={l.acces ?? ""} onChange={(e) => upd(i, { acces: e.target.value })} />
               </div>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pl-6">
+                <HoraireAvertissement debut={l.hDebut} fin={l.hFin} />
+                <ResponsableRapproche texte={l.responsable} employes={employes} />
+                {l.vehiculeSuggere && !l.vehiculeId && (() => { const v = vehicules.find((x) => x.id === l.vehiculeSuggere); return v ? (
+                  <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">Véhicule cité : {v.nom}
+                    <Button type="button" size="sm" variant="outline" className="h-5 px-1.5 text-[10px]" onClick={() => upd(i, { vehiculeId: v.id })}>Affecter</Button></span>) : null; })()}
+              </div>
+              {l.keep && <div className="pl-6"><DoublonChoix doublons={doublons.filter((d) => d.index === i)} choix={choix[i] ?? "fusionner"} onChoix={(c) => setChoix((m) => ({ ...m, [i]: c }))} /></div>}
               <div className="pl-6">
                 <Input className="h-8 text-xs" placeholder="Commentaire pour l'équipe" aria-label="Commentaire pour l'équipe" value={l.commentaire ?? ""} onChange={(e) => upd(i, { commentaire: e.target.value })} />
               </div>
