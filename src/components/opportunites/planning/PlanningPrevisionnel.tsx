@@ -10,7 +10,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import {
   GROUPES, GROUPE_LABEL, aDater, ajouterJours, calculerPeriodes, datePasseeAClore, ecartJours, estFermeture,
-  etatSignature, fmtJJMM, grouper, lundi, param, regrouperMateriaux,
+  cleMateriau, etatSignature, fmtJJMM, grouper, lundi, param, regrouperMateriaux,
   type OppPlanning, type Parametres, type StatutOuvert,
 } from "@/lib/opportunites/planning-previsionnel";
 
@@ -24,6 +24,18 @@ const COULEUR: Record<StatutOuvert, { bar: string; text: string }> = {
 };
 const eur = (n: number | null | undefined) => n == null ? "—" : n.toLocaleString("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
+const texte = (s: string) => s.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+function materiauxFiche(o: OppPlanning) {
+  const m = new Map<string, OppPlanning["materiaux"][number] & { achat: number | null }>();
+  for (const x of o.materiaux) {
+    const k = cleMateriau(x);
+    const cur = m.get(k);
+    const achat = x.prix_achat == null ? null : x.prix_achat * x.quantite;
+    if (!cur) m.set(k, { ...x, achat });
+    else { cur.quantite += x.quantite; cur.achat = achat == null ? cur.achat : (cur.achat ?? 0) + achat; }
+  }
+  return [...m.values()];
+}
 const TAILLE: Record<string, string> = { tres_petit: "Très petit", petit: "Petit", moyen: "Moyen", gros: "Gros", tres_gros: "Très gros" };
 
 function titre(o: OppPlanning) {
@@ -217,12 +229,12 @@ function Fiche({ o, p, couts, aujourdhui }: { o: OppPlanning; p: Parametres; cou
         {o.materiaux.length === 0 ? <p className="text-sm text-muted-foreground">Aucun.</p> : (
           <table className="w-full text-xs">
             <thead><tr className="text-left text-muted-foreground"><th className="py-1">Désignation</th><th className="text-right">Qté</th><th>Fournisseur</th>{couts && <th className="text-right">Achat</th>}<th>Stock</th></tr></thead>
-            <tbody>{o.materiaux.map((m, i) => (
+            <tbody>{materiauxFiche(o).map((m, i) => (
               <tr key={i} className="border-t border-border align-top">
-                <td className="py-1 pr-2">{m.designation}</td>
+                <td className="py-1 pr-2">{texte(m.designation)}{m.a_prix === false && <span className="text-muted-foreground"> (sans prix, non consolidé)</span>}</td>
                 <td className="whitespace-nowrap text-right">{qte(m.quantite)} {m.unite}</td>
                 <td className="pl-2">{m.fournisseur ?? "—"}</td>
-                {couts && <td className="text-right">{m.prix_achat == null ? "—" : eur(m.prix_achat * m.quantite)}</td>}
+                {couts && <td className="text-right">{eur(m.achat)}</td>}
                 <td className="pl-2 text-muted-foreground">non suivi</td>
               </tr>))}</tbody>
           </table>
@@ -230,7 +242,7 @@ function Fiche({ o, p, couts, aujourdhui }: { o: OppPlanning; p: Parametres; cou
         {o.autres_lignes.length > 0 && (
           <div className="mt-2">
             <p className="text-[11px] text-muted-foreground">Autres lignes (lots, locations, prestataires) — non consolidées :</p>
-            <ul className="text-xs">{o.autres_lignes.map((l, i) => <li key={i}>{l.designation} — {qte(l.quantite)} {l.unite ?? ""}</li>)}</ul>
+            <ul className="text-xs">{o.autres_lignes.map((l, i) => <li key={i}>{texte(l.designation)} — {qte(l.quantite)} {l.unite ?? ""}</li>)}</ul>
           </div>
         )}
       </div>
@@ -288,7 +300,7 @@ function MateriauxACommander({ data, opps, selection }: { data: PlanningData; op
             {lignes.length === 0 && <tr><td colSpan={semaines.length + 4} className="px-3 py-4 text-center text-muted-foreground">Aucun matériau à commander pour cette sélection.</td></tr>}
             {lignes.map((l) => (
               <tr key={l.cle} className="border-t border-border align-top">
-                <td className="px-3 py-1.5"><p className="font-medium">{l.designation}</p><p className="text-[10px] text-muted-foreground">{l.numeros.join(", ")}</p></td>
+                <td className="px-3 py-1.5"><p className="font-medium">{texte(l.designation)}</p><p className="text-[10px] text-muted-foreground">{l.numeros.join(", ")}</p></td>
                 {semaines.map((s) => (
                   <td key={s} className="px-2 py-1.5 text-right">{l.parSemaine[s] ? <><p>{qte(l.parSemaine[s].quantite)} {l.unite}</p><p className="text-[10px] text-muted-foreground">{l.parSemaine[s].numeros.join(", ")}</p></> : ""}</td>
                 ))}
