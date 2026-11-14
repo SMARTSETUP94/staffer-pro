@@ -19,6 +19,7 @@ import { EmailReaderDialog } from "@/components/emails/EmailReaderDialog";
 import { PiecesJointesMailSelection } from "@/components/logistique/PiecesJointesMailSelection";
 import { PageHeader } from "@/components/PageHeader";
 import { TriFileDialog } from "@/components/logistique/TriFileDialog";
+import { QualitePlanning } from "@/components/logistique/QualitePlanning";
 import { DoublonChoix, HoraireAvertissement, ResponsableRapproche, useDoublons, useEmployesActifs } from "@/components/logistique/SourceEtapes";
 import { avertissementHoraire, rapprocherResponsable, repartirSelonDoublons, type ChoixDoublon } from "@/lib/logistique/source-etapes";
 import { Button } from "@/components/ui/button";
@@ -153,6 +154,7 @@ function DemandesLogistiquePage() {
           {isAdmin && <Button size="sm" variant="outline" onClick={() => setTriOuvert(true)}>Reclasser la file</Button>}
         </div>} />
       {isAdmin && <TriFileDialog open={triOuvert} onOpenChange={setTriOuvert} onDone={() => void load()} />}
+      <QualitePlanning />
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
         <TabsList>
           <TabsTrigger value="todo">À traiter <span className="ml-1.5 text-xs opacity-60">{lists.todo.length}</span></TabsTrigger>
