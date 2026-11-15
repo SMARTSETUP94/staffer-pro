@@ -37,7 +37,8 @@ const QUALITE = 0.92;
 
 type Bloc = { top: number; height: number };
 type Page = { start: number; end: number };
-type Capture = { img: HTMLImageElement; k: number; entete: Bloc; pages: Page[] };
+/** k : pixels CSS → pixels image ; echelle : pixels image → millimètres. */
+type Capture = { img: HTMLImageElement; k: number; echelle: number; entete: Bloc; pages: Page[] };
 
 /** Capture un élément en PNG, chargé et prêt à être découpé. */
 async function versImage(el: HTMLElement): Promise<HTMLImageElement> {
@@ -61,13 +62,12 @@ function blocsDe(el: HTMLElement, vue: VuePlanning): Bloc[] {
     vue === "employes"
       ? [el.querySelector("thead"), ...Array.from(el.querySelectorAll("tbody > tr"))].filter(Boolean) as Element[]
       : Array.from(el.children);
-  return noeuds.map(n => {
-    const b = n.getBoundingClientRect();
-    return { top: b.top - r.top, height: b.height };
-  }).filter(b => b.height > 0);
+  return noeuds
+    .map(n => { const b = n.getBoundingClientRect(); return { top: b.top - r.top, height: b.height }; })
+    .filter(b => b.height > 0);
 }
 
-/** Découpe l'image entre deux positions CSS, en JPEG léger. */
+/** Découpe l'image entre deux positions CSS ; renvoie la hauteur en pixels image. */
 function tranche(img: HTMLImageElement, k: number, from: number, to: number) {
   const sy = Math.max(0, Math.round(from * k));
   const ey = Math.min(img.naturalHeight, Math.round(to * k));
@@ -78,7 +78,7 @@ function tranche(img: HTMLImageElement, k: number, from: number, to: number) {
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("canvas indisponible");
   ctx.drawImage(img, 0, sy, img.naturalWidth, sh, 0, 0, img.naturalWidth, sh);
-  return { data: canvas.toDataURL("image/jpeg", QUALITE), hauteur: sh / k };
+  return { data: canvas.toDataURL("image/jpeg", QUALITE), px: sh };
 }
 
 /**
@@ -112,14 +112,17 @@ function paginer(blocs: Bloc[], hauteurPx: number): { entete: Bloc; pages: Page[
   return { entete, pages: pages.length ? pages : [{ start: 0, end: entete.height }] };
 }
 
-async function capturer(el: HTMLElement, vue: VuePlanning, hauteurPx: number): Promise<Capture> {
+async function capturer(el: HTMLElement, vue: VuePlanning, dispoW: number, dispoH: number): Promise<Capture> {
   const img = await versImage(el);
-  const largeur = el.getBoundingClientRect().width || el.offsetWidth;
+  const largeur = el.getBoundingClientRect().width || el.offsetWidth || img.naturalWidth;
   const k = img.naturalWidth / largeur;
+  const echelle = dispoW / img.naturalWidth; // px image → mm
+  // Hauteur de page exprimée en pixels CSS : l'élément est réduit à dispoW de large.
+  const hauteurPx = dispoH / (echelle * k);
   const blocs = blocsDe(el, vue);
-  if (!blocs.length) return { img, k, entete: { top: 0, height: 0 }, pages: [{ start: 0, end: img.naturalHeight / k }] };
+  if (!blocs.length) return { img, k, echelle, entete: { top: 0, height: 0 }, pages: [{ start: 0, end: img.naturalHeight / k }] };
   const { entete, pages } = paginer(blocs, hauteurPx);
-  return { img, k, entete, pages };
+  return { img, k, echelle, entete, pages };
 }
 
 export async function exporterPlanningEquipesPdf(p: ExportPlanningEquipes): Promise<{ pages: number }> {
@@ -135,13 +138,12 @@ export async function exporterPlanningEquipesPdf(p: ExportPlanningEquipes): Prom
   const cibles = sections.length ? sections : [p.contenu];
 
   const captures: Capture[] = [];
-  for (const el of cibles) captures.push(await capturer(el, p.vue, dispoH));
+  for (const el of cibles) captures.push(await capturer(el, p.vue, dispoW, dispoH));
   const total = captures.reduce((n, c) => n + c.pages.length, 0);
   const legende = p.legende ? await versImage(p.legende) : null;
 
   let numero = 0;
   for (const c of captures) {
-    const echelle = dispoW / c.img.naturalWidth; // px image → mm
     for (const page of c.pages) {
       if (numero > 0) pdf.addPage();
       numero++;
@@ -167,12 +169,12 @@ export async function exporterPlanningEquipesPdf(p: ExportPlanningEquipes): Prom
       let y = haut;
       if (c.entete.height > 0) {
         const tete = tranche(c.img, c.k, 0, c.entete.height);
-        const h = Math.min(tete.hauteur * echelle, dispoH * 0.4);
+        const h = Math.min(tete.px * c.echelle, dispoH * 0.4);
         pdf.addImage(tete.data, "JPEG", MARGE, y, dispoW, h);
         y += h;
       }
       const corps = tranche(c.img, c.k, page.start, page.end);
-      pdf.addImage(corps.data, "JPEG", MARGE, y, dispoW, Math.min(corps.hauteur * echelle, haut + dispoH - y));
+      pdf.addImage(corps.data, "JPEG", MARGE, y, dispoW, Math.min(corps.px * c.echelle, haut + dispoH - y));
 
       pdf.setFontSize(8);
       pdf.setTextColor(140);
