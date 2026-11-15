@@ -104,6 +104,7 @@ import { Route as AppLogistiqueDisposRouteImport } from './routes/_app.logistiqu
 import { Route as AppLogistiqueEcranRouteImport } from './routes/_app.logistique.ecran'
 import { Route as AppLogistiqueEquipesRouteImport } from './routes/_app.logistique.equipes'
 import { Route as AppLogistiqueImprimerRouteImport } from './routes/_app.logistique.imprimer'
+import { Route as AppLogistiqueImprimerEquipesRouteImport } from './routes/_app.logistique.imprimer-equipes'
 import { Route as AppLogistiqueVehiculesPlanningRouteImport } from './routes/_app.logistique.vehicules-planning'
 import { Route as AppOpportunitesIndexRouteImport } from './routes/_app.opportunites.index'
 import { Route as AppOpportunitesAffaireIdRouteImport } from './routes/_app.opportunites.$affaireId'
@@ -629,6 +630,12 @@ const AppLogistiqueImprimerRoute = AppLogistiqueImprimerRouteImport.update({
   path: '/logistique/imprimer',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLogistiqueImprimerEquipesRoute =
+  AppLogistiqueImprimerEquipesRouteImport.update({
+    id: '/logistique/imprimer-equipes',
+    path: '/logistique/imprimer-equipes',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppLogistiqueVehiculesPlanningRoute =
   AppLogistiqueVehiculesPlanningRouteImport.update({
     id: '/logistique/vehicules-planning',
@@ -967,6 +974,7 @@ export interface FileRoutesByFullPath {
   '/logistique/ecran': typeof AppLogistiqueEcranRoute
   '/logistique/equipes': typeof AppLogistiqueEquipesRoute
   '/logistique/imprimer': typeof AppLogistiqueImprimerRoute
+  '/logistique/imprimer-equipes': typeof AppLogistiqueImprimerEquipesRoute
   '/logistique/vehicules-planning': typeof AppLogistiqueVehiculesPlanningRoute
   '/opportunites/$affaireId': typeof AppOpportunitesAffaireIdRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
@@ -1103,6 +1111,7 @@ export interface FileRoutesByTo {
   '/logistique/ecran': typeof AppLogistiqueEcranRoute
   '/logistique/equipes': typeof AppLogistiqueEquipesRoute
   '/logistique/imprimer': typeof AppLogistiqueImprimerRoute
+  '/logistique/imprimer-equipes': typeof AppLogistiqueImprimerEquipesRoute
   '/logistique/vehicules-planning': typeof AppLogistiqueVehiculesPlanningRoute
   '/opportunites/$affaireId': typeof AppOpportunitesAffaireIdRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
@@ -1244,6 +1253,7 @@ export interface FileRoutesById {
   '/_app/logistique/ecran': typeof AppLogistiqueEcranRoute
   '/_app/logistique/equipes': typeof AppLogistiqueEquipesRoute
   '/_app/logistique/imprimer': typeof AppLogistiqueImprimerRoute
+  '/_app/logistique/imprimer-equipes': typeof AppLogistiqueImprimerEquipesRoute
   '/_app/logistique/vehicules-planning': typeof AppLogistiqueVehiculesPlanningRoute
   '/_app/opportunites/$affaireId': typeof AppOpportunitesAffaireIdRoute
   '/_app/opportunites/import': typeof AppOpportunitesImportRoute
@@ -1385,6 +1395,7 @@ export interface FileRouteTypes {
     | '/logistique/ecran'
     | '/logistique/equipes'
     | '/logistique/imprimer'
+    | '/logistique/imprimer-equipes'
     | '/logistique/vehicules-planning'
     | '/opportunites/$affaireId'
     | '/opportunites/import'
@@ -1521,6 +1532,7 @@ export interface FileRouteTypes {
     | '/logistique/ecran'
     | '/logistique/equipes'
     | '/logistique/imprimer'
+    | '/logistique/imprimer-equipes'
     | '/logistique/vehicules-planning'
     | '/opportunites/$affaireId'
     | '/opportunites/import'
@@ -1661,6 +1673,7 @@ export interface FileRouteTypes {
     | '/_app/logistique/ecran'
     | '/_app/logistique/equipes'
     | '/_app/logistique/imprimer'
+    | '/_app/logistique/imprimer-equipes'
     | '/_app/logistique/vehicules-planning'
     | '/_app/opportunites/$affaireId'
     | '/_app/opportunites/import'
@@ -2396,6 +2409,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLogistiqueImprimerRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/logistique/imprimer-equipes': {
+      id: '/_app/logistique/imprimer-equipes'
+      path: '/logistique/imprimer-equipes'
+      fullPath: '/logistique/imprimer-equipes'
+      preLoaderRoute: typeof AppLogistiqueImprimerEquipesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/logistique/vehicules-planning': {
       id: '/_app/logistique/vehicules-planning'
       path: '/logistique/vehicules-planning'
@@ -2893,6 +2913,7 @@ interface AppRouteChildren {
   AppLogistiqueEcranRoute: typeof AppLogistiqueEcranRoute
   AppLogistiqueEquipesRoute: typeof AppLogistiqueEquipesRoute
   AppLogistiqueImprimerRoute: typeof AppLogistiqueImprimerRoute
+  AppLogistiqueImprimerEquipesRoute: typeof AppLogistiqueImprimerEquipesRoute
   AppLogistiqueVehiculesPlanningRoute: typeof AppLogistiqueVehiculesPlanningRoute
   AppParametresAutorisationsVehiculesRoute: typeof AppParametresAutorisationsVehiculesRoute
   AppParametresCompetencesEquipeRoute: typeof AppParametresCompetencesEquipeRoute
@@ -2992,6 +3013,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppLogistiqueEcranRoute: AppLogistiqueEcranRoute,
   AppLogistiqueEquipesRoute: AppLogistiqueEquipesRoute,
   AppLogistiqueImprimerRoute: AppLogistiqueImprimerRoute,
+  AppLogistiqueImprimerEquipesRoute: AppLogistiqueImprimerEquipesRoute,
   AppLogistiqueVehiculesPlanningRoute: AppLogistiqueVehiculesPlanningRoute,
   AppParametresAutorisationsVehiculesRoute:
     AppParametresAutorisationsVehiculesRoute,

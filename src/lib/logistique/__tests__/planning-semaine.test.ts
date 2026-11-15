@@ -64,3 +64,16 @@ describe('copie d’équipe et filtres', () => {
     expect(filtrerEtapes(e, { ...FILTRES_VIDES, personne: 'leo' }, { affectations: a, personnes: P, alertes: [] })).toHaveLength(2);
   });
 });
+
+import { semaineParPersonne as spp } from '@/lib/logistique/planning-semaine';
+describe('semaineParPersonne', () => {
+  const e = (id: string, heure: string | null) => ({ id, date: '2026-11-16', fin: '2026-11-16', heure, type: 'montage', numero: '4130', nom: 'the voice', lieu: 'LENDIT 1', responsable: null, affaire_id: 'a' });
+  const p = (id: string, nom: string) => ({ id, nom, prenom: 'X', origine: 'employe' as const });
+  const aff = (id: string, emp: string, etape: string, date = '2026-11-16') => ({ id, employe_id: emp, dispos_intervenant_id: null, date, etape_id: etape, affaire_id: 'a' });
+  it('liste chaque employé affecté avec ses étapes par jour, triées par heure, sans les non-affectés', () => {
+    const r = spp(['2026-11-16', '2026-11-17'], [e('e1', '14:00'), e('e2', '07:00')], [aff('1', 'p1', 'e1'), aff('2', 'p1', 'e2'), aff('3', 'p1', 'e2')], [p('p1', 'ZED'), p('p2', 'ABEL')]);
+    expect(r).toHaveLength(1);
+    expect(r[0].jours[0].map(c => c.etape.id)).toEqual(['e2', 'e1']);
+    expect(r[0].jours[1]).toEqual([]);
+  });
+});

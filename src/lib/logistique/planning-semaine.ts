@@ -149,3 +149,21 @@ export function filtrerEtapes<E extends EtapeSemaine>(etapes: E[], f: FiltresPla
   });
 }
 export { heureCourte };
+
+/** Vue « par employé » : une ligne par personne staffée, une case par jour listant ses affectations (chef en premier tri alphabétique). */
+export type CaseEmploye = { etape: EtapeSemaine; chef: boolean };
+export function semaineParPersonne<P extends PersonneSemaine>(dates: string[], etapes: EtapeSemaine[], affectations: AffectationSemaine[], personnes: P[]) {
+  const lignes = personnes.map(p => ({
+    personne: p,
+    jours: dates.map(jour => {
+      const vus = new Set<string>();
+      return affectations.filter(a => a.date === jour && memePersonne(p, a)).flatMap(a => {
+        const e = etapes.find(e => e.id === a.etape_id);
+        if (!e || vus.has(e.id)) return [];
+        vus.add(e.id);
+        return [{ etape: e, chef: a.role === 'chef_equipe' }];
+      }).sort((a, b) => (a.etape.heure ?? '99').localeCompare(b.etape.heure ?? '99')) as CaseEmploye[];
+    }),
+  })).filter(l => l.jours.some(j => j.length));
+  return lignes.sort((a, b) => `${a.personne.nom} ${a.personne.prenom}`.localeCompare(`${b.personne.nom} ${b.personne.prenom}`, 'fr'));
+}
