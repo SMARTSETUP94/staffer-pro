@@ -94,10 +94,10 @@ function ImprimerEquipes() {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-xs">
+          <table className="w-full min-w-[56rem] table-fixed border-collapse text-xs">
             <thead><tr>
-              <th className="sticky left-0 border border-border bg-primary px-2 py-1.5 text-left text-primary-foreground">Employé</th>
-              {dates.map(d => <th key={d} className={`min-w-[7.5rem] border border-border px-2 py-1.5 text-left capitalize ${weekend(d) ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground"}`}>{dateCourte(d)}</th>)}
+              <th className="sticky left-0 w-36 border border-border bg-primary px-2 py-1.5 text-left text-primary-foreground">Employé</th>
+              {dates.map(d => <th key={d} className={`border border-border px-2 py-1.5 text-left capitalize ${weekend(d) ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground"}`}>{dateCourte(d)}</th>)}
             </tr></thead>
             <tbody>
               {lignes.map((l, n) => (
