@@ -90,7 +90,7 @@ function paginer(blocs: Bloc[], hauteurPx: number): { entete: Bloc; pages: Page[
   const lignes = blocs.slice(1);
   const dispo = Math.max(10, hauteurPx - entete.height);
   const pages: Page[] = [];
-  let start = 0;
+  let start = entete.height;
   let used = 0;
   for (const b of lignes) {
     if (b.height > dispo) {
@@ -109,7 +109,7 @@ function paginer(blocs: Bloc[], hauteurPx: number): { entete: Bloc; pages: Page[
   }
   const fin = lignes.length ? lignes[lignes.length - 1].top + lignes[lignes.length - 1].height : entete.height;
   if (fin > start) pages.push({ start, end: fin });
-  return { entete, pages: pages.length ? pages : [{ start: 0, end: entete.height }] };
+  return { entete, pages: pages.length ? pages : [{ start: entete.height, end: entete.height }] };
 }
 
 async function capturer(el: HTMLElement, vue: VuePlanning, dispoW: number, dispoH: number): Promise<Capture> {
@@ -174,7 +174,7 @@ export async function exporterPlanningEquipesPdf(p: ExportPlanningEquipes): Prom
         y += h;
       }
       const corps = tranche(c.img, c.k, page.start, page.end);
-      pdf.addImage(corps.data, "JPEG", MARGE, y, dispoW, Math.min(corps.px * c.echelle, haut + dispoH - y));
+      if (page.end - page.start > 0.5) pdf.addImage(corps.data, "JPEG", MARGE, y, dispoW, Math.min(corps.px * c.echelle, haut + dispoH - y));
 
       pdf.setFontSize(8);
       pdf.setTextColor(140);
