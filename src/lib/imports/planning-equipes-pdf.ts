@@ -6,6 +6,10 @@
  * Le fichier est fabriqué par l'application, donc sans lien, sans titre d'onglet
  * et sans date ajoutés par la fenêtre d'impression du navigateur.
  *
+ * La pagination respecte les blocs (jour, intervention, ligne d'employé) : une
+ * intervention ou une ligne n'est jamais coupée entre deux pages, et le bandeau
+ * de tête (jour ou jours de la semaine) est recopié en haut de chaque page.
+ *
  * jspdf et html-to-image ne sont importés qu'ici, et ce module n'est chargé qu'au
  * clic sur « Enregistrer en PDF » : ils restent hors du chunk initial de la page.
  */
@@ -28,12 +32,16 @@ export type ExportPlanningEquipes = {
 const MARGE = 10;
 const TETE = 16;
 const PIED = 8;
+const PIXEL_RATIO = 1.5;
+const QUALITE = 0.92;
 
-type Tranche = { img: HTMLImageElement; pages: number };
+type Bloc = { top: number; height: number };
+type Page = { start: number; end: number };
+type Capture = { img: HTMLImageElement; k: number; entete: Bloc; pages: Page[] };
 
-/** Capture un élément en PNG haute résolution, chargé et prêt à être découpé. */
+/** Capture un élément en PNG, chargé et prêt à être découpé. */
 async function versImage(el: HTMLElement): Promise<HTMLImageElement> {
-  const url = await toPng(el, { pixelRatio: 2, backgroundColor: "#ffffff", cacheBust: true });
+  const url = await toPng(el, { pixelRatio: PIXEL_RATIO, backgroundColor: "#ffffff", cacheBust: true });
   const img = new Image();
   img.src = url;
   await new Promise<void>((ok, ko) => {
@@ -43,17 +51,75 @@ async function versImage(el: HTMLElement): Promise<HTMLImageElement> {
   return img;
 }
 
-/** Découpe une image en tranches tenant dans la hauteur d'une page. */
-function decouper(img: HTMLImageElement, echelle: number, parPagePx: number, i: number) {
-  const sy = i * parPagePx;
-  const sh = Math.min(parPagePx, img.naturalHeight - sy);
+/**
+ * Blocs de l'élément, en pixels CSS, le premier servant de tête répétable :
+ * titre du jour (vue jour par jour) ou ligne des jours (vue par employé).
+ */
+function blocsDe(el: HTMLElement, vue: VuePlanning): Bloc[] {
+  const r = el.getBoundingClientRect();
+  const noeuds: Element[] =
+    vue === "employes"
+      ? [el.querySelector("thead"), ...Array.from(el.querySelectorAll("tbody > tr"))].filter(Boolean) as Element[]
+      : Array.from(el.children);
+  return noeuds.map(n => {
+    const b = n.getBoundingClientRect();
+    return { top: b.top - r.top, height: b.height };
+  }).filter(b => b.height > 0);
+}
+
+/** Découpe l'image entre deux positions CSS, en JPEG léger. */
+function tranche(img: HTMLImageElement, k: number, from: number, to: number) {
+  const sy = Math.max(0, Math.round(from * k));
+  const ey = Math.min(img.naturalHeight, Math.round(to * k));
+  const sh = Math.max(1, ey - sy);
   const canvas = document.createElement("canvas");
   canvas.width = img.naturalWidth;
-  canvas.height = Math.max(1, Math.round(sh));
+  canvas.height = sh;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("canvas indisponible");
   ctx.drawImage(img, 0, sy, img.naturalWidth, sh, 0, 0, img.naturalWidth, sh);
-  return { data: canvas.toDataURL("image/png"), hauteur: sh * echelle };
+  return { data: canvas.toDataURL("image/jpeg", QUALITE), hauteur: sh / k };
+}
+
+/**
+ * Répartition des blocs en pages : la tête occupe la même place sur chacune,
+ * les blocs restent entiers, et un bloc plus haut qu'une page est découpé.
+ */
+function paginer(blocs: Bloc[], hauteurPx: number): { entete: Bloc; pages: Page[] } {
+  const entete = blocs[0];
+  const lignes = blocs.slice(1);
+  const dispo = Math.max(10, hauteurPx - entete.height);
+  const pages: Page[] = [];
+  let start = 0;
+  let used = 0;
+  for (const b of lignes) {
+    if (b.height > dispo) {
+      if (used > 0) { pages.push({ start, end: b.top }); start = b.top; used = 0; }
+      let y = b.top;
+      while (y < b.top + b.height - 1) {
+        const next = Math.min(y + dispo, b.top + b.height);
+        pages.push({ start: y, end: next });
+        y = next;
+      }
+      start = b.top + b.height;
+      continue;
+    }
+    if (used + b.height > dispo) { pages.push({ start, end: b.top }); start = b.top; used = b.height; }
+    else used += b.height;
+  }
+  const fin = lignes.length ? lignes[lignes.length - 1].top + lignes[lignes.length - 1].height : entete.height;
+  if (fin > start) pages.push({ start, end: fin });
+  return { entete, pages: pages.length ? pages : [{ start: 0, end: entete.height }] };
+}
+
+async function capturer(el: HTMLElement, vue: VuePlanning, hauteurPx: number): Promise<Capture> {
+  const img = await versImage(el);
+  const largeur = el.getBoundingClientRect().width || el.offsetWidth;
+  const k = img.naturalWidth / largeur;
+  const blocs = blocsDe(el, vue);
+  if (!blocs.length) return { img, k, entete: { top: 0, height: 0 }, pages: [{ start: 0, end: img.naturalHeight / k }] };
+  const { entete, pages } = paginer(blocs, hauteurPx);
+  return { img, k, entete, pages };
 }
 
 export async function exporterPlanningEquipesPdf(p: ExportPlanningEquipes): Promise<{ pages: number }> {
@@ -68,24 +134,19 @@ export async function exporterPlanningEquipesPdf(p: ExportPlanningEquipes): Prom
   const sections = p.vue === "jours" ? Array.from(p.contenu.querySelectorAll<HTMLElement>(":scope > section")) : [];
   const cibles = sections.length ? sections : [p.contenu];
 
-  const tranches: Tranche[] = [];
-  for (const el of cibles) {
-    const img = await versImage(el);
-    const echelle = dispoW / img.naturalWidth;
-    tranches.push({ img, pages: Math.max(1, Math.ceil((img.naturalHeight * echelle) / dispoH)) });
-  }
-  const total = tranches.reduce((n, t) => n + t.pages, 0);
+  const captures: Capture[] = [];
+  for (const el of cibles) captures.push(await capturer(el, p.vue, dispoH));
+  const total = captures.reduce((n, c) => n + c.pages.length, 0);
   const legende = p.legende ? await versImage(p.legende) : null;
 
   let numero = 0;
-  for (const t of tranches) {
-    const echelle = dispoW / t.img.naturalWidth;
-    const parPagePx = dispoH / echelle;
-    for (let i = 0; i < t.pages; i++) {
+  for (const c of captures) {
+    const echelle = dispoW / c.img.naturalWidth; // px image → mm
+    for (const page of c.pages) {
       if (numero > 0) pdf.addPage();
       numero++;
 
-      // Tête : titre de la semaine, vue, légende des couleurs.
+      // Tête de page : titre de la semaine, vue, légende des couleurs.
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(13);
       pdf.setTextColor(20);
@@ -102,8 +163,16 @@ export async function exporterPlanningEquipesPdf(p: ExportPlanningEquipes): Prom
       pdf.setLineWidth(0.2);
       pdf.line(MARGE, MARGE + TETE - 2, pageW - MARGE, MARGE + TETE - 2);
 
-      const slice = decouper(t.img, echelle, parPagePx, i);
-      pdf.addImage(slice.data, "PNG", MARGE, MARGE + TETE, dispoW, slice.hauteur);
+      const haut = MARGE + TETE;
+      let y = haut;
+      if (c.entete.height > 0) {
+        const tete = tranche(c.img, c.k, 0, c.entete.height);
+        const h = Math.min(tete.hauteur * echelle, dispoH * 0.4);
+        pdf.addImage(tete.data, "JPEG", MARGE, y, dispoW, h);
+        y += h;
+      }
+      const corps = tranche(c.img, c.k, page.start, page.end);
+      pdf.addImage(corps.data, "JPEG", MARGE, y, dispoW, Math.min(corps.hauteur * echelle, haut + dispoH - y));
 
       pdf.setFontSize(8);
       pdf.setTextColor(140);
