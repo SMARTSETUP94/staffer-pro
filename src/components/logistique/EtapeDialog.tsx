@@ -144,7 +144,7 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader><DialogTitle>{etape ? "Modifier l'étape" : "Nouvelle étape logistique"}</DialogTitle></DialogHeader>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2 [&>div]:min-w-0">
           <div className="sm:col-span-2">
             <Label>Chantier / opportunité</Label>
             <Popover open={affaireOpen} onOpenChange={setAffaireOpen}>
@@ -154,7 +154,7 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[22rem] p-0" align="start">
+              <PopoverContent className="w-[22rem] max-w-[calc(100vw-2rem)] p-0" align="start">
                 <Command>
                   <CommandInput placeholder="Rechercher par numéro ou mot clé…" />
                   <CommandList>

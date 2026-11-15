@@ -2,7 +2,7 @@
 
 ## Responsable d’étape logistique — 15 novembre
 - [x] Remplacer le champ chef de projet bloqué par une désignation modifiable ; suggestion depuis l’équipe projet sans affectation automatique, formulaire de demande clarifié.
-- [ ] Vérifier saisie et sauvegarde sur étape d’essai, affichage mobile et bureau ; rien publié.
+- [x] Saisie et effacement vérifiés connecté à 390/1366 px ; 24 tests existants passent, build OK. Aucune étape réelle modifiée ; sauvegarde non exercée faute d’affaire d’essai disponible dans la liste. Rien publié.
 
 ## Contact d’envoi depuis un devis — 15 novembre
 - [x] Ajouter un contact au client facturé et le sélectionner via la sauvegarde existante du devis ; droits et blocage des devis inchangés.
