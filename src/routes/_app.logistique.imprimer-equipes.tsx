@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, Printer } from "lucide-react";
 import { requireCapability } from "@/lib/capability-guard";
 import { Button } from "@/components/ui/button";
-import { ETAPE_LABELS } from "@/lib/logistique/etapes";
+import { ETAPE_CLASSES, ETAPE_LABELS } from "@/lib/logistique/etapes";
 import { ajouterJours } from "@/lib/dispos";
 import { blocsExport, commentaires, ENTETE_BLOC, horaire } from "@/lib/imports/planning-equipes";
 import { semaineParPersonne } from "@/lib/logistique/planning-semaine";
@@ -25,6 +25,8 @@ export const Route = createFileRoute("/_app/logistique/imprimer-equipes")({
 });
 
 const L = ETAPE_LABELS as Record<string, string>;
+const C = ETAPE_CLASSES as Record<string, string>;
+const weekend = (iso: string) => { const j = new Date(`${iso}T12:00:00Z`).getUTCDay(); return j === 0 || j === 6; };
 const dateCourte = (iso: string) => new Intl.DateTimeFormat("fr-FR", { weekday: "short", day: "numeric", month: "numeric", timeZone: "UTC" }).format(new Date(`${iso}T12:00:00Z`));
 
 function ImprimerEquipes() {
@@ -40,7 +42,7 @@ function ImprimerEquipes() {
   const titre = `Planning du ${new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long" }).format(new Date(`${dates[0]}T12:00:00`))} au ${new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${dates[6]}T12:00:00`))}`;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4 p-4 sm:p-6 print:max-w-none print:p-0">
+    <div className="mx-auto max-w-6xl [print-color-adjust:exact] [-webkit-print-color-adjust:exact] space-y-4 p-4 sm:p-6 print:max-w-none print:p-0">
       <style>{`@media print { @page { size: ${vue === "employes" ? "A4 landscape" : "A4 portrait"}; margin: 10mm; } }`}</style>
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-muted/40 p-2 print:hidden">
         <Button variant="ghost" size="sm" asChild><Link to="/logistique"><ArrowLeft className="mr-1 h-4 w-4" />Planning</Link></Button>
@@ -56,7 +58,7 @@ function ImprimerEquipes() {
         <Button onClick={() => window.print()}><Printer className="mr-1 h-4 w-4" />Imprimer / PDF</Button>
       </div>
 
-      <h1 className="text-xl font-bold">{titre}{vue === "employes" ? " — par employé" : ""}</h1>
+      <div className="flex flex-wrap items-end justify-between gap-2"><h1 className="text-xl font-bold">{titre}{vue === "employes" ? " — par employé" : ""}</h1><div className="flex flex-wrap gap-1">{Object.keys(C).map(t => <span key={t} className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${C[t]}`}>{L[t]}</span>)}</div></div>
       {q.isLoading ? <p className="text-sm text-muted-foreground">Chargement…</p> : q.error ? <p className="text-sm text-destructive">Lecture du planning impossible.</p> : vue === "jours" ? (
         <div className="space-y-6">
           {dates.map((jour, i) => {
@@ -64,23 +66,23 @@ function ImprimerEquipes() {
             if (!duJour.length) return null;
             return (
               <section key={jour} className={i > 0 ? "space-y-3 print:break-before-page" : "space-y-3"}>
-                <h2 className="text-center text-lg font-bold capitalize underline">{titreJour(jour)}</h2>
+                <h2 className="rounded-md bg-primary px-3 py-1.5 text-center text-lg font-bold capitalize text-primary-foreground">{titreJour(jour)} <span className="text-sm font-medium opacity-80">· {duJour.length} intervention{duJour.length > 1 ? "s" : ""} · {duJour.reduce((n, b) => n + b.personnes.length, 0)} pers.</span></h2>
                 {duJour.map(b => (
-                  <table key={b.etape.id} className="w-full break-inside-avoid border-collapse text-sm">
-                    <thead><tr>{ENTETE_BLOC.map(h => <th key={h} className="border border-foreground bg-muted px-2 py-1 text-left font-semibold">{h}</th>)}</tr></thead>
+                  <table key={b.etape.id} className="w-full break-inside-avoid border-collapse overflow-hidden rounded-md text-sm shadow-sm">
+                    <thead><tr>{ENTETE_BLOC.map(h => <th key={h} className="border border-border bg-muted px-2 py-1 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">{h}</th>)}</tr></thead>
                     <tbody>
-                      <tr className="font-semibold">
-                        <td className="border border-foreground px-2 py-1 tabular-nums">{b.etape.numero}</td>
-                        <td className="border border-foreground px-2 py-1">{b.etape.nom}</td>
-                        <td className="border border-foreground px-2 py-1">{b.etape.responsable ?? ""}</td>
-                        <td className="border border-foreground px-2 py-1">{L[b.etape.type] ?? b.etape.type}</td>
-                        <td className="border border-foreground px-2 py-1">{b.etape.lieu ?? ""}</td>
-                        <td className="border border-foreground px-2 py-1">{commentaires(b.etape)}</td>
+                      <tr className="bg-card font-semibold">
+                        <td className={`border border-border px-2 py-1 text-base font-bold tabular-nums ${C[b.etape.type] ?? "bg-muted"}`}>{b.etape.numero}</td>
+                        <td className="border border-border px-2 py-1 text-base">{b.etape.nom}</td>
+                        <td className="border border-border px-2 py-1">{b.etape.responsable ?? ""}</td>
+                        <td className="border border-border px-2 py-1"><span className={`rounded px-2 py-0.5 text-xs font-semibold ${C[b.etape.type] ?? "bg-muted"}`}>{L[b.etape.type] ?? b.etape.type}</span></td>
+                        <td className="border border-border px-2 py-1 font-normal">{b.etape.lieu ?? ""}</td>
+                        <td className="border border-border px-2 py-1 font-normal text-muted-foreground">{commentaires(b.etape)}</td>
                       </tr>
                       {b.personnes.length === 0 ? (
-                        <tr><td colSpan={6} className="border border-foreground px-2 py-1 italic text-muted-foreground">Équipe à compléter</td></tr>
+                        <tr><td colSpan={6} className="border border-border bg-destructive/10 px-2 py-1 font-medium italic text-destructive">Équipe à compléter</td></tr>
                       ) : Array.from({ length: Math.ceil(b.personnes.length / 6) }, (_, r) => (
-                        <tr key={r}>{Array.from({ length: 6 }, (_, c) => <td key={c} className="border border-foreground px-2 py-1">{b.personnes[r * 6 + c]?.nom ?? ""}</td>)}</tr>
+                        <tr key={r}>{Array.from({ length: 6 }, (_, c) => <td key={c} className={`border border-border px-2 py-1 ${b.personnes[r * 6 + c]?.role === "chef_equipe" ? "bg-accent font-semibold text-accent-foreground" : "bg-muted/30"}`}>{b.personnes[r * 6 + c]?.nom ?? ""}</td>)}</tr>
                       ))}
                     </tbody>
                   </table>
@@ -94,19 +96,20 @@ function ImprimerEquipes() {
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-xs">
             <thead><tr>
-              <th className="sticky left-0 border border-foreground bg-muted px-2 py-1 text-left">Employé</th>
-              {dates.map(d => <th key={d} className="min-w-[7.5rem] border border-foreground bg-muted px-2 py-1 text-left capitalize">{dateCourte(d)}</th>)}
+              <th className="sticky left-0 border border-border bg-primary px-2 py-1.5 text-left text-primary-foreground">Employé</th>
+              {dates.map(d => <th key={d} className={`min-w-[7.5rem] border border-border px-2 py-1.5 text-left capitalize ${weekend(d) ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground"}`}>{dateCourte(d)}</th>)}
             </tr></thead>
             <tbody>
-              {lignes.map(l => (
-                <tr key={`${l.personne.origine}:${l.personne.id}`} className="break-inside-avoid align-top">
-                  <td className="sticky left-0 border border-foreground bg-background px-2 py-1 font-semibold whitespace-nowrap">{l.personne.nom.toLocaleUpperCase("fr")} {l.personne.prenom}</td>
+              {lignes.map((l, n) => (
+                <tr key={`${l.personne.origine}:${l.personne.id}`} className={`break-inside-avoid align-top ${n % 2 ? "bg-muted/40" : "bg-card"}`}>
+                  <td className="sticky left-0 border border-border bg-inherit px-2 py-1 whitespace-nowrap"><div className="font-semibold">{l.personne.nom.toLocaleUpperCase("fr")} {l.personne.prenom}</div><div className="text-[10px] text-muted-foreground">{l.jours.filter(j => j.length).length} j travaillé{l.jours.filter(j => j.length).length > 1 ? "s" : ""}</div></td>
                   {l.jours.map((cases, i) => (
-                    <td key={i} className="border border-foreground px-2 py-1">
+                    <td key={i} className={`border border-border p-1 ${weekend(dates[i]) ? "bg-muted/60" : ""}`}>
                       {cases.map(c => (
-                        <div key={c.etape.id} className="mb-1 last:mb-0">
-                          <div className="font-semibold"><span className="tabular-nums">{c.etape.numero}</span> {c.etape.nom}{c.chef ? " (chef)" : ""}</div>
-                          <div className="text-muted-foreground">{[L[c.etape.type] ?? c.etape.type, horaire(c.etape), c.etape.lieu].filter(Boolean).join(" · ")}</div>
+                        <div key={c.etape.id} className={`mb-1 rounded px-1.5 py-1 last:mb-0 ${C[c.etape.type] ?? "bg-muted"}`}>
+                          <div className="flex items-center justify-between gap-1 text-[10px] font-semibold uppercase opacity-90"><span>{L[c.etape.type] ?? c.etape.type}</span>{horaire(c.etape) && <span className="tabular-nums">{horaire(c.etape)}</span>}</div>
+                          <div className="font-semibold leading-tight"><span className="tabular-nums">{c.etape.numero}</span> {c.etape.nom}{c.chef ? " ★ chef" : ""}</div>
+                          {c.etape.lieu && <div className="truncate text-[10px] opacity-90">{c.etape.lieu}</div>}
                         </div>
                       ))}
                     </td>
