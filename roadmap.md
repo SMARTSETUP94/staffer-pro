@@ -2,7 +2,7 @@
 
 ## Contact d’envoi depuis un devis — 15 novembre
 - [x] Ajouter un contact au client facturé et le sélectionner via la sauvegarde existante du devis ; droits et blocage des devis inchangés.
-- [ ] Vérifier création, sélection et relecture dans la fiche client sur données d’essai ; rien publié.
+- [x] Création, sélection après rechargement et relecture dans la fiche client vérifiées ; fenêtres 390/1366 px, 5 tests verts et build OK. Contact/client désactivés, devis supprimé logiquement et chantier d’essai archivé ; rien publié.
 
 ## Devis — cinq statuts et pipeline (14 novembre)
 - [x] Retirer « À finaliser » de l'éditeur et des filtres ; conserver les anciens états lisibles comme brouillons.
