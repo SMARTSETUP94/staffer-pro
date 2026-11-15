@@ -41,15 +41,8 @@ type Page = { start: number; end: number };
 type Capture = { img: HTMLImageElement; k: number; echelle: number; x: number; largeurMm: number; entete: Bloc; pages: Page[] };
 
 /** Capture un élément en PNG, chargé et prêt à être découpé. */
-async function versImage(el: HTMLElement, largeurCss?: number): Promise<HTMLImageElement> {
-  const url = await toPng(el, {
-    pixelRatio: PIXEL_RATIO,
-    backgroundColor: "#ffffff",
-    cacheBust: true,
-    // Sur un écran étroit, la vue « jour par jour » est plus large que la page :
-    // on la capture à sa largeur de bureau pour ne pas perdre de colonnes.
-    ...(largeurCss ? { style: { width: `${largeurCss}px` } } : {}),
-  });
+async function versImage(el: HTMLElement): Promise<HTMLImageElement> {
+  const url = await toPng(el, { pixelRatio: PIXEL_RATIO, backgroundColor: "#ffffff", cacheBust: true });
   const img = new Image();
   img.src = url;
   await new Promise<void>((ok, ko) => {
@@ -57,6 +50,21 @@ async function versImage(el: HTMLElement, largeurCss?: number): Promise<HTMLImag
     img.onerror = () => ko(new Error("capture illisible"));
   });
   return img;
+}
+
+/**
+ * Copie hors écran d'un élément, remise à une largeur de bureau.
+ * Sur un téléphone la vue « jour par jour » est plus large que l'écran : sans
+ * cette copie, le PDF perdrait les colonnes de droite.
+ */
+function horsEcran(el: HTMLElement, largeur: number) {
+  const conteneur = document.createElement("div");
+  conteneur.style.cssText = `position:fixed;left:-100000px;top:0;width:${largeur}px;background:#ffffff`;
+  const clone = el.cloneNode(true) as HTMLElement;
+  clone.style.width = `${largeur}px`;
+  conteneur.appendChild(clone);
+  document.body.appendChild(conteneur);
+  return { clone, fermer: () => conteneur.remove() };
 }
 
 /**
@@ -122,22 +130,26 @@ function paginer(blocs: Bloc[], hauteurPx: number): { entete: Bloc; pages: Page[
 async function capturer(el: HTMLElement, vue: VuePlanning, dispoW: number, dispoH: number): Promise<Capture> {
   const largeur = el.getBoundingClientRect().width || el.offsetWidth;
   const cible = vue === "jours" ? Math.max(largeur, 1000) : largeur;
-  const img = await versImage(el, cible > largeur ? cible : undefined);
-  const k = img.naturalWidth / cible;
-  // Réduction pour tenir dans la page, jamais au-delà de la taille naturelle (96 dpi) :
-  // sur un écran étroit, le planning reste à taille lisible au lieu d'être étiré.
-  const mmParPx = Math.min(dispoW / cible, 0.2646);
-  const echelle = mmParPx / k; // px image → mm
-  const largeurMm = cible * mmParPx;
-  const x = MARGE + (dispoW - largeurMm) / 2;
-  // Hauteur de page exprimée en pixels CSS.
-  const hauteurPx = dispoH / mmParPx;
-  // Sans élargissement, les blocs sont mesurés à l'écran et ne sont jamais coupés ;
-  // avec élargissement, leurs positions ne correspondent plus, on découpe à hauteur fixe.
-  const blocs = cible === largeur ? blocsDe(el, vue) : [];
-  if (!blocs.length) return { img, k, echelle, x, largeurMm, entete: { top: 0, height: 0 }, pages: paginerHauteurFixe(img.naturalHeight / k, hauteurPx) };
-  const { entete, pages } = paginer(blocs, hauteurPx);
-  return { img, k, echelle, x, largeurMm, entete, pages };
+  const copie = cible > largeur + 1 ? horsEcran(el, cible) : null;
+  const source = copie ? copie.clone : el;
+  try {
+    const img = await versImage(source);
+    const k = img.naturalWidth / cible;
+    // Réduction pour tenir dans la page, jamais au-delà de la taille naturelle (96 dpi) :
+    // sur un écran étroit, le planning reste à taille lisible au lieu d'être étiré.
+    const mmParPx = Math.min(dispoW / cible, 0.2646);
+    const echelle = mmParPx / k; // px image → mm
+    const largeurMm = cible * mmParPx;
+    const x = MARGE + (dispoW - largeurMm) / 2;
+    // Hauteur de page exprimée en pixels CSS.
+    const hauteurPx = dispoH / mmParPx;
+    const blocs = blocsDe(source, vue);
+    if (!blocs.length) return { img, k, echelle, x, largeurMm, entete: { top: 0, height: 0 }, pages: paginerHauteurFixe(img.naturalHeight / k, hauteurPx) };
+    const { entete, pages } = paginer(blocs, hauteurPx);
+    return { img, k, echelle, x, largeurMm, entete, pages };
+  } finally {
+    copie?.fermer();
+  }
 }
 
 /** Découpe à hauteur de page constante (aucun bloc mesurable). */
