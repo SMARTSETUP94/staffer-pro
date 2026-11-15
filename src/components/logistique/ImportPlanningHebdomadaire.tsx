@@ -19,17 +19,17 @@ import { Command, CommandInput, CommandList, CommandItem, CommandEmpty } from '@
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 function ChoixCherchable({ label, value, options, onChange }: { label: string; value: string; options: { id: string; label: string }[]; onChange: (id: string) => void }) {
-  const [openInt, setOpenInt] = useState(false);
-  const controle = openExt !== undefined;
-  const open = controle ? openExt : openInt;
-  const setOpen = (o: boolean) => { if (controle) onOpenChange?.(o); else setOpenInt(o); };
+  const [open, setOpen] = useState(false);
   return <Popover open={open} onOpenChange={setOpen}><PopoverTrigger asChild><Button variant="outline" role="combobox" aria-label={label} aria-expanded={open} className="w-full justify-between"><span className="truncate">{options.find(o => o.id === value)?.label ?? label}</span><ChevronsUpDown className="ml-2 size-4 shrink-0" /></Button></PopoverTrigger><PopoverContent className="w-80 max-w-[90vw] p-0"><Command><CommandInput placeholder="Rechercher…" /><CommandList><CommandEmpty>Aucun résultat</CommandEmpty>{options.map(o => <CommandItem key={o.id} value={o.label} onSelect={() => { onChange(o.id); setOpen(false); }}><Check className={`mr-2 size-4 ${value === o.id ? 'opacity-100' : 'opacity-0'}`} />{o.label}</CommandItem>)}</CommandList></Command></PopoverContent></Popover>;
 }
 
 export function ImportPlanningHebdomadaire({ open: openExt, onOpenChange }: { open?: boolean; onOpenChange?: (o: boolean) => void } = {}) {
   const analyser = useServerFn(analyserPlanningHebdomadaire);
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const [openInt, setOpenInt] = useState(false);
+  const controle = openExt !== undefined;
+  const open = controle ? openExt : openInt;
+  const setOpen = (o: boolean) => { if (controle) onOpenChange?.(o); else setOpenInt(o); };
   const [busy, setBusy] = useState(false);
   const [blocs, setBlocs] = useState<InterventionLue[]>([]);
   const [refs, setRefs] = useState<ReferencesPlanning>({ personnes: [], affaires: [] });
