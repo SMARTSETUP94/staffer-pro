@@ -154,6 +154,7 @@ function PlanningLogistiquePage() {
           {ecritTerrain && <HistoriqueAffectationsExport />}
           <Button size="sm" variant="outline" onClick={() => setCalendrierOpen(true)}><CalendarDays className="mr-1 h-4 w-4" />Calendrier chantier</Button>
           <Button size="sm" variant="outline" asChild><Link to="/logistique/imprimer"><Printer className="mr-1 h-4 w-4" />Imprimer</Link></Button>
+          <Button size="sm" variant="outline" asChild><Link to="/logistique/imprimer-equipes"><Printer className="mr-1 h-4 w-4" />Imprimer les équipes</Link></Button>
           <Button size="sm" variant="outline" asChild><Link to="/ecran-atelier"><Monitor className="mr-1 h-4 w-4" />Écran atelier</Link></Button>
           {canEdit && <Button size="sm" variant="outline" disabled={syncing} onClick={resync}><CalendarSync className="mr-1 h-4 w-4" />{syncing ? "Synchro…" : "Outlook"}</Button>}
         </div>
