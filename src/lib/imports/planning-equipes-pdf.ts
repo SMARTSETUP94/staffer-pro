@@ -41,8 +41,15 @@ type Page = { start: number; end: number };
 type Capture = { img: HTMLImageElement; k: number; echelle: number; x: number; largeurMm: number; entete: Bloc; pages: Page[] };
 
 /** Capture un élément en PNG, chargé et prêt à être découpé. */
-async function versImage(el: HTMLElement): Promise<HTMLImageElement> {
-  const url = await toPng(el, { pixelRatio: PIXEL_RATIO, backgroundColor: "#ffffff", cacheBust: true });
+async function versImage(el: HTMLElement, largeurCss?: number): Promise<HTMLImageElement> {
+  const url = await toPng(el, {
+    pixelRatio: PIXEL_RATIO,
+    backgroundColor: "#ffffff",
+    cacheBust: true,
+    // Sur un écran étroit, la vue « jour par jour » est plus large que la page :
+    // on la capture à sa largeur de bureau pour ne pas perdre de colonnes.
+    ...(largeurCss ? { style: { width: `${largeurCss}px` } } : {}),
+  });
   const img = new Image();
   img.src = url;
   await new Promise<void>((ok, ko) => {
@@ -113,21 +120,31 @@ function paginer(blocs: Bloc[], hauteurPx: number): { entete: Bloc; pages: Page[
 }
 
 async function capturer(el: HTMLElement, vue: VuePlanning, dispoW: number, dispoH: number): Promise<Capture> {
-  const img = await versImage(el);
-  const largeur = el.getBoundingClientRect().width || el.offsetWidth || img.naturalWidth;
-  const k = img.naturalWidth / largeur;
+  const largeur = el.getBoundingClientRect().width || el.offsetWidth;
+  const cible = vue === "jours" ? Math.max(largeur, 1000) : largeur;
+  const img = await versImage(el, cible > largeur ? cible : undefined);
+  const k = img.naturalWidth / cible;
   // Réduction pour tenir dans la page, jamais au-delà de la taille naturelle (96 dpi) :
   // sur un écran étroit, le planning reste à taille lisible au lieu d'être étiré.
-  const mmParPx = Math.min(dispoW / largeur, 0.2646);
+  const mmParPx = Math.min(dispoW / cible, 0.2646);
   const echelle = mmParPx / k; // px image → mm
-  const largeurMm = largeur * mmParPx;
+  const largeurMm = cible * mmParPx;
   const x = MARGE + (dispoW - largeurMm) / 2;
   // Hauteur de page exprimée en pixels CSS.
   const hauteurPx = dispoH / mmParPx;
-  const blocs = blocsDe(el, vue);
-  if (!blocs.length) return { img, k, echelle, x, largeurMm, entete: { top: 0, height: 0 }, pages: [{ start: 0, end: img.naturalHeight / k }] };
+  // Sans élargissement, les blocs sont mesurés à l'écran et ne sont jamais coupés ;
+  // avec élargissement, leurs positions ne correspondent plus, on découpe à hauteur fixe.
+  const blocs = cible === largeur ? blocsDe(el, vue) : [];
+  if (!blocs.length) return { img, k, echelle, x, largeurMm, entete: { top: 0, height: 0 }, pages: paginerHauteurFixe(img.naturalHeight / k, hauteurPx) };
   const { entete, pages } = paginer(blocs, hauteurPx);
   return { img, k, echelle, x, largeurMm, entete, pages };
+}
+
+/** Découpe à hauteur de page constante (aucun bloc mesurable). */
+function paginerHauteurFixe(totalPx: number, hauteurPx: number): Page[] {
+  const pages: Page[] = [];
+  for (let y = 0; y < totalPx; y += hauteurPx) pages.push({ start: y, end: Math.min(y + hauteurPx, totalPx) });
+  return pages.length ? pages : [{ start: 0, end: totalPx }];
 }
 
 export async function exporterPlanningEquipesPdf(p: ExportPlanningEquipes): Promise<{ pages: number }> {
