@@ -38,7 +38,7 @@ const QUALITE = 0.92;
 type Bloc = { top: number; height: number };
 type Page = { start: number; end: number };
 /** k : pixels CSS → pixels image ; echelle : pixels image → millimètres. */
-type Capture = { img: HTMLImageElement; k: number; echelle: number; entete: Bloc; pages: Page[] };
+type Capture = { img: HTMLImageElement; k: number; echelle: number; x: number; largeurMm: number; entete: Bloc; pages: Page[] };
 
 /** Capture un élément en PNG, chargé et prêt à être découpé. */
 async function versImage(el: HTMLElement): Promise<HTMLImageElement> {
@@ -116,13 +116,18 @@ async function capturer(el: HTMLElement, vue: VuePlanning, dispoW: number, dispo
   const img = await versImage(el);
   const largeur = el.getBoundingClientRect().width || el.offsetWidth || img.naturalWidth;
   const k = img.naturalWidth / largeur;
-  const echelle = dispoW / img.naturalWidth; // px image → mm
-  // Hauteur de page exprimée en pixels CSS : l'élément est réduit à dispoW de large.
-  const hauteurPx = dispoH / (echelle * k);
+  // Réduction pour tenir dans la page, jamais au-delà de la taille naturelle (96 dpi) :
+  // sur un écran étroit, le planning reste à taille lisible au lieu d'être étiré.
+  const mmParPx = Math.min(dispoW / largeur, 0.2646);
+  const echelle = mmParPx / k; // px image → mm
+  const largeurMm = largeur * mmParPx;
+  const x = MARGE + (dispoW - largeurMm) / 2;
+  // Hauteur de page exprimée en pixels CSS.
+  const hauteurPx = dispoH / mmParPx;
   const blocs = blocsDe(el, vue);
-  if (!blocs.length) return { img, k, echelle, entete: { top: 0, height: 0 }, pages: [{ start: 0, end: img.naturalHeight / k }] };
+  if (!blocs.length) return { img, k, echelle, x, largeurMm, entete: { top: 0, height: 0 }, pages: [{ start: 0, end: img.naturalHeight / k }] };
   const { entete, pages } = paginer(blocs, hauteurPx);
-  return { img, k, echelle, entete, pages };
+  return { img, k, echelle, x, largeurMm, entete, pages };
 }
 
 export async function exporterPlanningEquipesPdf(p: ExportPlanningEquipes): Promise<{ pages: number }> {
@@ -170,11 +175,11 @@ export async function exporterPlanningEquipesPdf(p: ExportPlanningEquipes): Prom
       if (c.entete.height > 0) {
         const tete = tranche(c.img, c.k, 0, c.entete.height);
         const h = Math.min(tete.px * c.echelle, dispoH * 0.4);
-        pdf.addImage(tete.data, "JPEG", MARGE, y, dispoW, h);
+        pdf.addImage(tete.data, "JPEG", c.x, y, c.largeurMm, h);
         y += h;
       }
       const corps = tranche(c.img, c.k, page.start, page.end);
-      if (page.end - page.start > 0.5) pdf.addImage(corps.data, "JPEG", MARGE, y, dispoW, Math.min(corps.px * c.echelle, haut + dispoH - y));
+      if (page.end - page.start > 0.5) pdf.addImage(corps.data, "JPEG", c.x, y, c.largeurMm, Math.min(corps.px * c.echelle, haut + dispoH - y));
 
       pdf.setFontSize(8);
       pdf.setTextColor(140);
