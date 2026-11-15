@@ -1,5 +1,9 @@
 # Roadmap
 
+## Contact d’envoi depuis un devis — 15 novembre
+- [x] Ajouter un contact au client facturé et le sélectionner via la sauvegarde existante du devis ; droits et blocage des devis inchangés.
+- [ ] Vérifier création, sélection et relecture dans la fiche client sur données d’essai ; rien publié.
+
 ## Devis — cinq statuts et pipeline (14 novembre)
 - [x] Retirer « À finaliser » de l'éditeur et des filtres ; conserver les anciens états lisibles comme brouillons.
 - [ ] Présenter puis faire approuver la migration : plus de passage à l'étude dès création ; finalisation → à l'étude ; envoi → envoyé ; soumission Claude reste brouillon, droits conservés.

@@ -16,6 +16,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ClientCombobox } from "@/components/clients/ClientCombobox";
+import { NouveauContactDialog } from "@/components/clients/NouveauContactDialog";
+import { useAuth } from "@/lib/auth-context";
 import { calculerDevis } from "@/lib/devis/calcul";
 import { CoutsBloc } from "./CoutsBloc";
 import { SignerOpportuniteDialog } from "@/components/opportunites/SignerOpportuniteDialog";
@@ -49,6 +51,8 @@ const DATES: { key: string; label: string; affaire: boolean }[] = [
 
 export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null; devisId: string }) {
   const navigate = useNavigate();
+  const { roles } = useAuth();
+  const [nouveauContact, setNouveauContact] = useState(false);
   const q = useDevis(devisId);
   const call = useDevisRpc(devisId);
   const patch = usePatchCache(devisId);
@@ -106,7 +110,13 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
   const contacts = useQuery({
     queryKey: ["client-contacts", d?.devis.client_id],
     enabled: !!d?.devis.client_id,
-    queryFn: async () => (await supabase.from("client_contacts").select("id,nom,prenom,email").eq("client_id", d!.devis.client_id!).eq("actif", true).order("nom")).data ?? [],
+    queryFn: async () => {
+      const clientId = d?.devis.client_id;
+      if (!clientId) return [];
+      const { data, error } = await supabase.from("client_contacts").select("id,nom,prenom,email").eq("client_id", clientId).eq("actif", true).order("nom");
+      if (error) throw error;
+      return data ?? [];
+    },
   });
 
   useEffect(() => {
@@ -328,13 +338,19 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
                   Fiche client incomplète ({[!d.client!.adresse && "adresse", !d.client!.siret && "SIRET"].filter(Boolean).join(", ")}) —{" "}
                   <Link to="/clients/$clientId" params={{ clientId: d.client!.id }} className="underline">compléter</Link></p>}
               </div>
-              <div className="w-56 space-y-1" id="devis-contact">
+              <div className="w-56 max-w-full space-y-1" id="devis-contact">
                 <p className="text-xs text-muted-foreground">Contact</p>
                 <select disabled={readOnly || !d.devis.client_id} className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={d.devis.contact_id ?? ""}
                   onChange={(e) => void setEntete({ contact_id: e.target.value || null })}>
                   <option value="">—</option>
                   {(contacts.data ?? []).map((c) => <option key={c.id} value={c.id}>{[c.prenom, c.nom].filter(Boolean).join(" ") || c.email}</option>)}
                 </select>
+                {!readOnly && d.devis.client_id && roles.some((role) => role === "admin" || role === "chef_chantier") && (
+                  <Button type="button" variant="ghost" size="sm" className="h-8 px-0 text-primary" onClick={() => setNouveauContact(true)}>
+                    <Plus className="mr-1 h-3.5 w-3.5" />Nouveau contact d’envoi
+                  </Button>
+                )}
+                {contacts.error && <p className="text-xs text-destructive">Impossible de charger les contacts.</p>}
               </div>
               {d.devis.client_final_id || clientFinalOuvert ? (
                 <div className="w-56 space-y-1">
@@ -358,6 +374,13 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
       </Card>
 
       {!d.devis.est_modele && <DevisChantierSignataire devisId={devisId} disabled={readOnly} enregistrer={setEntete} />}
+      {nouveauContact && !readOnly && d.devis.client_id && <NouveauContactDialog
+        key={d.devis.client_id}
+        clientId={d.devis.client_id}
+        clientNom={d.client?.nom ?? "Client facturé"}
+        onClose={() => setNouveauContact(false)}
+        onCreated={async (id) => (await setEntete({ contact_id: id })) !== null}
+      />}
       {/* Dates clés */}
       {!d.devis.est_modele && (
         <div id="devis-dates" className="space-y-2">
