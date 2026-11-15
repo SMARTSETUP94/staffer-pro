@@ -39,16 +39,16 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
   const [affaireOpen, setAffaireOpen] = useState(false);
   const [f, setF] = useState(() => init());
   const [chefProjet, setChefProjet] = useState<string | null>(null);
-  // Chef de projet du chantier choisi (lecture seule, vient de l'équipe projet).
+  // L'équipe projet fournit une suggestion, sans modifier le responsable de l'étape.
   useEffect(() => {
     setChefProjet(null);
     if (!f.affaire_id) return;
     let vivant = true;
     (async () => {
-      const { data: a } = await supabase.from("affaires").select("chef_projet_id").eq("id", f.affaire_id).maybeSingle();
-      if (!a?.chef_projet_id) return;
-      const { data: p } = await supabase.from("profiles").select("full_name, email").eq("id", a.chef_projet_id).maybeSingle();
-      if (vivant) setChefProjet(p?.full_name || p?.email || null);
+      const { data: a } = await supabase.from("affaire_roles").select("employe_id").eq("affaire_id", f.affaire_id).eq("role", "responsable_projet").maybeSingle();
+      if (!a?.employe_id) return;
+      const { data: p } = await supabase.from("employes").select("nom, prenom").eq("id", a.employe_id).maybeSingle();
+      if (vivant) setChefProjet(p ? [p.prenom, p.nom].filter(Boolean).join(" ") : null);
     })();
     return () => { vivant = false; };
   }, [f.affaire_id]);
@@ -144,7 +144,7 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader><DialogTitle>{etape ? "Modifier l'étape" : "Nouvelle étape logistique"}</DialogTitle></DialogHeader>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2 [&>div]:min-w-0">
           <div className="sm:col-span-2">
             <Label>Chantier / opportunité</Label>
             <Popover open={affaireOpen} onOpenChange={setAffaireOpen}>
@@ -154,7 +154,7 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[22rem] p-0" align="start">
+              <PopoverContent className="w-[22rem] max-w-[calc(100vw-2rem)] p-0" align="start">
                 <Command>
                   <CommandInput placeholder="Rechercher par numéro ou mot clé…" />
                   <CommandList>
@@ -173,6 +173,14 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
                 </Command>
               </PopoverContent>
             </Popover>
+          </div>
+          <div className="sm:col-span-2 space-y-2">
+            <Label htmlFor="etape-responsable">Chef de projet / responsable de l’étape (facultatif)</Label>
+            <ResponsableAutocomplete id="etape-responsable" value={f.responsable} onChange={(v) => set("responsable", v)} />
+            {chefProjet && <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+              <span className="text-muted-foreground">Responsable projet du chantier : {chefProjet}</span>
+              <Button type="button" size="sm" variant="outline" onClick={() => set("responsable", chefProjet)}>Choisir {chefProjet}</Button>
+            </div>}
           </div>
           <div>
             <Label>Étape</Label>
@@ -216,11 +224,9 @@ export function EtapeDialog({ open, onOpenChange, etape, defaultDate, defaultAff
           )}
           <div><Label>Lieu</Label><LieuAutocomplete value={f.lieu_libre} onChange={(v) => set("lieu_libre", v)} /></div>
           <div><Label>Nb personnes</Label><Input type="number" min={0} value={f.nb_personnes} onChange={(e) => set("nb_personnes", e.target.value)} /></div>
-          <div><Label>Chef de projet</Label><Input readOnly disabled value={chefProjet ?? (f.affaire_id ? "Non renseigné" : "Choisir un chantier")} /></div>
           <div><Label>Nb véhicules</Label><Input type="number" min={0} value={f.nb_vehicules} onChange={(e) => set("nb_vehicules", e.target.value)} /></div>
           <div className="sm:col-span-2"><Label>Permis requis (1 personne par permis)</Label><ChoixMultiple options={["B", "C", "CE"]} value={f.permis_requis} onChange={(v) => set("permis_requis", v)} /></div>
           <div className="sm:col-span-2"><Label>CACES requis</Label><ChoixMultiple options={["R489", "R486"]} value={f.caces_requis} onChange={(v) => set("caces_requis", v)} /></div>
-          <div className="sm:col-span-2"><Label>Responsable</Label><ResponsableAutocomplete value={f.responsable} onChange={(v) => set("responsable", v)} /></div>
           <div className="sm:col-span-2"><Label>Accès (quai, code…)</Label><Input value={f.acces} onChange={(e) => set("acces", e.target.value)} /></div>
           <div className="sm:col-span-2"><Label>Note</Label><Textarea rows={2} value={f.note} onChange={(e) => set("note", e.target.value)} /></div>
           <div className="sm:col-span-2"><Label>Commentaire pour l'équipe</Label><Textarea rows={3} placeholder="Indications du chef d'équipe au chef logistique et à tous…" value={f.commentaire_equipe} onChange={(e) => set("commentaire_equipe", e.target.value)} /></div>

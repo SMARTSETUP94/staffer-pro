@@ -171,12 +171,14 @@ export function DemandeLogistiqueForm({ jeton, onDone }: { jeton?: string; onDon
                 </SelectContent>
               </Select></div>
             <div className="space-y-1"><Label>Nombre de personnes{requis("nb_personnes")}</Label><Input type="number" min={0} max={50} value={x.nb} onChange={(e) => upd(i, { nb: e.target.value })} /></div>
-            <div className="space-y-1"><Label>Chef d'équipe{requis("responsable")}</Label>
-              <Input aria-label="Rechercher un chef d'équipe" placeholder="Rechercher un nom…" value={qChef} onChange={e => setQChef(e.target.value)} />
+            <div className="space-y-1"><Label>Responsable de l’intervention{requis("responsable")}</Label>
+              <Input aria-label="Rechercher un responsable" placeholder="Rechercher un nom…" value={qChef} onChange={e => setQChef(e.target.value)} />
               <Select value={x.chef} onValueChange={(v) => upd(i, { chef: v })}>
-                <SelectTrigger aria-label="Chef d'équipe"><SelectValue placeholder="Choisir" /></SelectTrigger>
+                <SelectTrigger aria-label="Responsable de l’intervention"><SelectValue placeholder="Non désigné" /></SelectTrigger>
                 <SelectContent>{listeChefs.filter(p => p.libelle.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().includes(qChef.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase())).map((p) => <SelectItem key={p.id} value={p.id}>{p.libelle}</SelectItem>)}</SelectContent>
-              </Select></div>
+              </Select>
+              {x.chef && <Button type="button" variant="ghost" size="sm" onClick={() => upd(i, { chef: "" })}>Retirer le responsable</Button>}
+              </div>
           </div>
           <div className="space-y-1"><Label>Commentaire{requis("commentaire")}</Label><Textarea rows={2} value={x.commentaire} onChange={(e) => upd(i, { commentaire: e.target.value })} /></div>
         </fieldset>

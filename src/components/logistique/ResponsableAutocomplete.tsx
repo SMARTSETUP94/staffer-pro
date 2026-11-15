@@ -1,12 +1,14 @@
+import { useId } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { roleLabel } from "@/lib/labels";
 
-const ROLES = ["chef_chantier", "chef_pose", "logistique", "commercial", "admin"] as const;
+const ROLES = ["chef_chantier", "chef_pose", "logistique", "commercial", "bureau_etude", "admin"] as const;
 
 /** Champ libre avec suggestions : chefs d'équipe et utilisateurs encadrants de l'application. */
-export function ResponsableAutocomplete({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+export function ResponsableAutocomplete({ value, onChange, id }: { value: string; onChange: (v: string) => void; id?: string }) {
+  const listId = useId();
   const { data = [] } = useQuery({
     queryKey: ["responsables-logistique"],
     staleTime: 300_000,
@@ -24,9 +26,9 @@ export function ResponsableAutocomplete({ value, onChange }: { value: string; on
   });
   return (
     <>
-      <Input list="responsables-logistique" placeholder="Rechercher un chef d'équipe ou saisir un nom"
+      <Input id={id} list={listId} placeholder="Rechercher une personne ou saisir un nom"
         value={value} onChange={(e) => onChange(e.target.value)} />
-      <datalist id="responsables-logistique">
+      <datalist id={listId}>
         {data.map((p) => <option key={p.name} value={p.name}>{p.role ? roleLabel(p.role as never) : ""}</option>)}
       </datalist>
     </>
