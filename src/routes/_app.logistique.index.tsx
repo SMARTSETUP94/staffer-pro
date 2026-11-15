@@ -2,7 +2,7 @@ import { PlanningJourMobile } from "@/components/logistique/PlanningJourMobile";
 import { CalendrierChantierDialog } from "@/components/logistique/CalendrierChantierDialog";
 import { useServerFn } from "@tanstack/react-start";
 import { syncOutlookLogistiqueFn } from "@/lib/server-fns/outlook-logistique.functions";
-import { AlertTriangle, CalendarDays, CalendarSync, Download, Monitor, Plus, Printer } from "lucide-react";
+import { AlertTriangle, CalendarDays, CalendarSync, Download, Monitor, MoreHorizontal, Plus, Printer, Upload, ChevronDown, History } from "lucide-react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -21,7 +21,8 @@ import { RegrouperToggle, useRegrouperParChantier } from "@/components/logistiqu
 import { NavigationSemaine } from "@/components/logistique/NavigationSemaine";
 import { PlanningEquipes, lundiCourant, usePlanningTerrain, useDroitsTerrain } from "@/components/logistique/PlanningEquipes";
 import { ImportPlanningHebdomadaire } from "@/components/logistique/ImportPlanningHebdomadaire";
-import { HistoriqueAffectationsExport } from "@/components/logistique/HistoriqueAffectationsExport";
+import { exporterHistoriqueAffectations } from "@/components/logistique/HistoriqueAffectationsExport";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ImportHistoriqueConsolide } from "@/components/logistique/ImportHistoriqueConsolide";
 import { ajouterJours, numeroSemaine, plageSemaine } from "@/lib/dispos";
 import { alertesPlanning, estJeudiOuApres, filtrerEtapes, sansReponse, FILTRES_VIDES, type Alerte, type FiltresPlanning } from "@/lib/logistique/planning-semaine";
@@ -124,6 +125,7 @@ function PlanningLogistiquePage() {
     invalidate();
   }
   const [exportBusy, setExportBusy] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   async function exporter() {
     if (!terrain.data) return;
     setExportBusy(true);
@@ -149,14 +151,27 @@ function PlanningLogistiquePage() {
           <NavigationSemaine debut={debut} onChange={setDebut} choisir><Button variant="outline" size="sm" onClick={() => setDebut(lundiCourant())}>Cette semaine</Button></NavigationSemaine>
           {vue === "etapes" && ([1, 2, 4] as const).map((n) => <Button key={n} variant={semaines === n ? "default" : "outline"} size="sm" onClick={() => setSemaines(n)}>{n} sem.</Button>)}
           {canEdit && <Button size="sm" onClick={() => setDlg({ open: true })}><Plus className="mr-1 h-4 w-4" />Étape</Button>}
-          {canTerrain && terrain.data && <Button size="sm" variant="outline" disabled={exportBusy} onClick={() => void exporter()}><Download className="mr-1 h-4 w-4" />{exportBusy ? "Export…" : "Exporter"}</Button>}
-          {ecritTerrain && <ImportPlanningHebdomadaire />}
-          {ecritTerrain && <HistoriqueAffectationsExport />}
-          <Button size="sm" variant="outline" onClick={() => setCalendrierOpen(true)}><CalendarDays className="mr-1 h-4 w-4" />Calendrier chantier</Button>
-          <Button size="sm" variant="outline" asChild><Link to="/logistique/imprimer"><Printer className="mr-1 h-4 w-4" />Imprimer</Link></Button>
-          <Button size="sm" variant="outline" asChild><Link to="/logistique/imprimer-equipes"><Printer className="mr-1 h-4 w-4" />Imprimer les équipes</Link></Button>
-          <Button size="sm" variant="outline" asChild><Link to="/ecran-atelier"><Monitor className="mr-1 h-4 w-4" />Écran atelier</Link></Button>
-          {canEdit && <Button size="sm" variant="outline" disabled={syncing} onClick={resync}><CalendarSync className="mr-1 h-4 w-4" />{syncing ? "Synchro…" : "Outlook"}</Button>}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild><Button size="sm" variant="outline"><Printer className="mr-1 h-4 w-4" />Imprimer / exporter<ChevronDown className="ml-1 h-3 w-3" /></Button></DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-64">
+              <DropdownMenuLabel>Imprimer</DropdownMenuLabel>
+              <DropdownMenuItem asChild><Link to="/logistique/imprimer"><Printer className="mr-2 h-4 w-4" />Planning des étapes</Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link to="/logistique/imprimer-equipes"><Printer className="mr-2 h-4 w-4" />Planning des équipes</Link></DropdownMenuItem>
+              {canTerrain && terrain.data && <><DropdownMenuSeparator /><DropdownMenuLabel>Exporter</DropdownMenuLabel>
+                <DropdownMenuItem disabled={exportBusy} onSelect={() => void exporter()}><Download className="mr-2 h-4 w-4" />{exportBusy ? "Export…" : "Planning de la semaine (Excel)"}</DropdownMenuItem></>}
+              {ecritTerrain && <DropdownMenuItem onSelect={() => void exporterHistoriqueAffectations()}><History className="mr-2 h-4 w-4" />Historique des affectations</DropdownMenuItem>}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild><Button size="sm" variant="outline" aria-label="Plus d'actions"><MoreHorizontal className="mr-1 h-4 w-4" />Plus</Button></DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-64">
+              {ecritTerrain && <DropdownMenuItem onSelect={() => setImportOpen(true)}><Upload className="mr-2 h-4 w-4" />Importer un planning Excel/PDF</DropdownMenuItem>}
+              <DropdownMenuItem onSelect={() => setCalendrierOpen(true)}><CalendarDays className="mr-2 h-4 w-4" />Calendrier chantier</DropdownMenuItem>
+              <DropdownMenuItem asChild><Link to="/ecran-atelier"><Monitor className="mr-2 h-4 w-4" />Écran atelier</Link></DropdownMenuItem>
+              {canEdit && <DropdownMenuItem disabled={syncing} onSelect={() => resync()}><CalendarSync className="mr-2 h-4 w-4" />{syncing ? "Synchro…" : "Synchroniser Outlook"}</DropdownMenuItem>}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {ecritTerrain && <ImportPlanningHebdomadaire open={importOpen} onOpenChange={setImportOpen} />}
         </div>
       </div>
 

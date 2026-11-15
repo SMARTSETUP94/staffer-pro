@@ -19,11 +19,14 @@ import { Command, CommandInput, CommandList, CommandItem, CommandEmpty } from '@
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 function ChoixCherchable({ label, value, options, onChange }: { label: string; value: string; options: { id: string; label: string }[]; onChange: (id: string) => void }) {
-  const [open, setOpen] = useState(false);
+  const [openInt, setOpenInt] = useState(false);
+  const controle = openExt !== undefined;
+  const open = controle ? openExt : openInt;
+  const setOpen = (o: boolean) => { if (controle) onOpenChange?.(o); else setOpenInt(o); };
   return <Popover open={open} onOpenChange={setOpen}><PopoverTrigger asChild><Button variant="outline" role="combobox" aria-label={label} aria-expanded={open} className="w-full justify-between"><span className="truncate">{options.find(o => o.id === value)?.label ?? label}</span><ChevronsUpDown className="ml-2 size-4 shrink-0" /></Button></PopoverTrigger><PopoverContent className="w-80 max-w-[90vw] p-0"><Command><CommandInput placeholder="Rechercher…" /><CommandList><CommandEmpty>Aucun résultat</CommandEmpty>{options.map(o => <CommandItem key={o.id} value={o.label} onSelect={() => { onChange(o.id); setOpen(false); }}><Check className={`mr-2 size-4 ${value === o.id ? 'opacity-100' : 'opacity-0'}`} />{o.label}</CommandItem>)}</CommandList></Command></PopoverContent></Popover>;
 }
 
-export function ImportPlanningHebdomadaire() {
+export function ImportPlanningHebdomadaire({ open: openExt, onOpenChange }: { open?: boolean; onOpenChange?: (o: boolean) => void } = {}) {
   const analyser = useServerFn(analyserPlanningHebdomadaire);
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -100,7 +103,7 @@ export function ImportPlanningHebdomadaire() {
     } catch (e) { setErreur(e instanceof Error ? e.message : 'Enregistrement impossible'); }
     finally { setBusy(false); }
   }
-  return <><Button variant="outline" onClick={() => setOpen(true)}><Upload className="mr-2 size-4" />Importer un planning Excel/PDF</Button><Dialog open={open} onOpenChange={o => { if (!busy) setOpen(o); }}><DialogContent className="max-h-[92vh] max-w-[calc(100vw-1rem)] grid-cols-[minmax(0,1fr)] overflow-x-hidden overflow-y-auto p-4 sm:max-w-4xl sm:p-6"><DialogHeader><DialogTitle>Importer un planning</DialogTitle></DialogHeader>
+  return <>{!controle && <Button variant="outline" onClick={() => setOpen(true)}><Upload className="mr-2 size-4" />Importer un planning Excel/PDF</Button>}<Dialog open={open} onOpenChange={o => { if (!busy) setOpen(o); }}><DialogContent className="max-h-[92vh] max-w-[calc(100vw-1rem)] grid-cols-[minmax(0,1fr)] overflow-x-hidden overflow-y-auto p-4 sm:max-w-4xl sm:p-6"><DialogHeader><DialogTitle>Importer un planning</DialogTitle></DialogHeader>
     <Label htmlFor="planning-fichier">Planning Excel (.xlsx) ou PDF</Label><Input id="planning-fichier" type="file" accept=".xlsx,.pdf" disabled={busy} onChange={e => { const f = e.target.files?.[0]; if (f) void lire(f); }} />
     {busy && <p role="status">{blocs.length ? 'Enregistrement…' : 'Lecture du planning…'}</p>}{erreur && <p role="alert" className="whitespace-pre-line text-sm text-destructive">{erreur}</p>}
     {blocs.length > 0 && <>{lecture && <p className="text-xs text-muted-foreground">{lecture}</p>}<p className="font-medium">{blocs.length} interventions · {total} affectations · {manquants} rattachements manquants</p>
