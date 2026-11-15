@@ -45,7 +45,7 @@ export function NouveauContactDialog({ clientId, clientNom, onClose, onCreated }
         toast.warning("Contact enregistré dans la fiche client, mais non sélectionné dans le devis. Vous pouvez réessayer.");
       }
     } catch (error) {
-      toast.error("Impossible d’enregistrer le contact", { description: error instanceof Error ? error.message : String(error) });
+      toast.error("Impossible d’enregistrer le contact", { description: error && typeof error === "object" && "message" in error ? String(error.message) : String(error) });
     } finally {
       setSaving(false);
     }

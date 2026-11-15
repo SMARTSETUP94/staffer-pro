@@ -379,7 +379,12 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
         clientId={d.devis.client_id}
         clientNom={d.client?.nom ?? "Client facturé"}
         onClose={() => setNouveauContact(false)}
-        onCreated={async (id) => (await setEntete({ contact_id: id })) !== null}
+        onCreated={async (id) => {
+          const { error } = await supabase.rpc("devis_entete_modifier", { _devis_id: devisId, _patch: { contact_id: id }, _maj_affaire_client: false });
+          if (error) { toast.error("Impossible de sélectionner le contact", { description: error.message }); return false; }
+          await q.refetch();
+          return true;
+        }}
       />}
       {/* Dates clés */}
       {!d.devis.est_modele && (
