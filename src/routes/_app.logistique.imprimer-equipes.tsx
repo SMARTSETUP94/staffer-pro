@@ -41,6 +41,31 @@ function ImprimerEquipes() {
   const lignes = semaineParPersonne(dates, etapes, affectations, personnes);
   const titre = `Planning du ${new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long" }).format(new Date(`${dates[0]}T12:00:00`))} au ${new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${dates[6]}T12:00:00`))}`;
 
+  const joursRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
+  const legendeRef = useRef<HTMLDivElement>(null);
+  const [enCours, setEnCours] = useState(false);
+  const [erreur, setErreur] = useState(false);
+
+  /** Fabrique le PDF dans l'application : ni lien, ni titre d'onglet, ni date du navigateur. */
+  const exporter = async () => {
+    const cible = vue === "jours" ? joursRef.current : tableRef.current;
+    if (!cible || enCours) return;
+    setEnCours(true);
+    setErreur(false);
+    try {
+      const { exporterPlanningEquipesPdf } = await import("@/lib/imports/planning-equipes-pdf");
+      await exporterPlanningEquipesPdf({
+        vue, titre, contenu: cible, legende: legendeRef.current,
+        nomFichier: `planning-equipes-${debut}${vue === "employes" ? "-employes" : ""}.pdf`,
+      });
+    } catch {
+      setErreur(true);
+    } finally {
+      setEnCours(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-6xl [print-color-adjust:exact] [-webkit-print-color-adjust:exact] space-y-4 p-4 sm:p-6 print:max-w-none print:p-0">
       <style>{`@media print { @page { size: ${vue === "employes" ? "A4 landscape" : "A4 portrait"}; margin: 10mm; } }`}</style>
