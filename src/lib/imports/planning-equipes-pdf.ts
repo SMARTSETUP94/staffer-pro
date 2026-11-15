@@ -15,6 +15,7 @@
  */
 import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
+import { paginer, paginerHauteurFixe, type Bloc, type Page } from "./planning-equipes-pagination";
 
 export type VuePlanning = "jours" | "employes";
 
@@ -35,8 +36,6 @@ const PIED = 8;
 const PIXEL_RATIO = 1.5;
 const QUALITE = 0.92;
 
-type Bloc = { top: number; height: number };
-type Page = { start: number; end: number };
 /** k : pixels CSS → pixels image ; echelle : pixels image → millimètres. */
 type Capture = { img: HTMLImageElement; k: number; echelle: number; x: number; largeurMm: number; entete: Bloc; pages: Page[] };
 
@@ -96,37 +95,6 @@ function tranche(img: HTMLImageElement, k: number, from: number, to: number) {
   return { data: canvas.toDataURL("image/jpeg", QUALITE), px: sh };
 }
 
-/**
- * Répartition des blocs en pages : la tête occupe la même place sur chacune,
- * les blocs restent entiers, et un bloc plus haut qu'une page est découpé.
- */
-function paginer(blocs: Bloc[], hauteurPx: number): { entete: Bloc; pages: Page[] } {
-  const entete = blocs[0];
-  const lignes = blocs.slice(1);
-  const dispo = Math.max(10, hauteurPx - entete.height);
-  const pages: Page[] = [];
-  let start = entete.height;
-  let used = 0;
-  for (const b of lignes) {
-    if (b.height > dispo) {
-      if (used > 0) { pages.push({ start, end: b.top }); start = b.top; used = 0; }
-      let y = b.top;
-      while (y < b.top + b.height - 1) {
-        const next = Math.min(y + dispo, b.top + b.height);
-        pages.push({ start: y, end: next });
-        y = next;
-      }
-      start = b.top + b.height;
-      continue;
-    }
-    if (used + b.height > dispo) { pages.push({ start, end: b.top }); start = b.top; used = b.height; }
-    else used += b.height;
-  }
-  const fin = lignes.length ? lignes[lignes.length - 1].top + lignes[lignes.length - 1].height : entete.height;
-  if (fin > start) pages.push({ start, end: fin });
-  return { entete, pages: pages.length ? pages : [{ start: entete.height, end: entete.height }] };
-}
-
 async function capturer(el: HTMLElement, vue: VuePlanning, dispoW: number, dispoH: number): Promise<Capture> {
   const largeur = el.getBoundingClientRect().width || el.offsetWidth;
   const cible = vue === "jours" ? Math.max(largeur, 1000) : largeur;
@@ -150,13 +118,6 @@ async function capturer(el: HTMLElement, vue: VuePlanning, dispoW: number, dispo
   } finally {
     copie?.fermer();
   }
-}
-
-/** Découpe à hauteur de page constante (aucun bloc mesurable). */
-function paginerHauteurFixe(totalPx: number, hauteurPx: number): Page[] {
-  const pages: Page[] = [];
-  for (let y = 0; y < totalPx; y += hauteurPx) pages.push({ start: y, end: Math.min(y + hauteurPx, totalPx) });
-  return pages.length ? pages : [{ start: 0, end: totalPx }];
 }
 
 export async function exporterPlanningEquipesPdf(p: ExportPlanningEquipes): Promise<{ pages: number }> {
