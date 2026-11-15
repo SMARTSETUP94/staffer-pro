@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { ArrowLeft, ChevronLeft, ChevronRight, Printer } from "lucide-react";
+import { useRef, useState } from "react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Download, Printer } from "lucide-react";
 import { requireCapability } from "@/lib/capability-guard";
 import { Button } from "@/components/ui/button";
 import { ETAPE_CLASSES, ETAPE_LABELS } from "@/lib/logistique/etapes";
@@ -41,6 +41,31 @@ function ImprimerEquipes() {
   const lignes = semaineParPersonne(dates, etapes, affectations, personnes);
   const titre = `Planning du ${new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long" }).format(new Date(`${dates[0]}T12:00:00`))} au ${new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${dates[6]}T12:00:00`))}`;
 
+  const joursRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
+  const legendeRef = useRef<HTMLDivElement>(null);
+  const [enCours, setEnCours] = useState(false);
+  const [erreur, setErreur] = useState(false);
+
+  /** Fabrique le PDF dans l'application : ni lien, ni titre d'onglet, ni date du navigateur. */
+  const exporter = async () => {
+    const cible = vue === "jours" ? joursRef.current : tableRef.current;
+    if (!cible || enCours) return;
+    setEnCours(true);
+    setErreur(false);
+    try {
+      const { exporterPlanningEquipesPdf } = await import("@/lib/imports/planning-equipes-pdf");
+      await exporterPlanningEquipesPdf({
+        vue, titre, contenu: cible, legende: legendeRef.current,
+        nomFichier: `planning-equipes-${debut}${vue === "employes" ? "-employes" : ""}.pdf`,
+      });
+    } catch {
+      setErreur(true);
+    } finally {
+      setEnCours(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-6xl [print-color-adjust:exact] [-webkit-print-color-adjust:exact] space-y-4 p-4 sm:p-6 print:max-w-none print:p-0">
       <style>{`@media print { @page { size: ${vue === "employes" ? "A4 landscape" : "A4 portrait"}; margin: 10mm; } }`}</style>
@@ -55,12 +80,16 @@ function ImprimerEquipes() {
           <Button size="sm" variant={vue === "jours" ? "default" : "outline"} onClick={() => setVue("jours")}>Jour par jour</Button>
           <Button size="sm" variant={vue === "employes" ? "default" : "outline"} onClick={() => setVue("employes")}>Par employé</Button>
         </div>
-        <Button onClick={() => window.print()}><Printer className="mr-1 h-4 w-4" />Imprimer / PDF</Button>
+        <div className="flex items-center gap-1">
+          <Button onClick={exporter} disabled={enCours || !q.data}><Download className="mr-1 h-4 w-4" />{enCours ? "Préparation…" : "Enregistrer en PDF"}</Button>
+          <Button variant="ghost" size="icon" title="Imprimer sur papier" aria-label="Imprimer sur papier" onClick={() => window.print()}><Printer className="h-4 w-4" /></Button>
+        </div>
       </div>
+      {erreur && <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-sm text-destructive">Le fichier n'a pas pu être créé. Réessayez, ou passez par « Imprimer sur papier ».</p>}
 
-      <div className="flex flex-wrap items-end justify-between gap-2"><h1 className="text-xl font-bold">{titre}{vue === "employes" ? " — par employé" : ""}</h1><div className="flex flex-wrap gap-1">{Object.keys(C).map(t => <span key={t} className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${C[t]}`}>{L[t]}</span>)}</div></div>
+      <div className="flex flex-wrap items-end justify-between gap-2"><h1 className="text-xl font-bold">{titre}{vue === "employes" ? " — par employé" : ""}</h1><div ref={legendeRef} className="flex flex-wrap gap-1">{Object.keys(C).map(t => <span key={t} className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${C[t]}`}>{L[t]}</span>)}</div></div>
       {q.isLoading ? <p className="text-sm text-muted-foreground">Chargement…</p> : q.error ? <p className="text-sm text-destructive">Lecture du planning impossible.</p> : vue === "jours" ? (
-        <div className="space-y-6">
+        <div ref={joursRef} className="space-y-6">
           {dates.map((jour, i) => {
             const duJour = blocs.filter(b => b.jour === jour);
             if (!duJour.length) return null;
@@ -94,7 +123,7 @@ function ImprimerEquipes() {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[56rem] table-fixed border-collapse text-xs">
+          <table ref={tableRef} className="w-full min-w-[56rem] table-fixed border-collapse text-xs">
             <thead><tr>
               <th className="sticky left-0 w-36 border border-border bg-primary px-2 py-1.5 text-left text-primary-foreground">Employé</th>
               {dates.map(d => <th key={d} className={`border border-border px-2 py-1.5 text-left capitalize ${weekend(d) ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground"}`}>{dateCourte(d)}</th>)}
