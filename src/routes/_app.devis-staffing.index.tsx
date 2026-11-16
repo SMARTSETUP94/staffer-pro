@@ -85,7 +85,13 @@ function DevisGlobal() {
     <div className="space-y-4 p-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">Devis</h1>
-        {canWrite && <Button onClick={() => setOpen(true)}><Plus className="mr-1 h-4 w-4" />Nouveau devis</Button>}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="text-right">
+            <p className="text-xs text-muted-foreground">Total {libelleTotal} · {rows.length} devis</p>
+            <p className="text-lg font-semibold tabular-nums">{eur(total)}</p>
+          </div>
+          {canWrite && <Button onClick={() => setOpen(true)}><Plus className="mr-1 h-4 w-4" />Nouveau devis</Button>}
+        </div>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative w-72">
