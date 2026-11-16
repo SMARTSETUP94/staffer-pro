@@ -10,6 +10,7 @@ import { requireCapability } from "@/lib/capability-guard";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LienPlanningPublic } from "@/components/logistique/LienPlanningPublic";
 import { ReglagesFormulaireLogistique } from "@/components/logistique/ReglagesFormulaireLogistique";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
@@ -68,6 +69,7 @@ function Page() {
           </AlertDialogContent>
         </AlertDialog>
       </section>
+      <LienPlanningPublic />
       <ReglagesFormulaireLogistique />
     </div>
   );
