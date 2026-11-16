@@ -84,7 +84,7 @@ function PlanningPublic() {
                         <td className="border border-border px-2 py-1">{b.etape.responsable ?? ""}</td>
                         <td className="border border-border px-2 py-1"><span className={`rounded px-2 py-0.5 text-xs font-semibold ${C[b.etape.type] ?? "bg-muted"}`}>{L[b.etape.type] ?? b.etape.type}</span></td>
                         <td className="border border-border px-2 py-1 font-normal">{b.etape.lieu ?? ""}</td>
-                        <td className="border border-border px-2 py-1 font-normal text-muted-foreground">{b.etape.vehicule ?? ""}</td>
+                        <td className="border border-border px-2 py-1 font-normal text-muted-foreground">{(b.etape as { vehicule?: string | null }).vehicule ?? ""}</td>
                       </tr>
                       {b.personnes.length === 0 ? (
                         <tr><td colSpan={6} className="border border-border bg-destructive/10 px-2 py-1 font-medium italic text-destructive">Équipe à compléter</td></tr>
