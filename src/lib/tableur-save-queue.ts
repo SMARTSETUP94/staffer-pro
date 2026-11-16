@@ -21,6 +21,12 @@ export function createTableurSaveQueue<Row, Field extends string>(
       pending.set(k, { row, field, timer: setTimeout(() => flush(id, field), delay) });
     },
     flush,
+    flushAll() {
+      [...pending.values()].forEach((e) => { clearTimeout(e.timer); });
+      const entries = [...pending.values()];
+      pending.clear();
+      entries.forEach((e) => save(e.row, e.field));
+    },
     clear() {
       pending.forEach(({ timer }) => clearTimeout(timer));
       pending.clear();

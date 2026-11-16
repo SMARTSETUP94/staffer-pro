@@ -784,6 +784,7 @@ function OpportunitesPage() {
           currentUserId={user?.id ?? null}
           defaultChargeId={user?.id ?? null}
           onRowsMutated={() => setRefreshTick((t) => t + 1)}
+          onRowPatched={(id, patch) => setOpps((cur) => cur.map((o) => (o.id === id ? ({ ...o, ...patch } as typeof o) : o)))}
         />
       ) : opps.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-muted/20 p-16 text-center">

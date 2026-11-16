@@ -102,6 +102,8 @@ interface Props {
   currentUserId: string | null;
   defaultChargeId: string | null;
   onRowsMutated: () => void;
+  /** Propagate a saved patch to the parent list without refetching. */
+  onRowPatched?: (affaireId: string, patch: Record<string, unknown>) => void;
 }
 
 interface CellPosition {
@@ -119,6 +121,7 @@ export function OpportunitesTableurView({
   currentUserId,
   defaultChargeId,
   onRowsMutated,
+  onRowPatched,
 }: Props) {
   const navigate = useNavigate();
   const { fetchNext } = useNextOpportuniteCode();
@@ -205,6 +208,8 @@ export function OpportunitesTableurView({
     });
   }, []);
 
+  const onRowPatchedRef = useRef(onRowPatched);
+  onRowPatchedRef.current = onRowPatched;
   const flashSaved = useCallback((id: string) => {
     setSavedFlash((prev) => {
       const next = new Set(prev);
@@ -349,6 +354,7 @@ export function OpportunitesTableurView({
             // ✅ Succès : on garde l'overlay (il reflète la vérité serveur)
             // Pas de onRowsMutated → pas de re-fetch destructif → focus conservé.
             flashSaved(row.id);
+            onRowPatchedRef.current?.(row.affaireId, patch as Record<string, unknown>);
           }
         }
       } finally {
@@ -382,7 +388,7 @@ export function OpportunitesTableurView({
 
   /** Cleanup debounce au démontage. */
   useEffect(() => {
-    return () => saveQueue.clear();
+    return () => saveQueue.flushAll();
   }, [saveQueue]);
 
   /** Patch local + schedule save. */
