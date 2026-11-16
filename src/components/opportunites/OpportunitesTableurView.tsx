@@ -121,6 +121,7 @@ export function OpportunitesTableurView({
   currentUserId,
   defaultChargeId,
   onRowsMutated,
+  onRowPatched,
 }: Props) {
   const navigate = useNavigate();
   const { fetchNext } = useNextOpportuniteCode();
@@ -207,6 +208,8 @@ export function OpportunitesTableurView({
     });
   }, []);
 
+  const onRowPatchedRef = useRef(onRowPatched);
+  onRowPatchedRef.current = onRowPatched;
   const flashSaved = useCallback((id: string) => {
     setSavedFlash((prev) => {
       const next = new Set(prev);
