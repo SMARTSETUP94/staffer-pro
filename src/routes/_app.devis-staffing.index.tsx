@@ -74,6 +74,8 @@ function DevisGlobal() {
       (!ca || r.charge_affaires_id === ca) &&
       (!t || [r.numero, r.affaire_numero, r.affaire_nom, r.client_nom].some((x) => x?.toLowerCase().includes(t))));
   }, [liste.data, q, statuts, ca]);
+  const total = useMemo(() => rows.reduce((s, r) => s + (r.net_ht == null ? 0 : Number(r.net_ht)), 0), [rows]);
+  const libelleTotal = statuts.length === 1 ? STATUT_LABEL[statuts[0]] : statuts.length > 1 ? `${statuts.length} statuts` : "Tous les devis";
   const claude = useDevisClaude((liste.data ?? []).map((r) => r.id));
   const cas = useMemo(() => [...new Map((liste.data ?? []).filter((r) => r.charge_affaires_id).map((r) => [r.charge_affaires_id!, r.charge_affaires_nom ?? "—"])).entries()], [liste.data]);
 
