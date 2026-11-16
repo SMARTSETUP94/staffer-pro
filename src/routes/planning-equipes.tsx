@@ -76,7 +76,7 @@ function PlanningPublic() {
                 <h2 className="rounded-md bg-primary px-3 py-1.5 text-center text-lg font-bold capitalize text-primary-foreground">{titreJour(jour)} <span className="text-sm font-medium opacity-80">· {duJour.length} intervention{duJour.length > 1 ? "s" : ""} · {duJour.reduce((n, b) => n + b.personnes.length, 0)} pers.</span></h2>
                 {duJour.map(b => (
                   <table key={b.etape.id} className="w-full break-inside-avoid border-collapse overflow-hidden rounded-md text-sm shadow-sm">
-                    <thead><tr>{ENTETE_BLOC.map(h => <th key={h} className="border border-border bg-muted px-2 py-1 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">{h}</th>)}</tr></thead>
+                    <thead><tr>{ENTETE_BLOC.map(h => h === "Commentaires" ? "Véhicule" : h).map(h => <th key={h} className="border border-border bg-muted px-2 py-1 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">{h}</th>)}</tr></thead>
                     <tbody>
                       <tr className="bg-card font-semibold">
                         <td className={`border border-border px-2 py-1 text-base font-bold tabular-nums ${C[b.etape.type] ?? "bg-muted"}`}>{b.etape.numero}</td>
