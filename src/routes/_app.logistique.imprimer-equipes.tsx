@@ -122,16 +122,16 @@ function ImprimerEquipes() {
           {!blocs.length && <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">Aucune étape cette semaine.</p>}
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table ref={tableRef} className="w-full min-w-[56rem] table-fixed border-collapse text-xs">
+        <div className="relative isolate max-h-[70svh] overflow-auto overscroll-contain rounded-md border border-border print:max-h-none print:overflow-visible print:border-0" role="region" aria-label="Affectations par employé" tabIndex={0}>
+          <table ref={tableRef} className="w-full min-w-[56rem] table-fixed border-separate border-spacing-0 text-xs">
             <thead><tr>
-              <th className="sticky left-0 w-36 border border-border bg-primary px-2 py-1.5 text-left text-primary-foreground">Nom Prénom</th>
-              {dates.map(d => <th key={d} className={`border border-border px-2 py-1.5 text-left capitalize ${weekend(d) ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground"}`}>{dateCourte(d)}</th>)}
+              <th className="sticky left-0 top-0 z-30 w-36 border border-border bg-primary px-2 py-1.5 text-left text-primary-foreground print:static">Nom Prénom</th>
+              {dates.map(d => <th key={d} className={`sticky top-0 z-20 border border-border px-2 py-1.5 text-left capitalize print:static ${weekend(d) ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground"}`}>{dateCourte(d)}</th>)}
             </tr></thead>
             <tbody>
               {lignes.map((l, n) => (
                 <tr key={`${l.personne.origine}:${l.personne.id}`} className={`break-inside-avoid align-top ${n % 2 ? "bg-muted/40" : "bg-card"}`}>
-                  <td className="sticky left-0 border border-border bg-inherit px-2 py-1 whitespace-nowrap"><div className="font-semibold">{l.personne.nom.toLocaleUpperCase("fr")} {l.personne.prenom}</div><div className="text-[10px] text-muted-foreground">{l.jours.filter(j => j.length).length} j travaillé{l.jours.filter(j => j.length).length > 1 ? "s" : ""}</div></td>
+                  <td className={`sticky left-0 z-10 border border-border px-2 py-1 break-words print:static ${n % 2 ? "bg-muted" : "bg-card"}`}><div className="font-semibold">{l.personne.nom.toLocaleUpperCase("fr")} {l.personne.prenom}</div><div className="text-[10px] text-muted-foreground">{l.jours.filter(j => j.length).length} j travaillé{l.jours.filter(j => j.length).length > 1 ? "s" : ""}</div></td>
                   {l.jours.map((cases, i) => (
                     <td key={i} className={`border border-border p-1 ${weekend(dates[i]) ? "bg-muted/60" : ""}`}>
                       {cases.map(c => (
