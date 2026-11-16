@@ -5533,6 +5533,8 @@ export type Database = {
           duree_montage: number
           id: boolean
           modele_ia: string | null
+          planning_public_jeton_cree_le: string | null
+          planning_public_jeton_hash: string | null
           updated_at: string
         }
         Insert: {
@@ -5548,6 +5550,8 @@ export type Database = {
           duree_montage?: number
           id?: boolean
           modele_ia?: string | null
+          planning_public_jeton_cree_le?: string | null
+          planning_public_jeton_hash?: string | null
           updated_at?: string
         }
         Update: {
@@ -5563,6 +5567,8 @@ export type Database = {
           duree_montage?: number
           id?: boolean
           modele_ia?: string | null
+          planning_public_jeton_cree_le?: string | null
+          planning_public_jeton_hash?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -9988,6 +9994,13 @@ export type Database = {
         Args: { _affaire: string; _metier?: number }
         Returns: Json
       }
+      planning_public_desactiver: { Args: never; Returns: undefined }
+      planning_public_etat: { Args: never; Returns: string }
+      planning_public_lire: {
+        Args: { _cle: string; _semaine: number }
+        Returns: Json
+      }
+      planning_public_regenerer: { Args: never; Returns: string }
       planning_terrain_affecter: {
         Args: {
           _etape: string

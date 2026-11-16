@@ -15,6 +15,7 @@ import { Route as DisposRouteImport } from './routes/dispos'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as PlanningEquipesRouteImport } from './routes/planning-equipes'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
@@ -176,6 +177,11 @@ const McpRoute = McpRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlanningEquipesRoute = PlanningEquipesRouteImport.update({
+  id: '/planning-equipes',
+  path: '/planning-equipes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -892,6 +898,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
+  '/planning-equipes': typeof PlanningEquipesRoute
   '/privacy': typeof PrivacyRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/absences': typeof AppAbsencesRoute
@@ -1031,6 +1038,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
+  '/planning-equipes': typeof PlanningEquipesRoute
   '/privacy': typeof PrivacyRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/absences': typeof AppAbsencesRoute
@@ -1170,6 +1178,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
+  '/planning-equipes': typeof PlanningEquipesRoute
   '/privacy': typeof PrivacyRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_app/absences': typeof AppAbsencesRoute
@@ -1313,6 +1322,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mcp'
     | '/onboarding'
+    | '/planning-equipes'
     | '/privacy'
     | '/.well-known/oauth-protected-resource'
     | '/absences'
@@ -1452,6 +1462,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mcp'
     | '/onboarding'
+    | '/planning-equipes'
     | '/privacy'
     | '/.well-known/oauth-protected-resource'
     | '/absences'
@@ -1590,6 +1601,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mcp'
     | '/onboarding'
+    | '/planning-equipes'
     | '/privacy'
     | '/.well-known/oauth-protected-resource'
     | '/_app/absences'
@@ -1732,6 +1744,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   McpRoute: typeof McpRoute
   OnboardingRoute: typeof OnboardingRoute
+  PlanningEquipesRoute: typeof PlanningEquipesRoute
   PrivacyRoute: typeof PrivacyRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
@@ -1784,6 +1797,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/planning-equipes': {
+      id: '/planning-equipes'
+      path: '/planning-equipes'
+      fullPath: '/planning-equipes'
+      preLoaderRoute: typeof PlanningEquipesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -3051,6 +3071,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   McpRoute: McpRoute,
   OnboardingRoute: OnboardingRoute,
+  PlanningEquipesRoute: PlanningEquipesRoute,
   PrivacyRoute: PrivacyRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
