@@ -75,6 +75,14 @@ function DevisGlobal() {
       (!t || [r.numero, r.affaire_numero, r.affaire_nom, r.client_nom].some((x) => x?.toLowerCase().includes(t))));
   }, [liste.data, q, statuts, ca]);
   const total = useMemo(() => rows.reduce((s, r) => s + (r.net_ht == null ? 0 : Number(r.net_ht)), 0), [rows]);
+  // Affaire unique : par affaire, seule la dernière révision (version la plus haute) compte, puis filtres appliqués.
+  const unique = useMemo(() => {
+    const der = new Map<string, Row>();
+    for (const r of liste.data ?? []) { const p = der.get(r.affaire_id); if (!p || r.version > p.version) der.set(r.affaire_id, r); }
+    const ids = new Set([...der.values()].map((r) => r.id));
+    const u = rows.filter((r) => ids.has(r.id));
+    return { n: u.length, total: u.reduce((s, r) => s + (r.net_ht == null ? 0 : Number(r.net_ht)), 0) };
+  }, [liste.data, rows]);
   const libelleTotal = statuts.length === 1 ? STATUT_LABEL[statuts[0]] : statuts.length > 1 ? `${statuts.length} statuts` : "Tous les devis";
   const claude = useDevisClaude((liste.data ?? []).map((r) => r.id));
   const cas = useMemo(() => [...new Map((liste.data ?? []).filter((r) => r.charge_affaires_id).map((r) => [r.charge_affaires_id!, r.charge_affaires_nom ?? "—"])).entries()], [liste.data]);
@@ -89,6 +97,10 @@ function DevisGlobal() {
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Total {libelleTotal} · {rows.length} devis</p>
             <p className="text-lg font-semibold tabular-nums">{eur(total)}</p>
+          </div>
+          <div className="text-right border-l pl-3">
+            <p className="text-xs text-muted-foreground">Affaire unique · {unique.n} affaires</p>
+            <p className="text-lg font-semibold tabular-nums">{eur(unique.total)}</p>
           </div>
           {canWrite && <Button onClick={() => setOpen(true)}><Plus className="mr-1 h-4 w-4" />Nouveau devis</Button>}
         </div>
