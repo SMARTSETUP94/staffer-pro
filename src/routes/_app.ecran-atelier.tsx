@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_app/ecran-atelier")({
       { title: "Écran atelier — Planning logistique" },
       { name: "description", content: "Affichage grand format du planning logistique et des équipes pour l'atelier." },
       { property: "og:title", content: "Écran atelier — Planning logistique" },
-      { property: "og:description", content: "Planning logistique d'aujourd'hui et des 6 prochains jours." },
+      { property: "og:description", content: "Planning logistique d'aujourd'hui et des 2 prochains jours." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -30,10 +30,10 @@ function EcranAtelier() {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 60_000); return () => clearInterval(t); }, []);
   const jour = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Paris" }).format(now);
-  const dates = Array.from({ length: 7 }, (_, i) => ajouterJours(jour, i));
+  const dates = Array.from({ length: 3 }, (_, i) => ajouterJours(jour, i));
   const q = useQuery({
     queryKey: ["ecran-atelier", jour], refetchInterval: 120_000,
-    queryFn: async () => { const { data, error } = await supabase.rpc("planning_terrain_ecran" as never, { _debut: jour, _fin: dates[6] } as never); if (error) throw error; return (data ?? []) as unknown as EtapeEcran[]; },
+    queryFn: async () => { const { data, error } = await supabase.rpc("planning_terrain_ecran" as never, { _debut: jour, _fin: dates[2] } as never); if (error) throw error; return (data ?? []) as unknown as EtapeEcran[]; },
   });
   const du = (d: string) => (q.data ?? []).filter((e) => e.date <= d && e.fin >= d).sort((a, b) => (a.heure ?? "99").localeCompare(b.heure ?? "99"));
   const titre = (d: string) => new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long" }).format(new Date(`${d}T12:00:00`));
@@ -50,18 +50,18 @@ function EcranAtelier() {
         </div>
       </div>
       {q.error && <p role="alert" className="text-lg text-destructive">Planning indisponible pour ce compte.</p>}
-      <div className="grid gap-4 xl:grid-cols-2">
-        {dates.map((d, i) => <section key={d} className={`space-y-2 ${i === 0 ? "xl:col-span-2" : ""}`}>
-          <h2 className={`font-bold first-letter:uppercase ${i === 0 ? "text-3xl" : "text-2xl"}`}>{i === 0 ? "Aujourd’hui · " : ""}{titre(d)}</h2>
-          {du(d).length === 0 ? <p className="text-lg text-muted-foreground">Aucune intervention.</p> : <div className={`grid gap-3 ${i === 0 ? "md:grid-cols-2 2xl:grid-cols-3" : ""}`}>{du(d).map((e) => (
+      <div className="grid gap-4 md:grid-cols-3">
+        {dates.map((d, i) => <section key={d} className="space-y-2">
+          <h2 className={`font-bold first-letter:uppercase ${i === 0 ? "text-2xl" : "text-xl"}`}>{i === 0 ? "Aujourd’hui · " : ""}{titre(d)}</h2>
+          {du(d).length === 0 ? <p className="text-base text-muted-foreground">Aucune intervention.</p> : <div className="grid gap-3">{du(d).map((e) => (
             <article key={e.id} className="overflow-hidden rounded-xl border border-border bg-card">
-              <div className={`flex flex-wrap items-center gap-3 px-4 py-2 ${i === 0 ? "text-2xl" : "text-xl"} ${ETAPE_CLASSES[e.type as EtapeType] ?? "bg-muted"}`}>
+              <div className={`flex flex-wrap items-center gap-2 px-3 py-2 text-lg ${ETAPE_CLASSES[e.type as EtapeType] ?? "bg-muted"}`}>
                 <strong>{e.numero} · {ETAPE_LABELS[e.type as EtapeType] ?? e.type}</strong><span>{horaire(e) || "horaire à confirmer"}</span>
                 <span className="ml-auto font-semibold">{e.equipe.length}/{e.nb_personnes ?? "—"}</span>
               </div>
-              <div className="space-y-1 px-4 py-3 text-lg">
+              <div className="space-y-1 px-3 py-2 text-base">
                 <p className="font-semibold">{e.nom}{e.lieu ? ` · ${e.lieu}` : ""}</p>
-                {e.vehicule && <p className="flex items-center gap-2"><Truck className="size-5" />{e.vehicule}</p>}
+                {e.vehicule && <p className="flex items-center gap-2"><Truck className="size-4" />{e.vehicule}</p>}
                 <p>{e.equipe.length ? e.equipe.map((p) => `${p.prenom} ${p.nom}${p.chef ? " (chef)" : ""}`).join(" · ") : <span className="text-destructive">Équipe à compléter</span>}</p>
               </div>
             </article>))}</div>}
