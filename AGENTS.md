@@ -66,5 +66,4 @@
 
 
 - Opportunity planning is read-only, separate from real load: reader opportunites_planning_lire + pure src/lib/opportunites/planning-previsionnel.ts; params are opp_plan_* keys in devis_parametres.
-- MCP file sources (base64, url, OneDrive Staffing/, document_id, fichier_ref) go through the pure checks in src/lib/mcp/fichiers.ts (signature, size, complete-file trailer); previews park files in the private policy-less mcp-tmp bucket (user folder, 10-min purge) and confirmations pass fichier_ref with an argument hash where the file is replaced by its SHA-256, so files are sent once and refusals always log their cause.
-- OneDrive reads use application Graph credentials restricted in code to smart@'s drive under Staffing/ (no shortcuts, other drives or ..), failing with an explicit Sites.Selected message until permission is granted.
+- MCP file handling rules live in src/lib/mcp/AGENTS.md.
