@@ -146,6 +146,7 @@ import { Route as AppParametresDevisModelesIndexRouteImport } from './routes/_ap
 import { Route as AppParametresDevisModelesDevisIdRouteImport } from './routes/_app.parametres.devis-modeles.$devisId'
 import { Route as ApiPublicHooksPollSharedInboxesRouteImport } from './routes/api/public/hooks/poll-shared-inboxes'
 import { Route as ApiPublicHooksPollSmartInboxRouteImport } from './routes/api/public/hooks/poll-smart-inbox'
+import { Route as ApiPublicHooksPurgeMcpTmpRouteImport } from './routes/api/public/hooks/purge-mcp-tmp'
 import { Route as AppAffairesAffaireIdDevisStaffingIndexRouteImport } from './routes/_app.affaires.$affaireId.devis-staffing.index'
 import { Route as AppAffairesAffaireIdDevisStaffingDevisIdRouteImport } from './routes/_app.affaires.$affaireId.devis-staffing.$devisId'
 import { Route as AppAffairesAffaireIdObjetsObjetIdRouteImport } from './routes/_app.affaires.$affaireId.objets.$objetId'
@@ -872,6 +873,12 @@ const ApiPublicHooksPollSmartInboxRoute =
     path: '/api/public/hooks/poll-smart-inbox',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksPurgeMcpTmpRoute =
+  ApiPublicHooksPurgeMcpTmpRouteImport.update({
+    id: '/api/public/hooks/purge-mcp-tmp',
+    path: '/api/public/hooks/purge-mcp-tmp',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AppAffairesAffaireIdDevisStaffingIndexRoute =
   AppAffairesAffaireIdDevisStaffingIndexRouteImport.update({
     id: '/devis-staffing/',
@@ -1026,6 +1033,7 @@ export interface FileRoutesByFullPath {
   '/parametres/devis-modeles/$devisId': typeof AppParametresDevisModelesDevisIdRoute
   '/api/public/hooks/poll-shared-inboxes': typeof ApiPublicHooksPollSharedInboxesRoute
   '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
+  '/api/public/hooks/purge-mcp-tmp': typeof ApiPublicHooksPurgeMcpTmpRoute
   '/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
   '/parametres/devis-modeles/': typeof AppParametresDevisModelesIndexRoute
   '/affaires/$affaireId/devis-staffing/$devisId': typeof AppAffairesAffaireIdDevisStaffingDevisIdRoute
@@ -1164,6 +1172,7 @@ export interface FileRoutesByTo {
   '/parametres/devis-modeles/$devisId': typeof AppParametresDevisModelesDevisIdRoute
   '/api/public/hooks/poll-shared-inboxes': typeof ApiPublicHooksPollSharedInboxesRoute
   '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
+  '/api/public/hooks/purge-mcp-tmp': typeof ApiPublicHooksPurgeMcpTmpRoute
   '/affaires/$affaireId': typeof AppAffairesAffaireIdIndexRoute
   '/parametres/devis-modeles': typeof AppParametresDevisModelesIndexRoute
   '/affaires/$affaireId/devis-staffing/$devisId': typeof AppAffairesAffaireIdDevisStaffingDevisIdRoute
@@ -1307,6 +1316,7 @@ export interface FileRoutesById {
   '/_app/parametres/devis-modeles/$devisId': typeof AppParametresDevisModelesDevisIdRoute
   '/api/public/hooks/poll-shared-inboxes': typeof ApiPublicHooksPollSharedInboxesRoute
   '/api/public/hooks/poll-smart-inbox': typeof ApiPublicHooksPollSmartInboxRoute
+  '/api/public/hooks/purge-mcp-tmp': typeof ApiPublicHooksPurgeMcpTmpRoute
   '/_app/affaires/$affaireId/': typeof AppAffairesAffaireIdIndexRoute
   '/_app/parametres/devis-modeles/': typeof AppParametresDevisModelesIndexRoute
   '/_app/affaires/$affaireId/devis-staffing/$devisId': typeof AppAffairesAffaireIdDevisStaffingDevisIdRoute
@@ -1450,6 +1460,7 @@ export interface FileRouteTypes {
     | '/parametres/devis-modeles/$devisId'
     | '/api/public/hooks/poll-shared-inboxes'
     | '/api/public/hooks/poll-smart-inbox'
+    | '/api/public/hooks/purge-mcp-tmp'
     | '/affaires/$affaireId/'
     | '/parametres/devis-modeles/'
     | '/affaires/$affaireId/devis-staffing/$devisId'
@@ -1588,6 +1599,7 @@ export interface FileRouteTypes {
     | '/parametres/devis-modeles/$devisId'
     | '/api/public/hooks/poll-shared-inboxes'
     | '/api/public/hooks/poll-smart-inbox'
+    | '/api/public/hooks/purge-mcp-tmp'
     | '/affaires/$affaireId'
     | '/parametres/devis-modeles'
     | '/affaires/$affaireId/devis-staffing/$devisId'
@@ -1730,6 +1742,7 @@ export interface FileRouteTypes {
     | '/_app/parametres/devis-modeles/$devisId'
     | '/api/public/hooks/poll-shared-inboxes'
     | '/api/public/hooks/poll-smart-inbox'
+    | '/api/public/hooks/purge-mcp-tmp'
     | '/_app/affaires/$affaireId/'
     | '/_app/parametres/devis-modeles/'
     | '/_app/affaires/$affaireId/devis-staffing/$devisId'
@@ -1753,6 +1766,7 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicHooksPollSharedInboxesRoute: typeof ApiPublicHooksPollSharedInboxesRoute
   ApiPublicHooksPollSmartInboxRoute: typeof ApiPublicHooksPollSmartInboxRoute
+  ApiPublicHooksPurgeMcpTmpRoute: typeof ApiPublicHooksPurgeMcpTmpRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2716,6 +2730,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksPollSmartInboxRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/purge-mcp-tmp': {
+      id: '/api/public/hooks/purge-mcp-tmp'
+      path: '/api/public/hooks/purge-mcp-tmp'
+      fullPath: '/api/public/hooks/purge-mcp-tmp'
+      preLoaderRoute: typeof ApiPublicHooksPurgeMcpTmpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/affaires/$affaireId/devis-staffing/': {
       id: '/_app/affaires/$affaireId/devis-staffing/'
       path: '/devis-staffing'
@@ -3081,6 +3102,7 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicHooksPollSharedInboxesRoute: ApiPublicHooksPollSharedInboxesRoute,
   ApiPublicHooksPollSmartInboxRoute: ApiPublicHooksPollSmartInboxRoute,
+  ApiPublicHooksPurgeMcpTmpRoute: ApiPublicHooksPurgeMcpTmpRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,5 +1,5 @@
 import { ToolError } from "@lovable.dev/mcp-js";
-import { controlerOctets, PHOTO_MAX_OCTETS, PHOTO_MIMES, sha256, type Mime } from "./fichiers";
+import { cheminsPerimes, controlerOctets, PHOTO_MAX_OCTETS, PHOTO_MIMES, sha256, type Mime } from "./fichiers";
 
 /**
  * Zone temporaire du connecteur : bucket privé « mcp-tmp » sans aucune politique utilisateur.
@@ -45,10 +45,29 @@ export async function purgerTemp(userId: string) {
     const db = await admin(); const limite = Date.now() - TEMP_TTL_MS;
     const dossiers = [userId, ...((await db.storage.from(BUCKET).list("", { limit: 50 })).data ?? []).map(d => d.name).filter(n => n && n !== userId)];
     for (const d of dossiers.slice(0, 51)) {
-      const vieux = ((await db.storage.from(BUCKET).list(d, { limit: 100 })).data ?? []).filter(o => o.created_at && new Date(o.created_at).getTime() < limite).map(o => `${d}/${o.name}`);
+      const vieux = cheminsPerimes(d, (await db.storage.from(BUCKET).list(d, { limit: 100 })).data ?? [], limite + TEMP_TTL_MS, TEMP_TTL_MS);
       if (vieux.length) await db.storage.from(BUCKET).remove(vieux);
     }
   } catch { /* purge best-effort */ }
+}
+/** Purge planifiée globale (bucket mcp-tmp uniquement) : parcourt tous les dossiers par pages, retire ce qui a plus de 10 minutes. */
+export async function purgerTempGlobal(maintenant = Date.now()) {
+  const db = await admin(); let retires = 0; let dossiers = 0;
+  for (let page = 0; page < 20; page++) {
+    const { data, error } = await db.storage.from(BUCKET).list("", { limit: 100, offset: page * 100 });
+    if (error) throw new Error(error.message);
+    for (const d of (data ?? []).map(x => x.name).filter(Boolean)) {
+      dossiers++;
+      for (let p = 0; p < 10; p++) {
+        const l = await db.storage.from(BUCKET).list(d, { limit: 100, offset: p * 100 });
+        const objets = l.data ?? []; const vieux = cheminsPerimes(d, objets, maintenant, TEMP_TTL_MS);
+        if (vieux.length) { const r = await db.storage.from(BUCKET).remove(vieux); if (!r.error) retires += vieux.length; }
+        if (objets.length < 100) break;
+      }
+    }
+    if ((data ?? []).length < 100) break;
+  }
+  return { dossiers, retires };
 }
 /** Retire une copie déposée dans affaires-photos qu'aucun document ne référence (échec ou doublon à la confirmation). */
 export async function retirerDocumentOrphelin(path: string) {

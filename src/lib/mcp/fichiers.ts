@@ -85,3 +85,12 @@ export function sansSourceFichier<T extends Record<string, unknown>>(a: T, sha: 
   if (sha) out.fichier_sha256 = sha;
   return out;
 }
+
+/** Objets de la zone temporaire à retirer : créés depuis plus de `ttlMs` (date absente ou illisible = conservé). */
+export function cheminsPerimes(dossier: string, objets: { name: string; created_at?: string | null }[], maintenant: number, ttlMs = 10 * 60 * 1000) {
+  return objets.filter(o => {
+    if (!o.name || !o.created_at) return false;
+    const t = new Date(o.created_at).getTime();
+    return Number.isFinite(t) && t < maintenant - ttlMs;
+  }).map(o => `${dossier}/${o.name}`);
+}
