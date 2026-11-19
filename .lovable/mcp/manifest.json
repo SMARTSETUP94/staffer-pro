@@ -13,7 +13,7 @@
   "mcp": {
     "server": {
       "name": "project-shift",
-      "version": "2.3.0",
+      "version": "2.4.0",
       "title": "Project Shift"
     },
     "tools": [
@@ -1751,7 +1751,7 @@
       {
         "name": "devis_lire",
         "title": "Lire un devis",
-        "description": "Devis complet : zones, objets, commentaires, heures, matériaux, lignes libres, options, remise et totaux. Coûts, prix d'achat et marge seulement si le compte a le droit coûts.",
+        "description": "Lire un devis. Par défaut vue résumée : en-tête, totaux et arbre des lignes (id, type, libellé, quantité, total, nombre d'heures / matériaux / lignes libres / photos). ligne_ids : détail complet de 20 objets au plus. vue = complet : tout le devis (volumineux). Coûts, prix d'achat et marge seulement avec le droit coûts.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -1763,6 +1763,23 @@
             "devis_id": {
               "type": "string",
               "format": "uuid"
+            },
+            "vue": {
+              "type": "string",
+              "enum": [
+                "resume",
+                "complet"
+              ],
+              "default": "resume",
+              "description": "resume (défaut) : en-tête, totaux et arbre des lignes avec id, type, libellé, quantité, total et nombre d'heures / matériaux / lignes libres. complet : tout le détail (volumineux)."
+            },
+            "ligne_ids": {
+              "type": "array",
+              "items": {
+                "$ref": "#/properties/devis_id"
+              },
+              "maxItems": 20,
+              "description": "Détail complet (heures, matériaux, lignes libres, photos) de ces lignes seulement, en plus du résumé."
             }
           },
           "required": [
@@ -1982,7 +1999,7 @@
       {
         "name": "devis_creer_brouillon",
         "title": "Créer un brouillon de devis",
-        "description": "Créer le brouillon de devis d'une opportunité depuis un modèle (défaut : modèle par défaut). Refusé si l'affaire a déjà un devis (renvoie son id). Idempotent par cle_externe. Brouillon uniquement. Premier appel : aperçu avant / après sans écriture ; après accord, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes.",
+        "description": "Créer le brouillon de devis d'une opportunité depuis un modèle (défaut : modèle par défaut). Refusé si l'affaire a déjà un devis (renvoie son id). Idempotent par cle_externe. Brouillon uniquement. Premier appel : aperçu avant / après sans écriture (l'id du devis est attribué à la confirmation) ; après accord, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes.",
         "annotations": {
           "readOnlyHint": false,
           "destructiveHint": false,
@@ -2153,7 +2170,8 @@
                         "heures": {
                           "type": "number",
                           "minimum": 0,
-                          "maximum": 100000
+                          "maximum": 100000,
+                          "description": "Heures pour UNE unité de l'objet si par_unite = true ; sinon heures totales de la ligne."
                         },
                         "taux_vente": {
                           "type": "number",
@@ -2165,7 +2183,8 @@
                           "description": "Montant exact de la ligne (taux affiché dérivé)."
                         },
                         "par_unite": {
-                          "type": "boolean"
+                          "type": "boolean",
+                          "description": "true : la valeur saisie vaut pour une unité et est multipliée par la quantité de l'objet parent ; false (défaut) : valeur pour la ligne entière, quelle que soit la quantité de l'objet."
                         }
                       },
                       "required": [
@@ -2263,7 +2282,8 @@
                           "maximum": 20
                         },
                         "par_unite": {
-                          "type": "boolean"
+                          "type": "boolean",
+                          "description": "true : la valeur saisie vaut pour une unité et est multipliée par la quantité de l'objet parent ; false (défaut) : valeur pour la ligne entière, quelle que soit la quantité de l'objet."
                         },
                         "heures_info": {
                           "$ref": "#/properties/lignes/items/properties/longueur_mm"
@@ -2817,7 +2837,7 @@
       {
         "name": "devis_ajouter_photo",
         "title": "Ajouter une image à un objet",
-        "description": "Joindre une image ou un plan (JPG, PNG ou PDF, 10 Mo maximum) à un objet du brouillon. Préférer url : lien https de partage OneDrive / SharePoint, staffing.setup.paris ou stockage de l'application, récupéré par le serveur (type réel contrôlé, redirections hors liste refusées). fichier_base64 reste possible pour les petits fichiers. La source est notée dans la légende. Brouillon uniquement. Premier appel : aperçu sans écriture ; après accord, renvoyer les mêmes arguments avec confirmation_id sous 10 minutes.",
+        "description": "Joindre une image ou un plan (JPG, PNG ou PDF, 10 Mo maximum, fichier complet contrôlé : fin JPEG FFD9, bloc PNG IEND, PDF %%EOF) à un objet du brouillon. Sources : onedrive_chemin (chemin relatif sous Staffing/ du OneDrive de smart@setup.paris, ex. 9539/02_entree.jpg) ou onedrive_item_id ; url de partage OneDrive / SharePoint / staffing.setup.paris ; document_id d'une image de la boîte de l'affaire ; fichier_base64 pour les petits fichiers. L'aperçu renvoie fichier_ref : à la confirmation, le mettre à la place du fichier (pas de second envoi). Plusieurs images : devis_ajouter_photos. Brouillon uniquement ; confirmation sous 10 minutes.",
         "annotations": {
           "readOnlyHint": false,
           "destructiveHint": false,
@@ -2843,13 +2863,30 @@
             "fichier_base64": {
               "type": "string",
               "minLength": 8,
-              "description": "Petit fichier uniquement : contenu JPG, PNG ou PDF en base64. Pour une vraie photo, préférer url."
+              "description": "Petit fichier : contenu JPG, PNG ou PDF en base64 (préfixe data: et retours à la ligne acceptés). Envoyé une seule fois : à la confirmation, renvoyer fichier_ref."
             },
             "url": {
               "type": "string",
               "format": "uri",
               "maxLength": 2000,
-              "description": "Lien https récupéré par le serveur : partage OneDrive / SharePoint, staffing.setup.paris ou stockage de l'application. 10 Mo maximum."
+              "description": "Lien https récupéré par le serveur : partage OneDrive / SharePoint, staffing.setup.paris ou stockage de l'application."
+            },
+            "onedrive_chemin": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 400,
+              "description": "Chemin relatif sous Staffing/ dans le OneDrive de smart@setup.paris, ex. 9539/02_entree.jpg."
+            },
+            "onedrive_item_id": {
+              "type": "string",
+              "minLength": 5,
+              "maxLength": 200,
+              "description": "Identifiant OneDrive d'un fichier rangé sous Staffing/ (drive de smart@setup.paris)."
+            },
+            "fichier_ref": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$",
+              "description": "Empreinte renvoyée par l'aperçu : remplace le fichier à la confirmation (valable 10 minutes)."
             },
             "mime": {
               "type": "string",
@@ -3079,6 +3116,295 @@
             "numero_progbat",
             "total_progbat",
             "mode"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "devis_ajouter_photos",
+        "title": "Ajouter plusieurs images à des objets",
+        "description": "Joindre 1 à 20 images ou plans (JPG, PNG, PDF ; 10 Mo chacun ; fichier complet contrôlé) à des objets du brouillon, en un seul aperçu et une seule confirmation, tout ou rien. Chaque image a une source : onedrive_chemin (dossier Staffing de smart@), url, document_id ou fichier_base64. L'aperçu renvoie fichiers_ref : à la confirmation, les mettre à la place des fichiers. Brouillon uniquement.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "devis_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "photos": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "ligne_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Objet du devis."
+                  },
+                  "document_id": {
+                    "$ref": "#/properties/devis_id"
+                  },
+                  "fichier_base64": {
+                    "type": "string",
+                    "minLength": 8,
+                    "description": "Petit fichier : contenu JPG, PNG ou PDF en base64 (préfixe data: et retours à la ligne acceptés). Envoyé une seule fois : à la confirmation, renvoyer fichier_ref."
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "maxLength": 2000,
+                    "description": "Lien https récupéré par le serveur : partage OneDrive / SharePoint, staffing.setup.paris ou stockage de l'application."
+                  },
+                  "onedrive_chemin": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 400,
+                    "description": "Chemin relatif sous Staffing/ dans le OneDrive de smart@setup.paris, ex. 9539/02_entree.jpg."
+                  },
+                  "onedrive_item_id": {
+                    "type": "string",
+                    "minLength": 5,
+                    "maxLength": 200,
+                    "description": "Identifiant OneDrive d'un fichier rangé sous Staffing/ (drive de smart@setup.paris)."
+                  },
+                  "fichier_ref": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$",
+                    "description": "Empreinte renvoyée par l'aperçu : remplace le fichier à la confirmation (valable 10 minutes)."
+                  },
+                  "mime": {
+                    "type": "string",
+                    "enum": [
+                      "image/jpeg",
+                      "image/png",
+                      "application/pdf"
+                    ],
+                    "description": "Facultatif : détecté d'après le contenu."
+                  },
+                  "legende": {
+                    "type": "string",
+                    "maxLength": 300
+                  },
+                  "source": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "visible_client": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                },
+                "required": [
+                  "ligne_id"
+                ],
+                "additionalProperties": false
+              },
+              "minItems": 1,
+              "maxItems": 20,
+              "description": "1 à 20 images, une source chacune ; tout ou rien."
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "autonomie",
+                "conversation"
+              ],
+              "description": "autonomie = tâche planifiée ou initiative de Claude : refusé si un humain a repris le brouillon. conversation = l'utilisateur demande explicitement dans la conversation de compléter ce devis."
+            },
+            "confirmation_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "devis_id",
+            "photos",
+            "mode"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "documents_affaire_televerser",
+        "title": "Déposer un document dans une affaire",
+        "description": "Ajouter un JPG, PNG ou PDF (10 Mo, fichier complet contrôlé) aux documents d'une affaire, depuis onedrive_chemin (dossier Staffing de smart@), url ou fichier_base64. Doublon détecté par empreinte (renvoie le document existant). Aucune suppression. Premier appel : aperçu sans écriture et fichier_ref ; après accord, renvoyer les mêmes arguments avec fichier_ref et confirmation_id sous 10 minutes.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "affaire_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "fichier_base64": {
+              "type": "string",
+              "minLength": 8,
+              "description": "Petit fichier JPG, PNG ou PDF en base64 ; à la confirmation, renvoyer fichier_ref à la place."
+            },
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "maxLength": 2000,
+              "description": "Lien https : partage OneDrive / SharePoint, staffing.setup.paris ou stockage de l'application."
+            },
+            "onedrive_chemin": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 400,
+              "description": "Chemin relatif sous Staffing/ du OneDrive de smart@setup.paris, ex. 9539/plan_entree.pdf."
+            },
+            "onedrive_item_id": {
+              "type": "string",
+              "minLength": 5,
+              "maxLength": 200
+            },
+            "fichier_ref": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$",
+              "description": "Empreinte renvoyée par l'aperçu (10 minutes)."
+            },
+            "mime": {
+              "type": "string",
+              "enum": [
+                "image/jpeg",
+                "image/png",
+                "application/pdf"
+              ]
+            },
+            "nom": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "description": "Nom lisible du document (défaut : nom du fichier OneDrive)."
+            },
+            "categorie": {
+              "type": "string",
+              "enum": [
+                "brief",
+                "plan",
+                "visuel",
+                "reperage",
+                "offre_fournisseur",
+                "devis_setup",
+                "autre",
+                "moodboard",
+                "esquisse_commerciale",
+                "logistique",
+                "avant_montage",
+                "pendant_montage",
+                "apres_montage",
+                "avant_demontage",
+                "pendant_demontage",
+                "apres_demontage",
+                "incident"
+              ],
+              "description": "Catégorie existante des documents d'affaire (devis_setup pour un devis Set Up)."
+            },
+            "source": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "Origine : mail de…, plan fourni par…"
+            },
+            "confirmation_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "affaire_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null,
+        "conditional": true
+      },
+      {
+        "name": "materiaux_proposer",
+        "title": "Proposer un article au catalogue",
+        "description": "Proposer un matériau absent du catalogue (désignation, unité, fournisseur, prix d'achat relu sur une offre, source). Crée seulement une proposition à valider par un admin dans Prix proposés, jamais un article actif ; prix enregistré seulement avec le droit coûts. Vérifier d'abord materiaux_rechercher. Aperçu puis confirmation avec les mêmes arguments.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "devis_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Devis en cours de rédaction qui motive la proposition."
+            },
+            "produit": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "unite": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "description": "m², ml, unité, plaque…"
+            },
+            "ref": {
+              "type": "string",
+              "maxLength": 120
+            },
+            "fournisseur": {
+              "type": "string",
+              "maxLength": 255
+            },
+            "format_texte": {
+              "type": "string",
+              "maxLength": 255
+            },
+            "epaisseur_mm": {
+              "type": "number",
+              "minimum": 0
+            },
+            "prix_achat": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Prix d'achat HT relu sur une offre ; enregistré seulement si le compte a le droit coûts."
+            },
+            "source": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "Origine du prix : offre fournisseur du…, site…, mail de…"
+            },
+            "confirmation_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Omettre pour obtenir l’aperçu ; renvoyer les mêmes arguments avec cet identifiant après accord humain, sous 10 minutes."
+            }
+          },
+          "required": [
+            "devis_id",
+            "produit",
+            "unite",
+            "source"
           ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"

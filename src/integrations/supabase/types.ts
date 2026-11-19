@@ -9773,6 +9773,10 @@ export type Database = {
         Args: { _devis_materiau_id: string; _p?: Json }
         Returns: string
       }
+      materiau_proposer_mcp: {
+        Args: { _affaire_id: string; _p: Json }
+        Returns: Json
+      }
       materiau_proposition_proches: { Args: { _id: string }; Returns: Json }
       materiau_proposition_refuser: {
         Args: { _id: string; _motif: string }
@@ -9888,6 +9892,10 @@ export type Database = {
           _p: Json
           _tool: string
         }
+        Returns: Json
+      }
+      mcp_document_affaire_ajouter: {
+        Args: { _affaire_id: string; _p: Json }
         Returns: Json
       }
       mcp_execute_write_locked: {

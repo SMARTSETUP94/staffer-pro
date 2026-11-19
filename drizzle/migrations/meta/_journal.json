@@ -974,6 +974,20 @@
       "when": 1794814729034,
       "tag": "0138_planning_public_lien",
       "breakpoints": true
+    },
+    {
+      "idx": 139,
+      "version": "7",
+      "when": 1795091890598,
+      "tag": "0139_connecteur_claude_photos_documents_materiaux",
+      "breakpoints": true
+    },
+    {
+      "idx": 140,
+      "version": "7",
+      "when": 1795092536086,
+      "tag": "0140_mcp_document_affaire_sans_colonne_generee",
+      "breakpoints": true
     }
   ]
 }

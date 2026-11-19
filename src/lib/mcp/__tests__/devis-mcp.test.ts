@@ -2,12 +2,13 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { controlerFichier, DEVIS_WRITE_TOOLS, devisPayload, devisSchemas, elementsVises, hoteAutorise, margeFiable, resumeTotaux, sansCouts, tailleLot, telechargerFichier } from "../devis";
 
-const png = btoa(String.fromCharCode(0x89, 0x50, 0x4e, 0x47, 1, 2, 3, 4));
+const PNG = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82];
+const png = btoa(String.fromCharCode(...PNG));
 const uuid = "11111111-1111-4111-8111-111111111111";
 
 describe("outils devis MCP", () => {
   it("n'expose que les six écritures de brouillon et l'enregistrement du transfert ProGBat", () => {
-    expect([...DEVIS_WRITE_TOOLS].sort()).toEqual(["devis_ajouter_photo", "devis_creer_brouillon", "devis_enregistrer_transfert", "devis_modifier_entete", "devis_nouvelle_version", "devis_remplir", "devis_soumettre"]);
+    expect([...DEVIS_WRITE_TOOLS].sort()).toEqual(["devis_ajouter_photo", "devis_ajouter_photos", "devis_creer_brouillon", "devis_enregistrer_transfert", "devis_modifier_entete", "devis_nouvelle_version", "devis_remplir", "devis_soumettre"]);
   });
   it("transfert ProGBat : numéro S provisoire ou D définitif, mode obligatoire", () => {
     const t = z.object(devisSchemas.devis_enregistrer_transfert);
@@ -36,7 +37,7 @@ describe("outils devis MCP", () => {
     expect(z.object(devisSchemas.devis_modifier_entete).safeParse({ devis_id: uuid, mode: "conversation", champs: { statut_redaction: "valide" } }).success).toBe(false);
   });
   it("contrôle le type réel et la taille du fichier", () => {
-    expect(controlerFichier(png, "image/png").length).toBe(8);
+    expect(controlerFichier(png, "image/png").length).toBe(20);
     expect(() => controlerFichier(png, "application/pdf")).toThrow(/type annoncé/);
     expect(() => controlerFichier(btoa("x".repeat(20)), "image/png", 10)).toThrow(/volumineux/);
   });
@@ -45,7 +46,7 @@ describe("outils devis MCP", () => {
     expect(JSON.stringify(payload)).not.toContain(png);
     expect(payload).not.toHaveProperty("confirmation_id");
     expect(payload.storage_path).toMatch(new RegExp(`^${uuid}/mcp/[0-9a-f]{64}\\.png$`));
-    expect(fichier?.bytes.length).toBe(8);
+    expect(fichier?.bytes.length).toBe(20);
   });
   it("masque les prix d'achat sans droit coûts", () => {
     const m = { id: "1", designation: "MDF", prix_vente: 10, prix_achat_net: 5, prix_m2: 8, prix_ml: null };
@@ -55,7 +56,7 @@ describe("outils devis MCP", () => {
 });
 
 describe("lot 4 — corrections après recette", () => {
-  const pngBytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 1, 2, 3, 4]);
+  const pngBytes = new Uint8Array(PNG);
   const rep = (status: number, body: Uint8Array | null, headers: Record<string, string> = {}) =>
     new Response(body as BodyInit | null, { status, headers });
   it("modifier / supprimer : schéma strict par cible", () => {

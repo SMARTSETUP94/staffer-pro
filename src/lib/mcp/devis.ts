@@ -5,9 +5,13 @@ import { argumentsHash } from "./write-policy";
 import { confirmationSchema } from "./write-schemas";
 import { dateSchema } from "./schemas";
 import { extrait, noteApres } from "@/lib/devis/note";
+import { causeJournal, controlerFichier, controlerOctets, detecterType, PHOTO_MAX_OCTETS, PHOTO_MIMES, sansSourceFichier, sha256, trop, type Mime } from "./fichiers";
+export { controlerFichier, detecterType, PHOTO_MAX_OCTETS, PHOTO_MIMES };
 
 /** Écritures devis autorisées pour Claude. Toute autre action devis reste dans l'application. */
-export const DEVIS_WRITE_TOOLS = ["devis_creer_brouillon", "devis_remplir", "devis_modifier_entete", "devis_ajouter_photo", "devis_nouvelle_version", "devis_soumettre", "devis_enregistrer_transfert"] as const;
+export const DEVIS_WRITE_TOOLS = ["devis_creer_brouillon", "devis_remplir", "devis_modifier_entete", "devis_ajouter_photo", "devis_ajouter_photos", "devis_nouvelle_version", "devis_soumettre", "devis_enregistrer_transfert"] as const;
+/** Nom vérifié par la base : l'envoi groupé passe par la même écriture que l'image seule (liste autorisée inchangée). */
+export const DB_TOOL: Partial<Record<DevisWriteName, string>> = { devis_ajouter_photos: "devis_ajouter_photo" };
 export type DevisWriteName = typeof DEVIS_WRITE_TOOLS[number];
 export const DEVIS_READ_TOOLS = ["devis_lister", "devis_lire", "devis_referentiel", "materiaux_rechercher", "devis_charge_be", "devis_exporter_pdf", "devis_exporter_progbat", "devis_proposer_photos", "devis_note_version"] as const;
 export type DevisReadName = typeof DEVIS_READ_TOOLS[number];
@@ -15,18 +19,25 @@ export const DEVIS_READ_CAPS: Record<DevisReadName, string> = {
   devis_lister: "devis.view", devis_lire: "devis.view", devis_referentiel: "devis.rediger", materiaux_rechercher: "devis.rediger", devis_charge_be: "devis.view", devis_exporter_pdf: "devis.view", devis_exporter_progbat: "devis.view", devis_proposer_photos: "devis.rediger", devis_note_version: "devis.view",
 };
 export const LOT_MAX = 300;
-export const PHOTO_MAX_OCTETS = 10 * 1024 * 1024;
-export const PHOTO_MIMES = { "image/jpeg": "jpg", "image/png": "png", "application/pdf": "pdf" } as const;
 
 const uuid = z.string().uuid();
+const PAR_UNITE = "true : la valeur saisie vaut pour une unité et est multipliée par la quantité de l'objet parent ; false (défaut) : valeur pour la ligne entière, quelle que soit la quantité de l'objet.";
+const sourcesFichier = {
+  fichier_base64: z.string().min(8).optional().describe("Petit fichier : contenu JPG, PNG ou PDF en base64 (préfixe data: et retours à la ligne acceptés). Envoyé une seule fois : à la confirmation, renvoyer fichier_ref."),
+  url: z.string().url().max(2000).optional().describe("Lien https récupéré par le serveur : partage OneDrive / SharePoint, staffing.setup.paris ou stockage de l'application."),
+  onedrive_chemin: z.string().min(1).max(400).optional().describe("Chemin relatif sous Staffing/ dans le OneDrive de smart@setup.paris, ex. 9539/02_entree.jpg."),
+  onedrive_item_id: z.string().min(5).max(200).optional().describe("Identifiant OneDrive d'un fichier rangé sous Staffing/ (drive de smart@setup.paris)."),
+  fichier_ref: z.string().regex(/^[0-9a-f]{64}$/).optional().describe("Empreinte renvoyée par l'aperçu : remplace le fichier à la confirmation (valable 10 minutes)."),
+  mime: z.enum(["image/jpeg", "image/png", "application/pdf"]).optional().describe("Facultatif : détecté d'après le contenu."),
+};
 const num = z.number().finite();
 const mode = z.enum(["autonomie", "conversation"]).describe("autonomie = tâche planifiée ou initiative de Claude : refusé si un humain a repris le brouillon. conversation = l'utilisateur demande explicitement dans la conversation de compléter ce devis.");
 const heure = z.object({
   id: uuid.optional().describe("Ligne d'heures existante de cette ligne à mettre à jour (sinon : même poste + niveau déjà présent = mise à jour, pas de doublon)."),
   poste: z.string().min(1).max(40).optional().describe("Code poste : suivi_projet, plans_bem, construction, metallerie, peinture, cnc, laser, impression_uv, impressions_souples, tapisserie, montage, logistique."),
   niveau: z.string().max(40).optional().describe("standard ; pour montage : chef ou monteur."),
-  heures: num.min(0).max(100000), taux_vente: num.min(0).optional().describe("Omettre pour le taux de la grille."),
-  montant_force: num.optional().describe("Montant exact de la ligne (taux affiché dérivé)."), par_unite: z.boolean().optional(),
+  heures: num.min(0).max(100000).describe("Heures pour UNE unité de l'objet si par_unite = true ; sinon heures totales de la ligne."), taux_vente: num.min(0).optional().describe("Omettre pour le taux de la grille."),
+  montant_force: num.optional().describe("Montant exact de la ligne (taux affiché dérivé)."), par_unite: z.boolean().optional().describe(PAR_UNITE),
 }).strict().refine(h => h.id || h.poste, "poste obligatoire (ou id d'une ligne d'heures existante)");
 const materiau = z.object({
   materiau_id: uuid.optional().describe("Id catalogue (materiaux_rechercher). Sinon designation + prix_achat."),
@@ -37,7 +48,7 @@ const libre = z.object({
   categorie: z.enum(["achat", "sous_traitance", "location", "forfait"]).optional(), forfait_cle: z.string().max(60).optional(),
   designation: z.string().max(255).optional(), unite: z.string().max(40).optional(), quantite: num.optional(),
   prix_achat: num.optional(), prix_forfait: num.optional().describe("Prix de vente direct (négatif pour une régularisation)."),
-  coefficient: num.min(0).max(20).optional(), par_unite: z.boolean().optional(), heures_info: num.optional(), poste_info: z.string().max(40).optional(),
+  coefficient: num.min(0).max(20).optional(), par_unite: z.boolean().optional().describe(PAR_UNITE), heures_info: num.optional(), poste_info: z.string().max(40).optional(),
 }).strict();
 const element = z.object({
   ref: z.string().min(1).max(40).optional().describe("Référence locale pour rattacher des enfants via parent_ref."),
@@ -70,7 +81,9 @@ const suppression = z.object({ cible: z.enum(["ligne", "heure", "materiau", "lib
 
 export const devisSchemas = {
   devis_lister: { affaire_id: uuid.optional(), recherche: z.string().max(120).optional(), statuts: z.array(z.enum(["brouillon", "a_valider", "valide", "transfere", "signe", "refuse"])).max(6).optional(), limit: z.number().int().min(1).max(100).default(25), offset: z.number().int().min(0).default(0) },
-  devis_lire: { devis_id: uuid },
+  devis_lire: { devis_id: uuid,
+    vue: z.enum(["resume", "complet"]).default("resume").describe("resume (défaut) : en-tête, totaux et arbre des lignes avec id, type, libellé, quantité, total et nombre d'heures / matériaux / lignes libres. complet : tout le détail (volumineux)."),
+    ligne_ids: z.array(uuid).max(20).optional().describe("Détail complet (heures, matériaux, lignes libres, photos) de ces lignes seulement, en plus du résumé.") },
   devis_note_version: { devis_id: uuid, version_id: uuid.describe("Identifiant d'une version lue dans note_historique de devis_lire.") },
   devis_proposer_photos: { devis_id: uuid.describe("Devis dont les zones et objets reçoivent des propositions d'images de la boîte de l'affaire.") },
   devis_referentiel: {},
@@ -95,9 +108,11 @@ export const devisSchemas = {
     note_mcp_coches: z.array(z.string().min(1).max(2000)).max(200).optional().describe("Points de la note marqués comme traités (texte exact du point)."),
   }).strict().refine(p => Object.keys(p).length > 0, "Modification vide"), mode, ...confirmationSchema },
   devis_ajouter_photo: { devis_id: uuid, ligne_id: uuid.describe("Objet du devis."),
-    document_id: uuid.optional().describe("Image JPG/PNG de la boîte de documents de l'affaire du devis (voir documents_affaire) : copiée dans le devis."), fichier_base64: z.string().min(8).optional().describe("Petit fichier uniquement : contenu JPG, PNG ou PDF en base64. Pour une vraie photo, préférer url."),
-    url: z.string().url().max(2000).optional().describe("Lien https récupéré par le serveur : partage OneDrive / SharePoint, staffing.setup.paris ou stockage de l'application. 10 Mo maximum."),
-    mime: z.enum(["image/jpeg", "image/png", "application/pdf"]).optional().describe("Facultatif : détecté d'après le contenu."), legende: z.string().max(300).optional(), source: z.string().max(200).optional().describe("Origine : pièce jointe du mail de…, plan, référence…"), visible_client: z.boolean().default(false), mode, ...confirmationSchema },
+    document_id: uuid.optional().describe("Image JPG/PNG de la boîte de documents de l'affaire du devis (voir documents_affaire) : copiée dans le devis."), ...sourcesFichier,
+    legende: z.string().max(300).optional(), source: z.string().max(200).optional().describe("Origine : pièce jointe du mail de…, plan, référence…"), visible_client: z.boolean().default(false), mode, ...confirmationSchema },
+  devis_ajouter_photos: { devis_id: uuid, photos: z.array(z.object({ ligne_id: uuid.describe("Objet du devis."), document_id: uuid.optional(), ...sourcesFichier,
+      legende: z.string().max(300).optional(), source: z.string().max(200).optional(), visible_client: z.boolean().default(false) }).strict()).min(1).max(20).describe("1 à 20 images, une source chacune ; tout ou rien."),
+    mode, ...confirmationSchema },
   devis_nouvelle_version: { devis_id: uuid.describe("Devis envoyé / validé à reprendre ; l'original n'est jamais modifié."), note: z.string().max(8000).optional(), mode, ...confirmationSchema },
   devis_enregistrer_transfert: { devis_id: uuid,
     numero_progbat: z.string().trim().toUpperCase().regex(/^(S\d{6}|D-\d{6}-\d{4})$/, "Numéro ProGBat : S + 6 chiffres (brouillon) ou D-AAAAMM-NNNN (finalisé)").describe("S003800 juste après l'import (brouillon ProGBat) ; D-AAAAMM-NNNN une fois le devis finalisé par un humain."),
@@ -129,6 +144,26 @@ export function resumeTotaux(calcul: unknown) {
   if (!calcul || typeof calcul !== "object") return null;
   const c = calcul as Record<string, unknown>;
   return { ...Object.fromEntries(TOTAUX.filter(k => k in c).map(k => [k, c[k] as never])), ...margeFiable(c) };
+}
+const CHAMPS_ENTETE = ["id", "numero", "version", "statut_redaction", "libelle", "date_devis", "date_validite", "validite_jours", "client_id", "contact_id", "client_final_id", "remise_mode", "remise_valeur", "note_mcp", "note_mcp_coches", "cree_par_mcp", "modifie_par_humain_le", "updated_at", "numero_progbat"];
+/** Vue résumée de devis_lire : en-tête, totaux, arbre des lignes ; détail complet seulement pour ligne_ids (coûts déjà masqués par le lecteur). */
+export function resumeDevis(lu: Record<string, any>, ligneIds?: string[]) {
+  const d = (lu.devis ?? {}) as Record<string, unknown>;
+  const totaux = (lu.calcul?.lignes ?? {}) as Record<string, number>;
+  const compte = (rows: any[] | undefined) => (rows ?? []).reduce((m: Record<string, number>, r) => (m[r.ligne_id] = (m[r.ligne_id] ?? 0) + 1, m), {});
+  const nh = compte(lu.heures), nm = compte(lu.materiaux), nl = compte(lu.libres), np = compte(lu.photos);
+  const lignes = ((lu.lignes ?? []) as any[]).map(l => ({ id: l.id, parent_id: l.parent_id ?? null, type: l.type, libelle: l.libelle ?? (l.texte ? String(l.texte).slice(0, 80) : null), quantite: l.quantite ?? null,
+    total_ht: totaux[l.id] ?? null, ...(l.type === "option" ? { incluse: l.option_incluse === true } : {}), ...(l.interne ? { interne: true } : {}),
+    nb_heures: nh[l.id] ?? 0, nb_materiaux: nm[l.id] ?? 0, nb_libres: nl[l.id] ?? 0, nb_photos: np[l.id] ?? 0 }));
+  const ids = new Set(ligneIds ?? []);
+  const pour = (rows: any[] | undefined) => (rows ?? []).filter(r => ids.has(r.ligne_id));
+  return {
+    entete: Object.fromEntries(CHAMPS_ENTETE.filter(k => k in d).map(k => [k, d[k] as never])),
+    affaire: lu.affaire ?? null, client: lu.client ? { id: lu.client.id, nom: lu.client.nom } : null, contact: lu.contact ? { id: lu.contact.id, nom: lu.contact.nom, prenom: lu.contact.prenom, email: lu.contact.email } : null,
+    totaux: lu.calcul ? resumeTotaux(lu.calcul) : null, droits: lu.droits ?? null, nb_corbeille: (lu.corbeille_elements ?? []).length + (lu.corbeille ?? []).length,
+    lignes,
+    ...(ids.size ? { detail: { lignes: ((lu.lignes ?? []) as any[]).filter(l => ids.has(l.id)), heures: pour(lu.heures), materiaux: pour(lu.materiaux), libres: pour(lu.libres), photos: pour(lu.photos) } } : {}),
+  };
 }
 /** Marge fiable seulement si aucun coût de revient ne manque (aucun coût n'est inventé). */
 export function margeFiable(c: Record<string, unknown>) {
@@ -173,7 +208,8 @@ export async function readDevis(context: McpAppContext, name: DevisReadName, arg
       if (lu.calcul && typeof lu.calcul === "object") lu.calcul = { ...lu.calcul, ...margeFiable(lu.calcul) };
       const hist = await context.db.from("devis_textes_historique").select("id,source,auteur_id,cree_le,apres").eq("devis_id", args.devis_id).eq("cible", "note").order("cree_le", { ascending: false }).limit(5);
       const note_historique = (hist.data ?? []).map((h: any) => ({ version_id: h.id as string, source: h.source === "mcp" ? "Claude (MCP)" : h.source as string, auteur_id: h.auteur_id as string | null, date: h.cree_le as string, extrait: extrait(h.apres) }));
-      data = { rows: [1], devis: lu as never, redaction_claude: (meta.data ?? null) as never, note_historique, note_historique_consigne: "Extraits seulement : texte complet d'une version avec devis_note_version." };
+      const corps = args.vue === "complet" ? { devis: lu as never } : { ...(resumeDevis(lu as Record<string, any>, args.ligne_ids) as unknown as Record<string, never>), vue: "resume", consigne_vue: "Résumé : détail d'objets avec ligne_ids (20 maximum), devis entier avec vue = complet." };
+      data = { rows: [1], ...corps, redaction_claude: (meta.data ?? null) as never, note_historique, note_historique_consigne: "Extraits seulement : texte complet d'une version avec devis_note_version." };
     } else if (name === "devis_note_version") {
       const r = await context.db.from("devis_textes_historique").select("id,cible,source,cree_le,avant,apres").eq("id", args.version_id).eq("devis_id", args.devis_id).eq("cible", "note").maybeSingle();
       if (r.error || !r.data) throw new ToolError("Version introuvable ou accès refusé");
@@ -224,33 +260,6 @@ export async function readDevis(context: McpAppContext, name: DevisReadName, arg
   return result;
 }
 
-type Mime = keyof typeof PHOTO_MIMES;
-const trop = (max: number) => new ToolError(`Fichier trop volumineux (${max / 1024 / 1024} Mo maximum)`);
-/** Type réel d'après la signature du contenu (JPG, PNG, PDF), sinon null. */
-export function detecterType(bytes: Uint8Array): Mime | null {
-  const sig = (s: number[]) => s.every((b, i) => bytes[i] === b);
-  if (sig([0xff, 0xd8, 0xff])) return "image/jpeg";
-  if (sig([0x89, 0x50, 0x4e, 0x47])) return "image/png";
-  if (sig([0x25, 0x50, 0x44, 0x46])) return "application/pdf";
-  return null;
-}
-function controlerOctets(bytes: Uint8Array<ArrayBuffer>, mime: Mime | undefined, max: number) {
-  if (bytes.length > max) throw trop(max);
-  const reel = detecterType(bytes);
-  if (!reel) throw new ToolError("Type de fichier refusé (JPG, PNG ou PDF uniquement, d'après le contenu)");
-  if (mime && mime !== reel) throw new ToolError("Le contenu ne correspond pas au type annoncé (JPG, PNG ou PDF uniquement)");
-  return { bytes, mime: reel };
-}
-/** Décode et contrôle un fichier : type réel (signature) et taille. */
-export function controlerFichier(base64: string, mime?: Mime, max = PHOTO_MAX_OCTETS) {
-  const clean = base64.replace(/^data:[^;]+;base64,/, "").replace(/\s/g, "");
-  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(clean)) throw new ToolError("Contenu base64 invalide");
-  if (Math.floor(clean.length * 3 / 4) > max + 4) throw trop(max);
-  const bin = atob(clean); const bytes = new Uint8Array(new ArrayBuffer(bin.length));
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return controlerOctets(bytes, mime, max).bytes;
-}
-
 /** Hôtes d'où le serveur accepte de récupérer une image (redirections comprises). */
 const HOTES_PHOTO = [/\.sharepoint\.com$/, /(^|\.)onedrive\.live\.com$/, /^1drv\.ms$/, /^staffing\.setup\.paris$/, /^znwffztmdgsshuvvzsvq\.supabase\.co$/];
 export function hoteAutorise(u: URL) {
@@ -289,34 +298,62 @@ export async function telechargerFichier(url: string, mime?: Mime, max = PHOTO_M
   }
   throw new ToolError("Trop de redirections");
 }
-async function sha256(bytes: Uint8Array<ArrayBuffer>) {
-  const h = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(h), b => b.toString(16).padStart(2, "0")).join("");
+export type FichierObtenu = { bytes: Uint8Array<ArrayBuffer>; mime: Mime; sha: string; source: string | null; nom: string | null; origine: "document" | "temp" | "direct" };
+export type CtxFichier = { db: any; affaireId: string; userId?: string; temp?: { lire: (userId: string, ref: string) => Promise<{ bytes: Uint8Array<ArrayBuffer>; mime: Mime; source: string | null; nom: string | null }> }; onedrive?: (src: { chemin?: string; itemId?: string }, mime?: Mime) => Promise<{ bytes: Uint8Array<ArrayBuffer>; mime: Mime; source: string; nom: string }> };
+/** Une seule source par fichier ; renvoie le contenu contrôlé (signature, taille, fin de fichier) et une source lisible. */
+export async function obtenirFichier(a: Record<string, any>, ctx: CtxFichier | undefined, opts: { document?: boolean } = {}): Promise<FichierObtenu> {
+  const cles = ["fichier_base64", "url", "onedrive_chemin", "onedrive_item_id", "fichier_ref", ...(opts.document !== false ? ["document_id"] : [])].filter(k => a[k]);
+  if (cles.length !== 1) throw new ToolError(`Fournir une seule source : soit url, soit onedrive_chemin / onedrive_item_id (dossier Staffing), ${opts.document !== false ? "soit document_id (boîte de l'affaire), " : ""}soit fichier_base64 (petits fichiers), ou fichier_ref à la confirmation${cles.length ? ` (reçu : ${cles.join(", ")})` : ""}`);
+  let r: { bytes: Uint8Array<ArrayBuffer>; mime: Mime; source: string | null; nom: string | null }, origine: FichierObtenu["origine"] = "direct";
+  if (a.document_id) {
+    const doc = await lireDocumentAffaire(ctx, String(a.document_id));
+    r = { bytes: doc.bytes, mime: doc.mime, source: `document de l'affaire ${doc.nom}`.slice(0, 200), nom: doc.nom }; origine = "document";
+  } else if (a.fichier_ref) {
+    if (!ctx?.temp || !ctx.userId) throw new ToolError("fichier_ref indisponible ici");
+    r = await ctx.temp.lire(ctx.userId, String(a.fichier_ref)); origine = "temp";
+    if (a.mime && a.mime !== r.mime) throw new ToolError(`Le contenu ne correspond pas au type annoncé : ${a.mime} annoncé, ${r.mime} détecté`);
+  } else if (a.onedrive_chemin || a.onedrive_item_id) {
+    const od = ctx?.onedrive ?? (await import("./onedrive")).telechargerOneDrive;
+    const t = await od({ chemin: a.onedrive_chemin, itemId: a.onedrive_item_id }, a.mime); r = { bytes: t.bytes, mime: t.mime, source: t.source, nom: t.nom || null };
+  } else if (a.url) {
+    const t = await telechargerFichier(String(a.url), a.mime); r = { bytes: t.bytes, mime: t.mime, source: `lien ${t.hote}`, nom: null };
+  } else {
+    const bytes = controlerFichier(String(a.fichier_base64), a.mime); r = { bytes, mime: detecterType(bytes) as Mime, source: null, nom: null };
+  }
+  return { ...r, sha: await sha256(r.bytes), origine };
 }
-
-/** Construit les arguments métier transmis à la base (jamais le fichier lui-même). */
-export async function devisPayload(name: DevisWriteName, args: Record<string, any>, ctx?: { db: any; affaireId: string }): Promise<{ payload: Record<string, unknown>; fichier?: { path: string; bytes: Uint8Array<ArrayBuffer>; mime: string } }> {
+function photoPayload(devisId: string, a: Record<string, any>, f: FichierObtenu) {
+  const path = `${devisId}/mcp/${f.sha}.${PHOTO_MIMES[f.mime]}`;
+  return { path, payload: { ligne_id: a.ligne_id, storage_path: path, mime: f.mime, size_bytes: f.bytes.length, legende: a.legende ?? null, source: a.source ?? f.source, visible_client: a.visible_client ?? false, ...(a.document_id ? { source_document_id: a.document_id } : {}) } };
+}
+export type FichierDepot = { path: string; bytes: Uint8Array<ArrayBuffer>; mime: string; sha: string; origine: FichierObtenu["origine"]; nom: string | null; source: string | null };
+/** Construit les arguments métier transmis à la base (jamais le fichier lui-même) et l'empreinte normalisée des arguments. */
+export async function devisPayload(name: DevisWriteName, args: Record<string, any>, ctx?: CtxFichier): Promise<{ payload: Record<string, unknown>; fichier?: FichierDepot; fichiers?: FichierDepot[]; hashArgs: Record<string, unknown> }> {
   const { confirmation_id: _c, ...a } = args;
   if (name === "devis_ajouter_photo") {
-    if ([a.fichier_base64, a.url, a.document_id].filter(Boolean).length !== 1) throw new ToolError("Fournir soit url (recommandé), soit document_id (boîte de l'affaire), soit fichier_base64 (petits fichiers)");
-    let bytes: Uint8Array<ArrayBuffer>, mime: Mime, source = a.source ?? null;
-    if (a.document_id) {
-      const doc = await lireDocumentAffaire(ctx, String(a.document_id));
-      bytes = doc.bytes; mime = doc.mime; source = source ?? `document de l'affaire ${doc.nom}`.slice(0, 200);
-      const path = `${a.devis_id}/mcp/${await sha256(bytes)}.${PHOTO_MIMES[mime]}`;
-      return { payload: { mode: a.mode, devis_id: a.devis_id, ligne_id: a.ligne_id, storage_path: path, mime, size_bytes: bytes.length, legende: a.legende ?? null, source, visible_client: a.visible_client ?? false, source_document_id: a.document_id }, fichier: { path, bytes, mime } };
+    const f = await obtenirFichier(a, ctx);
+    const { path, payload } = photoPayload(String(a.devis_id), a, f);
+    return { payload: { mode: a.mode, devis_id: a.devis_id, ...payload }, fichier: { path, bytes: f.bytes, mime: f.mime, sha: f.sha, origine: f.origine, nom: f.nom, source: f.source }, hashArgs: sansSourceFichier(args, a.document_id ? null : f.sha) };
+  }
+  if (name === "devis_ajouter_photos") {
+    const photos = (a.photos ?? []) as Record<string, any>[];
+    if (photos.length < 1 || photos.length > 20) throw new ToolError("De 1 à 20 images par appel");
+    const fichiers: FichierDepot[] = [], items: Record<string, unknown>[] = [], hashPhotos: Record<string, unknown>[] = [];
+    for (const [i, p] of photos.entries()) {
+      let f: FichierObtenu;
+      try { f = await obtenirFichier(p, ctx); } catch (e) { throw new ToolError(`Image ${i + 1} (ligne ${p.ligne_id}) : ${e instanceof Error ? e.message : "refusée"}`); }
+      const { path, payload } = photoPayload(String(a.devis_id), p, f);
+      items.push(payload); fichiers.push({ path, bytes: f.bytes, mime: f.mime, sha: f.sha, origine: f.origine, nom: f.nom, source: f.source });
+      hashPhotos.push(sansSourceFichier(p, p.document_id ? null : f.sha));
     }
-    if (a.url) { const t = await telechargerFichier(String(a.url), a.mime); bytes = t.bytes; mime = t.mime; source = source ?? `lien ${t.hote}`; }
-    else { bytes = controlerFichier(String(a.fichier_base64), a.mime); mime = detecterType(bytes) as Mime; }
-    const path = `${a.devis_id}/mcp/${await sha256(bytes)}.${PHOTO_MIMES[mime]}`;
-    return { payload: { mode: a.mode, devis_id: a.devis_id, ligne_id: a.ligne_id, storage_path: path, mime, size_bytes: bytes.length, legende: a.legende ?? null, source, visible_client: a.visible_client ?? false }, fichier: { path, bytes, mime } };
+    return { payload: { mode: a.mode, devis_id: a.devis_id, photos: items }, fichiers, hashArgs: { ...args, photos: hashPhotos } };
   }
   if (name === "devis_remplir") {
     const n = tailleLot(a.lignes ?? [], (a.modifications?.length ?? 0) + (a.suppressions?.length ?? 0));
     if (n === 0) throw new ToolError("Lot vide : fournir lignes, modifications ou suppressions");
     if (n > LOT_MAX) throw new ToolError(`${LOT_MAX} lignes maximum par appel (ajouts, modifications et suppressions comprises) : découper en plusieurs appels`);
   }
-  return { payload: a };
+  return { payload: a, hashArgs: args };
 }
 
 function apercu(sim: Record<string, any>) {
@@ -348,12 +385,18 @@ export function elementsVises(lu: Record<string, any> | null, args: Record<strin
   ];
 }
 
+/** Erreur d'une étape RPC : message de la base conservé (jamais de contenu de fichier). */
+const echec = (etape: string, e: { message?: string } | null | undefined) => new ToolError(`${etape} : ${String(e?.message ?? "erreur inconnue").slice(0, 200)}`);
 export async function runDevisWrite(context: McpAppContext, name: DevisWriteName, args: Record<string, any>) {
+  const dbTool = DB_TOOL[name] ?? name;
+  let etape = "droits"; const mesure: Record<string, number | undefined> = { longueur_base64: typeof args.fichier_base64 === "string" ? args.fichier_base64.length : undefined };
+  const temp = await import("./fichier-temp.server").catch(() => null);
   try {
     if (!devisWriteEnabled(context)) throw new ToolError("Écriture devis refusée : droit de rédaction requis");
     if (name === "devis_enregistrer_transfert" && args.mode !== "conversation") throw new ToolError("Transfert ProGBat refusé en autonomie : uniquement en conversation, avec l'accord explicite de l'utilisateur");
-    const fresh = await context.db.rpc("mcp_assert_write", { _tool: name });
+    const fresh = await context.db.rpc("mcp_assert_write", { _tool: dbTool });
     if (fresh.error) throw new ToolError(fresh.error.message?.includes("devis non activé") ? "Module devis non activé pour ce compte" : "Écriture MCP refusée : droits ou connexion modifiés");
+    etape = "lecture du devis";
     let affaireId: string;
     if (name === "devis_creer_brouillon") affaireId = String(args.affaire_id);
     else {
@@ -361,13 +404,22 @@ export async function runDevisWrite(context: McpAppContext, name: DevisWriteName
       if (etat.error || !etat.data) throw new ToolError("Devis introuvable ou accès refusé");
       affaireId = String((etat.data as any).affaire_id);
     }
-    const { payload, fichier } = await devisPayload(name, args, { db: context.db, affaireId });
-    const hash = await argumentsHash(args);
-    const sim = await context.db.rpc("devis_mcp_simuler", { _tool: name, _payload: payload as never, _affaire_id: affaireId });
-    if (sim.error) throw new ToolError("Aperçu indisponible");
+    etape = "contrôle du fichier";
+    if (temp) void temp.purgerTemp(context.userId);
+    const { payload, fichier, fichiers, hashArgs } = await devisPayload(name, args, { db: context.db, affaireId, userId: context.userId, temp: temp ? { lire: temp.lireTemp } : undefined });
+    const depots = fichiers ?? (fichier ? [fichier] : []);
+    mesure.taille_octets = depots.reduce((n, f) => n + f.bytes.length, 0) || undefined;
+    const hash = await argumentsHash(hashArgs);
+    etape = "simulation";
+    const sim = await context.db.rpc("devis_mcp_simuler", { _tool: dbTool, _payload: payload as never, _affaire_id: affaireId });
+    if (sim.error) throw echec("Aperçu indisponible", sim.error);
     const s = sim.data as Record<string, any>;
     if (s?.error) throw new ToolError(String(s.error));
     let vue: Record<string, unknown> = apercu(s);
+    if (name === "devis_creer_brouillon" && vue.resultat && typeof vue.resultat === "object") {
+      const { devis_id: _id, ...reste } = vue.resultat as Record<string, unknown>;
+      vue = { ...vue, resultat: { ...reste, devis_id: "attribué à la confirmation" } };
+    }
     if (name === "devis_modifier_entete" && (args.champs?.note || args.champs?.note_mcp_coches)) {
       const cur = await context.db.from("devis").select("note_mcp,note_mcp_coches").eq("id", args.devis_id).maybeSingle();
       const avant = (cur.data?.note_mcp ?? null) as string | null;
@@ -380,26 +432,40 @@ export async function runDevisWrite(context: McpAppContext, name: DevisWriteName
       vue = { ...vue, elements_vises: elementsVises((lu.data ?? null) as Record<string, any> | null, args) };
     }
     if (typeof args.confirmation_id === "string") {
-      if (fichier) {
-        const up = await context.db.storage.from("devis-photos").upload(fichier.path, fichier.bytes, { contentType: fichier.mime, upsert: false });
-        if (up.error && !/exist|duplicate/i.test(up.error.message)) throw new ToolError("Dépôt du fichier refusé");
+      etape = "dépôt du fichier";
+      for (const f of depots) {
+        const up = await context.db.storage.from("devis-photos").upload(f.path, f.bytes, { contentType: f.mime, upsert: false });
+        if (up.error && !/exist|duplicate/i.test(up.error.message)) throw echec("Dépôt du fichier refusé", up.error);
       }
-      const { data, error } = await context.db.rpc("mcp_execute_write_locked", { _confirmation_id: args.confirmation_id, _tool: name, _arguments_hash: hash, _payload: payload as never, _diff: vue as never });
-      if (error) throw new ToolError("Confirmation indisponible");
+      etape = "confirmation";
+      const { data, error } = await context.db.rpc("mcp_execute_write_locked", { _confirmation_id: args.confirmation_id, _tool: dbTool, _arguments_hash: hash, _payload: payload as never, _diff: vue as never });
+      if (error) throw echec("Confirmation indisponible", error);
       const out = data as Record<string, any>;
-      if (fichier && out?.error) {
+      if (depots.length && out?.error) {
         const { retirerCopieOrpheline } = await import("@/lib/devis/images-ia.server");
-        await retirerCopieOrpheline(fichier.path).catch(() => false);
+        for (const f of depots) await retirerCopieOrpheline(f.path).catch(() => false);
       }
+      if (!out?.error && temp) for (const f of depots) if (f.origine === "temp") await temp.retirerTemp(context.userId, f.sha, f.mime as Mime);
       return { ...compactResult({ ...out, totaux: resumeTotaux(out?.calcul), calcul: undefined }), ...(out?.error ? { isError: true } : {}) };
     }
-    const { data, error } = await context.db.rpc("mcp_write_preview", { _tool: name, _arguments_hash: hash, _payload: payload as never, _affaire_id: affaireId, _etape_id: null as never, _snapshot: s.snapshot, _diff: {} });
-    if (error) throw new ToolError("Aperçu refusé par les droits ou journal indisponible");
-    return compactResult({ statut: "preview", mode: args.mode, ...vue, ...(data as object), consigne: "Montrer cet aperçu à l'utilisateur, puis renvoyer exactement les mêmes arguments avec confirmation_id sous 10 minutes." });
+    etape = "zone temporaire";
+    const refs: { ligne_id?: string; fichier_ref: string }[] = [];
+    if (temp) for (const [i, f] of depots.entries()) if (f.origine === "direct") {
+      await temp.deposerTemp(context.userId, f.bytes, f.mime as Mime, { source: f.source, nom: f.nom });
+      refs.push({ ligne_id: name === "devis_ajouter_photos" ? args.photos?.[i]?.ligne_id : args.ligne_id, fichier_ref: f.sha });
+    }
+    etape = "aperçu";
+    const { data, error } = await context.db.rpc("mcp_write_preview", { _tool: dbTool, _arguments_hash: hash, _payload: payload as never, _affaire_id: affaireId, _etape_id: null as never, _snapshot: s.snapshot, _diff: {} });
+    if (error) throw echec("Aperçu refusé par les droits ou journal indisponible", error);
+    return compactResult({ statut: "preview", mode: args.mode, ...vue, ...(data as object),
+      ...(refs.length ? { fichiers_ref: refs, consigne_fichier: "À la confirmation, remplacer fichier_base64 / url / onedrive_* par fichier_ref (même fichier, sans le renvoyer) ; les autres arguments restent identiques." } : {}),
+      consigne: "Montrer cet aperçu à l'utilisateur, puis renvoyer les mêmes arguments avec confirmation_id sous 10 minutes." });
   } catch (error) {
-    const audit = await context.db.from("mcp_audit_log").insert({ user_id: context.userId, client_id: context.clientId, tool: name, statut: "refused", arguments: {} });
+    const cause = causeJournal(etape, error, mesure);
+    if (!(error instanceof ToolError)) console.error(`[mcp ${name}] ${cause.etape} : ${cause.erreur_type} ${cause.erreur_message}`);
+    const audit = await context.db.from("mcp_audit_log").insert({ user_id: context.userId, client_id: context.clientId, tool: name, statut: "refused", arguments: cause });
     if (audit.error) throw new ToolError("Journal indisponible : écriture interrompue");
-    return { ...compactResult({ error: error instanceof ToolError ? error.message : "Écriture indisponible", statut: "refused" }), isError: true };
+    return { ...compactResult({ error: error instanceof ToolError ? error.message : `Erreur interne pendant l'étape « ${etape} » (${cause.erreur_type})`, statut: "refused" }), isError: true };
   }
 }
 
