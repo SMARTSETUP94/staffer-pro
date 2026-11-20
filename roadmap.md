@@ -247,3 +247,4 @@
 ## Images des devis par l'IA (plan accepté 13 nov. 2026)
 - [x] M1/M2 appliquées (dérivés + catégories + propositions), essai 9518 réussi, copies orphelines retirées côté serveur.
 - [ ] Extraction automatique au relevé périodique non branchée (extraction au clic « Trier et extraire » ou « Proposer les images »).
+- [ ] En-tête devis « Client & interlocuteurs » (validé Gabin) — migration à montrer avant application
