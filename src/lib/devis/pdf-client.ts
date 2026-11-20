@@ -320,7 +320,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   for (const r of racines) {
     N += 1; const n = String(N);
     if (!detaille) {
-      corps.push([{ content: n }, { content: titreCourt(r), styles: { fontStyle: "bold", fillColor: C.bleuClair } }, "ens", "1", "", { content: eurPdf(totalAffiche(vc, r)), styles: { halign: "right", fontStyle: "bold" } }]);
+      corps.push([{ content: n }, { content: titreCourt(r), styles: { fontStyle: "bold", fillColor: C.bleuClair } }, "ens", "1", "", { content: totalAffiche(vc, r) === 0 && optionsNonIncluses(vc, r) > 0 ? "voir options" : eurPdf(totalAffiche(vc, r)), styles: { halign: "right", fontStyle: "bold" } }]);
       continue;
     }
     const kids = enfants(vc, r.id).filter((k) => k.type !== "commentaire" && !(k.type === "option" && !k.option_incluse));
@@ -346,7 +346,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
     // Intertitre sobre de zone ou de chapitre détaillé
     corps.push([{ content: n, styles: { font: H, fontStyle: "bold", textColor: C.bleu, fontSize: 9.5, cellPadding: { top: 3.5, bottom: 1.5, left: 2, right: 2 }, lineWidth: { bottom: 0.4 }, lineColor: C.bleu } },
       { content: titre, colSpan: 4, styles: { font: H, fontStyle: "bold", textColor: C.bleu, fontSize: 9.5, cellPadding: { top: 3.5, bottom: 1.5, left: 2, right: 2 }, lineWidth: { bottom: 0.4 }, lineColor: C.bleu } },
-      { content: eurPdf(total), styles: { font: H, fontStyle: "bold", textColor: C.bleu, fontSize: 8.6, halign: "right", cellPadding: { top: 3.5, bottom: 1.5, left: 2, right: 2 }, lineWidth: { bottom: 0.4 }, lineColor: C.bleu } }]);
+      { content: total === 0 && kids.length === 0 && optionsNonIncluses(vc, r) > 0 ? "voir options" : eurPdf(total), styles: { font: H, fontStyle: "bold", textColor: C.bleu, fontSize: 8.6, halign: "right", cellPadding: { top: 3.5, bottom: 1.5, left: 2, right: 2 }, lineWidth: { bottom: 0.4 }, lineColor: C.bleu } }]);
     if (dchap) descr(dchap);
     const forfait = chap ? Number(r.montant ?? 0) : 0;
     let decal = 0;
