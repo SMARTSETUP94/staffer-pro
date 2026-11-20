@@ -66,3 +66,4 @@
 
 
 - Opportunity planning is read-only, separate from real load: reader opportunites_planning_lire + pure src/lib/opportunites/planning-previsionnel.ts; params are opp_plan_* keys in devis_parametres.
+

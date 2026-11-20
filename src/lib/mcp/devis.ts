@@ -220,7 +220,10 @@ export async function readDevis(context: McpAppContext, name: DevisReadName, arg
       const hist = await context.db.from("devis_textes_historique").select("id,source,auteur_id,cree_le,apres").eq("devis_id", args.devis_id).eq("cible", "note").order("cree_le", { ascending: false }).limit(5);
       const note_historique = (hist.data ?? []).map((h: any) => ({ version_id: h.id as string, source: h.source === "mcp" ? "Claude (MCP)" : h.source as string, auteur_id: h.auteur_id as string | null, date: h.cree_le as string, extrait: extrait(h.apres) }));
       const corps = args.vue === "complet" ? { devis: lu as never } : { ...(resumeDevis(lu as Record<string, any>, args.ligne_ids) as unknown as Record<string, never>), vue: "resume", consigne_vue: "Résumé : détail d'objets avec ligne_ids (20 maximum), devis entier avec vue = complet." };
-      data = { rows: [1], ...corps, redaction_claude: (meta.data ?? null) as never, note_historique, note_historique_consigne: "Extraits seulement : texte complet d'une version avec devis_note_version." };
+      const ca = await context.db.rpc("devis_charge_affaires_actuel", { _devis_id: args.devis_id });
+      const caRow = (ca.data as { prenom: string | null; nom: string | null }[] | null)?.[0];
+      const charge_affaires = caRow ? [caRow.prenom, caRow.nom].filter(Boolean).join(" ") || null : null;
+      data = { rows: [1], ...corps, charge_affaires: charge_affaires as never, redaction_claude: (meta.data ?? null) as never, note_historique, note_historique_consigne: "Extraits seulement : texte complet d'une version avec devis_note_version." };
     } else if (name === "devis_note_version") {
       const r = await context.db.from("devis_textes_historique").select("id,cible,source,cree_le,avant,apres").eq("id", args.version_id).eq("devis_id", args.devis_id).eq("cible", "note").maybeSingle();
       if (r.error || !r.data) throw new ToolError("Version introuvable ou accès refusé");

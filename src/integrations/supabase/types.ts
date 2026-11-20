@@ -2712,6 +2712,39 @@ export type Database = {
           },
         ]
       }
+      devis_fiches_journal: {
+        Row: {
+          acteur: string | null
+          action: string
+          champs: string[]
+          cible: string
+          cible_id: string
+          created_at: string
+          devis_id: string
+          id: string
+        }
+        Insert: {
+          acteur?: string | null
+          action: string
+          champs?: string[]
+          cible: string
+          cible_id: string
+          created_at?: string
+          devis_id: string
+          id?: string
+        }
+        Update: {
+          acteur?: string | null
+          action?: string
+          champs?: string[]
+          cible?: string
+          cible_id?: string
+          created_at?: string
+          devis_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
       devis_heures: {
         Row: {
           cout_revient: number | null
@@ -9010,6 +9043,10 @@ export type Database = {
         Args: { _brouillon?: boolean; _devis_id: string }
         Returns: undefined
       }
+      devis_assert_fiches_completables: {
+        Args: { _devis_id: string }
+        Returns: undefined
+      }
       devis_bibliotheque_rechercher: {
         Args: { _limit?: number; _q: string }
         Returns: {
@@ -9024,6 +9061,15 @@ export type Database = {
       }
       devis_calculer: { Args: { _devis_id: string }; Returns: Json }
       devis_calculer_interne: { Args: { _devis_id: string }; Returns: Json }
+      devis_charge_affaires_actuel: {
+        Args: { _devis_id: string }
+        Returns: {
+          employe_id: string
+          nom: string
+          peut_modifier: boolean
+          prenom: string
+        }[]
+      }
       devis_charge_be: {
         Args: { _affaire_ids: string[] }
         Returns: {
@@ -9035,6 +9081,44 @@ export type Database = {
           jours_be: number
           numero: string
           version: number
+        }[]
+      }
+      devis_charges_affaires_choix: {
+        Args: { _devis_id: string }
+        Returns: {
+          habituel: boolean
+          id: string
+          nom: string
+          prenom: string
+        }[]
+      }
+      devis_client_completer: {
+        Args: { _devis_id: string; _patch: Json }
+        Returns: undefined
+      }
+      devis_client_email: { Args: { _devis_id: string }; Returns: string }
+      devis_contact_completer: {
+        Args: { _contact_id: string; _devis_id: string; _patch: Json }
+        Returns: undefined
+      }
+      devis_contact_creer: {
+        Args: {
+          _devis_id: string
+          _email: string
+          _nom: string
+          _prenom: string
+          _telephone: string
+        }
+        Returns: string
+      }
+      devis_contacts_client: {
+        Args: { _devis_id: string }
+        Returns: {
+          email: string
+          id: string
+          nom: string
+          prenom: string
+          telephone: string
         }[]
       }
       devis_copier_sous_arbre: {

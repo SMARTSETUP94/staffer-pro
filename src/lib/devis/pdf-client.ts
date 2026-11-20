@@ -1,3 +1,4 @@
+import { ligneInterlocuteur } from "./entete-verrou";
 /**
  * PDF client d'un devis Staffing (format Set Up Paris), construit uniquement depuis devis_lire_client :
  * aucune heure, taux, coût, prix d'achat, coefficient, marge, ligne interne ni note de Claude n'y figure.
@@ -26,6 +27,8 @@ export type DevisClient = {
   /** Champs du modèle ProGBat, affichés seulement s'ils sont fournis par le lecteur client. */
   chantier?: { adresse?: string | null; travaux?: string | null; debut?: string | null; duree_jours?: number | null } | null;
   signataire?: { nom: string; email: string | null; telephone?: string | null } | null;
+  /** Chargé d'affaires : nom + e-mail @setup.paris seulement. */
+  interlocuteur?: { nom: string | null; email: string | null } | null;
   mentions_legales?: { forme?: string | null; capital?: string | null; telephone?: string | null; email?: string | null; ape?: string | null; tva?: string | null; iban?: string | null; bic?: string | null } | null;
   /** Encadré de mentions (paramètres entreprise), une ligne par mention ; défaut MENTIONS_MODELE. */
   mentions_devis?: string | null;
@@ -302,6 +305,8 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
     yR += lv.length * 4.1;
   }
   if (vc.signataire) { font("tb", 8.8, C.bleu); doc.text([vc.signataire.nom, vc.signataire.email, vc.signataire.telephone].filter(Boolean).join(" – "), X, yR + 1, { align: "right" }); yR += 5; }
+  const li = ligneInterlocuteur(vc.interlocuteur);
+  if (li) { font("t", 8.3, C.gris); const l2 = doc.splitTextToSize(textePdf(li), 95); doc.text(l2, X, yR + 1, { align: "right" }); yR += l2.length * 3.8 + 1; }
   if (vc.numero_progbat && /^D-\d{6}-\d{4}$/.test(vc.numero_progbat)) { font("t", 7.5, C.gris); doc.text(`Réf. ProGBat : ${vc.numero_progbat}`, X, yR + 1, { align: "right" }); yR += 4; }
 
   // ── Bloc client

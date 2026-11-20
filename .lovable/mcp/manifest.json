@@ -1756,7 +1756,7 @@
       {
         "name": "devis_lire",
         "title": "Lire un devis",
-        "description": "Lire un devis. Par défaut vue résumée : en-tête, totaux et arbre des lignes (id, type, libellé, quantité, total, nombre d'heures / matériaux / lignes libres / photos). ligne_ids : détail complet de 20 objets au plus. vue = complet : tout le devis (volumineux). Coûts, prix d'achat et marge seulement avec le droit coûts.",
+        "description": "Lire un devis. Par défaut vue résumée : en-tête (dont charge_affaires : nom du chargé d'affaires seulement), totaux et arbre des lignes (id, type, libellé, quantité, total, nombre d'heures / matériaux / lignes libres / photos). ligne_ids : détail complet de 20 objets au plus. vue = complet : tout le devis (volumineux). Coûts, prix d'achat et marge seulement avec le droit coûts.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
