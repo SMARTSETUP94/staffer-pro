@@ -49,6 +49,8 @@ export function eurPdf(v: number | null | undefined) {
   const [e, d] = Math.abs(n).toFixed(2).split(".");
   return `${n < 0 ? "-" : ""}${e.replace(/\B(?=(\d{3})+(?!\d))/g, " ")},${d} €`;
 }
+/** Montant hors taxes rappelé en clair (« 15 453,62 € HT »). */
+export const eurHt = (v: number | null | undefined) => `${eurPdf(v)} HT`;
 export const datePdf = (s: string | null | undefined) => {
   if (!s) return "";
   const [y, m, d] = s.slice(0, 10).split("-");
@@ -361,7 +363,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
     N += 1; const n = String(N);
     if (!detaille) {
       corps.push([{ content: n }, { content: suffixeOptions(r, titreCourt(r)), styles: { fontStyle: "bold", fillColor: C.bleuClair } }, "ens", "1", "", seulementOptions(r)
-        ? { content: eurPdf(optionsNonIncluses(vc, r)), styles: { halign: "right", fontStyle: "italic", textColor: C.gris } }
+        ? { content: eurHt(optionsNonIncluses(vc, r)), styles: { halign: "right", fontStyle: "italic", textColor: C.gris } }
         : { content: eurPdf(totalAffiche(vc, r)), styles: { halign: "right", fontStyle: "bold" } }]);
       continue;
     }
@@ -388,7 +390,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
     // Intertitre sobre de zone ou de chapitre détaillé
     corps.push([{ content: n, styles: { font: H, fontStyle: "bold", textColor: C.bleu, fontSize: 9.5, cellPadding: { top: 3.5, bottom: 1.5, left: 2, right: 2 }, lineWidth: { bottom: 0.4 }, lineColor: C.bleu } },
       { content: suffixeOptions(r, titre), colSpan: 4, styles: { font: H, fontStyle: "bold", textColor: C.bleu, fontSize: 9.5, cellPadding: { top: 3.5, bottom: 1.5, left: 2, right: 2 }, lineWidth: { bottom: 0.4 }, lineColor: C.bleu } },
-      { content: eurPdf(seulementOptions(r) ? optionsNonIncluses(vc, r) : total), styles: { font: H, fontStyle: seulementOptions(r) ? "italic" : "bold", textColor: seulementOptions(r) ? C.gris : C.bleu, fontSize: 8.6, halign: "right", cellPadding: { top: 3.5, bottom: 1.5, left: 2, right: 2 }, lineWidth: { bottom: 0.4 }, lineColor: C.bleu } }]);
+      { content: seulementOptions(r) ? eurHt(optionsNonIncluses(vc, r)) : eurPdf(total), styles: { font: H, fontStyle: seulementOptions(r) ? "italic" : "bold", textColor: seulementOptions(r) ? C.gris : C.bleu, fontSize: 8.6, halign: "right", cellPadding: { top: 3.5, bottom: 1.5, left: 2, right: 2 }, lineWidth: { bottom: 0.4 }, lineColor: C.bleu } }]);
     if (dchap) descr(dchap);
     const forfait = chap ? Number(r.montant ?? 0) : 0;
     let decal = 0;
@@ -399,7 +401,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
     }
   }
   const tableStyles = { font: T, fontSize: 8.6, cellPadding: { top: 1.8, bottom: 1.8, left: 2, right: 2 }, textColor: C.encre, lineColor: C.filet, lineWidth: { bottom: 0.15 }, valign: "top" as const };
-  const colonnes = { 0: { cellWidth: 13 }, 1: { cellWidth: 97 }, 2: { cellWidth: 10, halign: "center" as const }, 3: { cellWidth: 12, halign: "right" as const }, 4: { cellWidth: 24, halign: "right" as const }, 5: { cellWidth: 24, halign: "right" as const } };
+  const colonnes = { 0: { cellWidth: 13 }, 1: { cellWidth: 94 }, 2: { cellWidth: 10, halign: "center" as const }, 3: { cellWidth: 12, halign: "right" as const }, 4: { cellWidth: 24, halign: "right" as const }, 5: { cellWidth: 27, halign: "right" as const } };
   /** Regroupe chaque ligne et ses lignes rattachées : la cellule N° couvre le groupe (rowSpan), qu'autoTable ne coupe pas. */
   const grouper = (rows: any[]) => {
     for (let i = 0; i < rows.length; i++) {
@@ -435,7 +437,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   // ── Options (non comprises dans le total)
   const opts2 = optionsDevis(vc);
   if (opts2.length) {
-    place(20); font("h", 10, C.bleu); doc.text("Options (non comprises dans le total)", M, y); y += 2;
+    place(20); font("h", 10, C.bleu); doc.text("Options HT (non comprises dans le total)", M, y); y += 2;
     const corpsO: any[] = [];
     const opt = { fillColor: C.fond };
     opts2.forEach((o, i) => {
@@ -480,8 +482,8 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
     place(10 + opts2.length * 6);
     autoTable(doc, {
       startY: y, margin: { left: xT, right: M }, tableWidth: 72,
-      head: [[{ content: "Options (non comprises)", colSpan: 2 }]],
-      body: opts2.map((o, i) => [`O${i + 1}`, { content: eurPdf(o.montant), styles: { halign: "right" } }]),
+      head: [[{ content: "Options (non comprises) — montants HT", colSpan: 2 }]],
+      body: opts2.map((o, i) => [`O${i + 1}`, { content: eurHt(o.montant), styles: { halign: "right" } }]),
       styles: { ...tableStyles, fontSize: 8.6 }, headStyles: { fillColor: C.fond, textColor: C.gris, font: T, fontStyle: "bold" },
     });
     y = (doc as any).lastAutoTable.finalY + 7;
