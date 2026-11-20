@@ -259,3 +259,27 @@ export function ecartTauxPct(taux: number, grille: number | null | undefined): n
   if (grille == null || grille === 0) return null;
   return r2(((taux - grille) / grille) * 100);
 }
+
+/**
+ * Prix client d'une ligne : montant propre + enfants non commentaire, récursivement,
+ * hors options non incluses placées dessous (elles ont leur propre prix, hors total).
+ * Une option vaut donc son montant propre + celui de ses objets. Source unique pour PDF,
+ * ProGBat, éditeur et MCP ; ne modifie ni total_ht ni options_ht.
+ */
+export function prixLignes(
+  lignes: { id: string; parent_id: string | null; type: string; option_incluse?: boolean | null }[],
+  montant: (id: string) => number,
+): Record<string, number> {
+  const kids = new Map<string, typeof lignes>();
+  for (const l of lignes) if (l.parent_id) kids.set(l.parent_id, [...(kids.get(l.parent_id) ?? []), l]);
+  const out: Record<string, number> = {};
+  const prix = (l: (typeof lignes)[number]): number => {
+    if (out[l.id] != null) return out[l.id]!;
+    const s = (Number(montant(l.id)) || 0) + (kids.get(l.id) ?? [])
+      .filter((k) => k.type !== "commentaire" && !(k.type === "option" && !k.option_incluse))
+      .reduce((a, k) => a + prix(k), 0);
+    return (out[l.id] = r2(s));
+  };
+  for (const l of lignes) prix(l);
+  return out;
+}

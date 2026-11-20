@@ -5,6 +5,7 @@ import {
   DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { prixLignes } from "@/lib/devis/calcul";
 import { TYPE_LABEL, eur, type Ligne } from "./api";
 import { CommentaireEnPlace } from "./NoteDevis";
 
@@ -58,11 +59,12 @@ export function DevisArbre({ lignes, montants, racines, selected, readOnly, acti
     actions.move(l.id, l.parent_id, ordre);
   };
 
+  const prix = prixLignes(lignes, (id) => montants[id] ?? 0);
   const render = (l: Ligne, depth: number) => {
     const kids = children(l.id).filter((k) => k.type !== "commentaire" || true);
     const isContainer = CONTENEURS.has(l.type);
     const open = !collapsed.has(l.id);
-    const montant = depth === 0 ? racines[l.id] : montants[l.id];
+    const montant = depth === 0 ? racines[l.id] : l.type === "option" ? prix[l.id] || undefined : montants[l.id];
     return (
       <div key={l.id}>
         <div

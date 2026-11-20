@@ -9,6 +9,7 @@
  * Suivi et plans, sinon Pose, sinon Dépose ; à défaut seulement, une ligne « Ajustement d'arrondi ».
  */
 import type { DevisClient, LigneClient } from "./pdf-client";
+import { prixLignes } from "./calcul";
 import { TYPE_RACINE, detailObjet, titreCourt, descriptifChapitre } from "./pdf-client";
 
 export type DonneesProgbat = DevisClient & {
@@ -61,16 +62,21 @@ export function dimensionsTexte(l: Pick<LigneClient, "longueur_mm" | "largeur_mm
 export function construireProgbat(v: DonneesProgbat): { lignes: LigneProgbat[]; fiche: FicheProgbat } {
   const all = v.lignes;
   const kids = (p: string) => all.filter((l) => l.parent_id === p).sort((a, b) => a.ordre - b.ordre);
-  const subC = (l: LigneClient): number => cents(l.montant) + kids(l.id).filter((k) => k.type !== "commentaire").reduce((s, k) => s + subC(k), 0);
-  const subH = (l: LigneClient): number => Number(v.heures[l.id] ?? 0) + kids(l.id).filter((k) => k.type !== "commentaire").reduce((s, k) => s + subH(k), 0);
-  const comVisibles = (l: LigneClient): string[] => kids(l.id).flatMap((k) =>
+  const horsOption = (k: LigneClient) => !(k.type === "option" && !k.option_incluse);
+  const montants = new Map(all.map((l) => [l.id, Number(l.montant ?? 0)]));
+  const prix = prixLignes(all, (id) => montants.get(id) ?? 0);
+  const subC = (l: LigneClient): number => cents(prix[l.id] ?? 0);
+  const subH = (l: LigneClient): number => Number(v.heures[l.id] ?? 0) + kids(l.id).filter((k) => k.type !== "commentaire" && horsOption(k)).reduce((s, k) => s + subH(k), 0);
+  const comVisibles = (l: LigneClient): string[] => kids(l.id).filter((k) => k.type === "commentaire" || horsOption(k)).flatMap((k) =>
     k.type === "commentaire" ? (k.texte?.trim() ? [k.texte.trim()] : []) : comVisibles(k));
 
   const racines = all.filter((l) => !l.parent_id).sort((a, b) => a.ordre - b.ordre);
   const zones = racines.filter((r) => r.type === "zone");
   const objetsRacine = racines.filter((r) => r.type === "objet");
   const chapitres = CHAPITRES.flatMap((t) => racines.filter((r) => r.type === t));
-  const options = racines.filter((r) => r.type === "option");
+  // Toutes les options (racine ou dans une zone) vont dans la section Options, jamais comme objets de zone.
+  const ordreArbreLoc = (p: string | null): LigneClient[] => (p ? kids(p) : racines).flatMap((l) => [l, ...ordreArbreLoc(l.id)]);
+  const options = ordreArbreLoc(null).filter((r) => r.type === "option" && (!r.parent_id || !r.option_incluse));
 
   const out: LigneProgbat[] = [{ kind: "entete" }];
   let ecartC = 0;
@@ -91,6 +97,7 @@ export function construireProgbat(v: DonneesProgbat): { lignes: LigneProgbat[]; 
       k += 1; out.push({ kind: "ligne", n: `${z}.${k}`, designation: `${titre} (forfait)`, quantite: 1, unite: "ens", pu: cents(zone.montant) / 100, temps: r2(Number(v.heures[zone.id] ?? 0)) });
     }
     for (const e of enfants) {
+      if (!horsOption(e)) continue;
       if (e.type === "commentaire") { if (e.texte?.trim()) out.push({ kind: "commentaire", designation: e.texte.trim() }); continue; }
       k += 1; ligneObjet(e, `${z}.${k}`);
     }

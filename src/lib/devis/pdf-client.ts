@@ -3,6 +3,7 @@
  * aucune heure, taux, coût, prix d'achat, coefficient, marge, ligne interne ni note de Claude n'y figure.
  * Module pur (navigateur et serveur) : les images sont passées en octets.
  */
+import { prixLignes } from "./calcul";
 import { enfants as enfantsArbre, trierRacines, sansNumeroSaisi, ordreArbre } from "./arbre";
 import { jsPDF } from "jspdf";
 import autoTable, { type RowInput } from "jspdf-autotable";
@@ -68,16 +69,23 @@ export function detailObjet(l: LigneClient) {
   return [!aDims(desc) && d.length ? `${d.join(" × ")} mm` : "", !aFinition(desc) ? (l.finition ?? "").trim() : "", desc].filter(Boolean).join("\n");
 }
 const enfants = (vc: DevisClient, p: string) => enfantsArbre(vc.lignes, p);
-/** Montant d'une ligne : sous-total serveur, sinon montant propre + enfants (sous-zones sans sous-total). */
+/** Prix de chaque ligne (montant propre + enfants, options non incluses exclues) — calcul partagé prixLignes. */
+const cachePrix = new WeakMap<object, Record<string, number>>();
+export function prixClient(vc: Pick<DevisClient, "lignes">): Record<string, number> {
+  let p = cachePrix.get(vc.lignes);
+  if (!p) { const m = new Map(vc.lignes.map((l) => [l.id, Number(l.montant ?? 0)])); p = prixLignes(vc.lignes, (id) => m.get(id) ?? 0); cachePrix.set(vc.lignes, p); }
+  return p;
+}
+/** Montant d'une ligne : sous-total serveur, sinon montant propre + enfants. */
 function montantDeIn(vc: DevisClient | null, l: LigneClient): number {
   if (l.sous_total != null) return Number(l.sous_total);
-  const kids = vc ? enfants(vc, l.id).filter((k) => k.type !== "commentaire" && !(k.type === "option" && !k.option_incluse)) : [];
-  return Number(l.montant ?? 0) + kids.reduce((s, k) => s + montantDeIn(vc, k), 0);
+  return vc ? prixClient(vc)[l.id] ?? 0 : Number(l.montant ?? 0);
 }
-const montantDe = (l: LigneClient) => Number(l.sous_total ?? l.montant ?? 0);
+/** Prix d'une option : son montant propre + celui de ses objets (jamais 0 quand seuls les enfants sont chiffrés). */
+export const montantOption = (vc: DevisClient, o: LigneClient) => montantDeIn(vc, o);
 /** Options non incluses sous une ligne : leur montant est exclu des sous-totaux affichés. */
 export function optionsNonIncluses(vc: DevisClient, l: LigneClient): number {
-  return enfants(vc, l.id).reduce((s, k) => s + (k.type === "option" ? (k.option_incluse ? 0 : montantDe(k)) : optionsNonIncluses(vc, k)), 0);
+  return enfants(vc, l.id).reduce((s, k) => s + (k.type === "option" ? (k.option_incluse ? 0 : montantOption(vc, k)) : optionsNonIncluses(vc, k)), 0);
 }
 export const totalAffiche = (vc: DevisClient, l: LigneClient) =>
   Math.round((l.sous_total != null ? Number(l.sous_total) - optionsNonIncluses(vc, l) : montantDeIn(vc, l)) * 100) / 100;
@@ -164,7 +172,7 @@ export function optionsDevis(vc: DevisClient) {
   const parent = (l: LigneClient) => vc.lignes.find((x) => x.id === l.parent_id);
   return ordreArbre(vc.lignes).filter((l) => l.type === "option" && !l.option_incluse).map((o) => {
     let z = parent(o); while (z && z.parent_id) z = parent(z);
-    return { ligne: o, zone: z ? titreCourt(z) : null, montant: montantDe(o), incluse: !!o.option_incluse };
+    return { ligne: o, zone: z ? titreCourt(z) : null, montant: montantOption(vc, o), incluse: !!o.option_incluse };
   });
 }
 
@@ -377,6 +385,12 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
       corpsO.push([{ content: `O${i + 1}`, styles: { textColor: C.gris } }, { content: `${o.ligne.libelle ?? "Option"}${o.zone ? ` — ${o.zone}` : ""}`, styles: { fontStyle: "bold" } }, "ens", "1",
         detaille ? eurPdf(o.montant) : "", { content: eurPdf(o.montant), styles: { fontStyle: "bold" } }]);
       const d = (o.ligne.descriptif_client ?? "").trim(); if (detaille && d) corpsO.push([vide, { content: d, colSpan: 5, styles: { fontStyle: "italic", textColor: C.gris, fontSize: 8 } }]);
+      // Objets de l'option, comme sous une zone (libellé, descriptif, prix).
+      for (const r of lignesTableau(vc, o.ligne, niveau, `O${i + 1}`)) {
+        if (r.style === "commentaire") { corpsO.push([vide, { content: r.designation, colSpan: 5, styles: { fontStyle: "italic", textColor: C.gris, fontSize: 8 } }]); continue; }
+        corpsO.push([{ content: r.n, styles: { textColor: C.gris } }, r.designation, r.unite, r.qte, r.pu, r.total]);
+        if (r.detail) corpsO.push([vide, { content: r.detail, colSpan: 5, styles: { fontStyle: "italic", textColor: C.gris, fontSize: 8 } }]);
+      }
     });
     autoTable(doc, { startY: y, margin: { left: M, right: M, bottom: 300 - BAS }, body: corpsO, styles: tableStyles, columnStyles: colonnes });
     y = (doc as any).lastAutoTable.finalY + 6;

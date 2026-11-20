@@ -5,6 +5,7 @@ import { argumentsHash } from "./write-policy";
 import { confirmationSchema } from "./write-schemas";
 import { dateSchema } from "./schemas";
 import { extrait, noteApres } from "@/lib/devis/note";
+import { prixLignes } from "@/lib/devis/calcul";
 import { causeJournal, controlerFichier, controlerOctets, detecterType, PHOTO_MAX_OCTETS, PHOTO_MIMES, sansSourceFichier, sha256, trop, type Mime } from "./fichiers";
 export { controlerFichier, detecterType, PHOTO_MAX_OCTETS, PHOTO_MIMES };
 
@@ -149,7 +150,10 @@ const CHAMPS_ENTETE = ["id", "numero", "version", "statut_redaction", "libelle",
 /** Vue résumée de devis_lire : en-tête, totaux, arbre des lignes ; détail complet seulement pour ligne_ids (coûts déjà masqués par le lecteur). */
 export function resumeDevis(lu: Record<string, any>, ligneIds?: string[]) {
   const d = (lu.devis ?? {}) as Record<string, unknown>;
-  const totaux = (lu.calcul?.lignes ?? {}) as Record<string, number>;
+  const propres = (lu.calcul?.lignes ?? {}) as Record<string, number>;
+  // total_ht d'une option = son prix (montant propre + objets) ; les autres lignes gardent leur montant propre.
+  const prixOpt = prixLignes(((lu.lignes ?? []) as any[]).map(l => ({ id: l.id, parent_id: l.parent_id ?? null, type: l.type, option_incluse: l.option_incluse })), id => Number(propres[id] ?? 0));
+  const totaux = Object.fromEntries(((lu.lignes ?? []) as any[]).map(l => [l.id, l.type === "option" ? prixOpt[l.id] : propres[l.id]]).filter(([, v]) => v != null)) as Record<string, number>;
   const compte = (rows: any[] | undefined) => (rows ?? []).reduce((m: Record<string, number>, r) => (m[r.ligne_id] = (m[r.ligne_id] ?? 0) + 1, m), {});
   const nh = compte(lu.heures), nm = compte(lu.materiaux), nl = compte(lu.libres), np = compte(lu.photos);
   const lignes = ((lu.lignes ?? []) as any[]).map(l => ({ id: l.id, parent_id: l.parent_id ?? null, type: l.type, libelle: l.libelle ?? (l.texte ? String(l.texte).slice(0, 80) : null), quantite: l.quantite ?? null,
