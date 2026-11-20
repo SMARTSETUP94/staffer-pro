@@ -15,7 +15,7 @@ import { useIndicateurAffaire } from "./PipelineIndicateursBandeau";
 import { eurEntier } from "@/lib/pipeline-indicateurs";
 import { devisPipelineAction, versionSignaturePropose, type DevisBadge } from "@/lib/devis/pipeline";
 
-type Ctx = { badges: Map<string, DevisBadge>; peutRediger: boolean; flag: boolean; refresh: () => void };
+type Ctx = { badges: Map<string, DevisBadge>; peutRediger: boolean; flag: boolean; ready: boolean; refresh: () => void };
 const DevisPipelineCtx = createContext<Ctx | null>(null);
 
 /** Charge en un appel la dernière version de devis de chaque vignette affichée. */
@@ -29,11 +29,18 @@ export function DevisPipelineProvider({ affaireIds, children }: { affaireIds: st
     queryFn: async () => {
       const { data, error } = await supabase.rpc("devis_derniers_par_affaire", { _affaire_ids: affaireIds.slice(0, 1000) });
       if (error) throw error;
-      return new Map((data ?? []).map((r) => [r.affaire_id, { devis_id: r.devis_id, version: r.version, statut_redaction: r.statut_redaction, numero_progbat: r.numero_progbat, date_envoi: r.date_envoi } as DevisBadge]));
+      const badges = new Map((data ?? []).map((r) => [r.affaire_id, { devis_id: r.devis_id, version: r.version, statut_redaction: r.statut_redaction, numero_progbat: r.numero_progbat, date_envoi: r.date_envoi } as DevisBadge]));
+      const missing = affaireIds.slice(0, 1000).filter(id => !badges.has(id));
+      if (missing.length) {
+        const fallback = await supabase.from("devis").select("id,affaire_id,version,statut_redaction,numero_progbat,date_envoi").in("affaire_id", missing).eq("redige_dans_staffing", true).eq("est_modele", false).is("supprime_le", null).order("version", { ascending: false });
+        if (fallback.error) throw fallback.error;
+        for (const r of fallback.data ?? []) if (r.affaire_id && !badges.has(r.affaire_id)) badges.set(r.affaire_id, { devis_id: r.id, version: r.version, statut_redaction: r.statut_redaction ?? "brouillon", numero_progbat: r.numero_progbat, date_envoi: r.date_envoi });
+      }
+      return badges;
     },
   });
   return (
-    <DevisPipelineCtx.Provider value={{ badges: q.data ?? new Map(), peutRediger, flag, refresh: () => void qc.invalidateQueries({ queryKey: ["devis-pipeline-badges"] }) }}>
+    <DevisPipelineCtx.Provider value={{ badges: q.data ?? new Map(), peutRediger, flag, ready: q.isSuccess, refresh: () => void qc.invalidateQueries({ queryKey: ["devis-pipeline-badges"] }) }}>
       {children}
     </DevisPipelineCtx.Provider>
   );
@@ -50,11 +57,12 @@ export function DevisMontantLigne({ affaireId }: { affaireId: string }) {
   if (!ind) return null;
   if (ind.net_ht != null && ind.devis_id) {
     const statut = badge ? libelleStatutDevis(badge.statut_redaction, badge.numero_progbat, badge.date_envoi, STATUT_LABEL).toLowerCase() : null;
+    const devisId = ind.devis_id;
     return (
       <div className="mt-1 flex flex-wrap items-center gap-1.5" {...stop}>
         <button type="button" className="text-left text-base font-bold tabular-nums text-foreground underline-offset-2 hover:underline" title="Ouvrir le devis"
-          onClick={() => navigate({ to: "/affaires/$affaireId/devis-staffing/$devisId", params: { affaireId, devisId: ind.devis_id! } })}>
-          {eurEntier(ind.net_ht)}<span className="text-xs font-semibold text-muted-foreground"> · R{ind.version}{statut ? ` · ${statut}` : ""}</span>
+          onClick={() => navigate({ to: "/affaires/$affaireId/devis-staffing/$devisId", params: { affaireId, devisId } })}>
+          {eurEntier(ind.net_ht)}<span className="text-xs font-semibold text-muted-foreground">{ind.source_montant === "version_precedente" ? ` · montant de R${ind.montant_version}, R${ind.version} en cours` : ` · R${ind.version}${statut ? ` · ${statut}` : ""}`}</span>
         </button>
         {ind.numero_progbat && <span className="rounded border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary" title={libelleNumeroProgbat(ind.numero_progbat)}>ProGBat</span>}
       </div>
@@ -74,7 +82,7 @@ export function DevisPipelineBouton({ affaireId, statut, onStatutChange }: { aff
   const [modeleChoisi, setModeleChoisi] = useState<string | null>(null);
   const modele = modeleChoisi ?? modeles.data?.defautId ?? "";
   const ouvrir = (devisId: string) => navigate({ to: "/affaires/$affaireId/devis-staffing/$devisId", params: { affaireId, devisId } });
-  if (!ctx) return null;
+  if (!ctx?.ready) return null;
   const badge = ctx.badges.get(affaireId);
   const action = devisPipelineAction({ statut, badge, peutRediger: ctx.peutRediger, flag: ctx.flag });
   if (!action) return null;

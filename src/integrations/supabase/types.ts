@@ -6636,6 +6636,7 @@ export type Database = {
           created_at: string
           date: string
           id: string
+          prochaine_action_close_le: string | null
           prochaine_action_due_le: string | null
           texte: string
           type: Database["public"]["Enums"]["opp_action_type"]
@@ -6648,6 +6649,7 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
+          prochaine_action_close_le?: string | null
           prochaine_action_due_le?: string | null
           texte: string
           type: Database["public"]["Enums"]["opp_action_type"]
@@ -6660,6 +6662,7 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
+          prochaine_action_close_le?: string | null
           prochaine_action_due_le?: string | null
           texte?: string
           type?: Database["public"]["Enums"]["opp_action_type"]
@@ -9343,6 +9346,22 @@ export type Database = {
             Returns: Json
           }
       devis_restaurer: { Args: { _devis_id: string }; Returns: undefined }
+      devis_retenu_pipeline: {
+        Args: { _affaire_ids: string[] }
+        Returns: {
+          affaire_id: string
+          date_envoi: string
+          devis_id: string
+          montant_devis_id: string
+          montant_version: number
+          net_ht: number
+          numero: string
+          numero_progbat: string
+          source_montant: string
+          statut_redaction: Database["public"]["Enums"]["devis_redaction_statut"]
+          version: number
+        }[]
+      }
       devis_signer_vers_fabrication: {
         Args: { _devis_id: string }
         Returns: Json
@@ -9690,6 +9709,20 @@ export type Database = {
           typologie_future: string
         }[]
       }
+      list_opportunites_closes: {
+        Args: never
+        Returns: {
+          charge_affaires_id: string
+          client: string
+          date_montage: string
+          date_opportunite: string
+          id: string
+          nom: string
+          numero: string
+          statut_change_le: string
+          statut_opportunite: Database["public"]["Enums"]["opportunite_statut"]
+        }[]
+      }
       logistique_etape_proposee_valide: {
         Args: { _e: Json }
         Returns: {
@@ -9962,6 +9995,7 @@ export type Database = {
         }
         Returns: Json
       }
+      pipeline_regularisation: { Args: { _executer?: boolean }; Returns: Json }
       planning_atelier_ecriture_autorisee: { Args: never; Returns: boolean }
       planning_atelier_enregistrer: {
         Args: {
@@ -10388,6 +10422,7 @@ export type Database = {
         | "transfere"
         | "signe"
         | "refuse"
+        | "remplace"
       devis_statut:
         | "brouillon"
         | "signe"
@@ -10745,6 +10780,7 @@ export const Constants = {
         "transfere",
         "signe",
         "refuse",
+        "remplace",
       ],
       devis_statut: [
         "brouillon",

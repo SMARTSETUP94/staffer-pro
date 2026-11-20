@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { LigneType } from "@/lib/devis/calcul";
 
-export type DevisStatut = "brouillon" | "a_valider" | "valide" | "transfere" | "signe" | "refuse";
+export type DevisStatut = "brouillon" | "a_valider" | "valide" | "transfere" | "signe" | "refuse" | "remplace";
 
 export interface Ligne {
   id: string; devis_id: string; parent_id: string | null; type: LigneType; ordre: number; libelle: string | null;
@@ -77,7 +77,7 @@ export function usePatchCache(id: string) {
 }
 
 export const STATUT_LABEL: Record<DevisStatut, string> = {
-  brouillon: "Brouillon", a_valider: "Brouillon", valide: "Finalisé", transfere: "Envoyé", signe: "Signé", refuse: "Refusé",
+  brouillon: "Brouillon", a_valider: "Brouillon", valide: "Finalisé", transfere: "Envoyé", signe: "Signé", refuse: "Refusé", remplace: "Remplacé",
 };
 export const TYPE_LABEL: Record<LigneType, string> = {
   zone: "Zone", objet: "Objet", commentaire: "Commentaire", chapitre_suivi: "Suivi et plans",

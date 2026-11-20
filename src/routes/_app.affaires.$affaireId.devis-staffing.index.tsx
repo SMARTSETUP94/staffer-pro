@@ -17,7 +17,7 @@ import { STATUT_LABEL, eur, type DevisStatut } from "@/components/devis/editeur/
 import { libelleNumeroProgbat, libelleStatutDevis } from "@/lib/devis/progbat-export";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/devis-staffing/")({
-  head: () => ({ meta: [{ title: "Devis de l'affaire" }] }),
+  head: () => ({ meta: [{ title: "Versions des devis de l’affaire — Staffing Setup Paris" }, { name: "description", content: "Historique des versions et états des devis de cette affaire." }, { property: "og:title", content: "Versions des devis de l’affaire — Staffing Setup Paris" }, { property: "og:description", content: "Consultation des devis et de leurs versions conservées." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: DevisListe,
 });
 

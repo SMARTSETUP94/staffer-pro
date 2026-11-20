@@ -33,6 +33,7 @@ type Carte = Datable & {
 
 /** En retard : action due dépassée, ou « À faire » trop ancienne. */
 export function estEnRetard(o: Carte, now = new Date()) {
+  if (["perdu", "gagne", "termine"].includes(o.statut_opportunite)) return false;
   if (o.next_action_due_le && jour(o.next_action_due_le) < debutJour(now)) return true;
   return o.statut_opportunite === "a_faire" && aFaireBadge(o, now)?.kind === "retard";
 }

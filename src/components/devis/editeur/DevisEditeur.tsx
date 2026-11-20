@@ -269,7 +269,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
         <DevisStatutBadge statut={st} label={libelleStatutDevis(st, d.devis.numero_progbat, d.devis.date_envoi, STATUT_LABEL)} />{infoClaude && <BadgeClaude />}
         <span className="ml-auto text-sm text-muted-foreground">Total HT <strong className="text-base tabular-nums text-foreground">{eur(calc.remise !== 0 ? calc.net_ht : calc.total_ht)}</strong>{calc.remise !== 0 && <span className="text-xs"> (net)</span>}</span>
         {!d.devis.est_modele && (() => {
-          const v = d.droits.valider, e = d.droits.ecrire, aff = !!d.devis.affaire_id, nonSigne = !d.devis.signe_vers_fabrication_le;
+          const v = d.droits.valider && st !== "remplace", e = d.droits.ecrire, aff = !!d.devis.affaire_id, nonSigne = !d.devis.signe_vers_fabrication_le;
           const valideOuEnvoye = ["valide", "transfere"].includes(st);
           const peutEnvoyer = (st === "valide" || (st === "transfere" && !!d.devis.numero_progbat && !d.devis.date_envoi)) && v && aff;
           const ouvrirEnvoi = () => { setEnvoiDate(new Date().toISOString().slice(0, 10)); setEnvoiDlg(true); };
@@ -304,7 +304,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
                 {aff && <DropdownMenuItem disabled={!valideOuEnvoye} onClick={() => setPgDlg(true)}><FileDown className="mr-2 h-4 w-4" />Vers ProGBat{!valideOuEnvoye && " (après finalisation)"}</DropdownMenuItem>}
                 <DropdownMenuSeparator />
                 {st !== "brouillon" && e && <DropdownMenuItem onClick={() => void nouvelleVersion()}>Nouvelle version</DropdownMenuItem>}
-                {d.droits.parametres && <DropdownMenuItem onClick={() => { setModele({ nom: d.devis.libelle ?? "", categorie: "", description: "" }); setModeleDlg(true); }}>Enregistrer comme modèle</DropdownMenuItem>}
+                {d.droits.parametres && st !== "remplace" && <DropdownMenuItem onClick={() => { setModele({ nom: d.devis.libelle ?? "", categorie: "", description: "" }); setModeleDlg(true); }}>Enregistrer comme modèle</DropdownMenuItem>}
                 {e && <><DropdownMenuSeparator /><DropdownMenuItem className="text-destructive" disabled={!devisSupprimable(st) || !peutSupprimer.data} onClick={() => setSupprDlg(true)}><Trash2 className="mr-2 h-4 w-4" />Supprimer le devis</DropdownMenuItem>
                   {!devisSupprimable(st) && <p className="px-2 py-1 text-xs text-muted-foreground">{SUPPRESSION_REFUSEE}</p>}</>}
               </DropdownMenuContent>
@@ -315,7 +315,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
           {pleinEcran ? <Minimize2 className="mr-1 h-3.5 w-3.5" /> : <Maximize2 className="mr-1 h-3.5 w-3.5" />}{pleinEcran ? "Quitter" : "Plein écran"}
         </Button>
       </div>
-      <NoteDevis devisId={devisId} statut={st} peutEcrire={d.droits.ecrire} />
+      {st === "remplace" && <p className="text-sm text-muted-foreground">Version remplacée · lecture seule</p>}
+      <NoteDevis devisId={devisId} statut={st} peutEcrire={d.droits.ecrire && st !== "remplace"} />
       <HistoriqueTextes devisId={devisId} cible="commentaire" ligneId={histComm} open={!!histComm} onOpenChange={(o) => { if (!o) setHistComm(null); }} peutRestaurer={texteEditable} onRestaure={() => void q.refetch()} />
       {/* En-tête */}
       <Card>

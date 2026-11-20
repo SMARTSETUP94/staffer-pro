@@ -3,7 +3,7 @@ import { useFeatureFlag } from "@/hooks/use-feature-flag";
 import { DevisEditeur } from "@/components/devis/editeur/DevisEditeur";
 
 export const Route = createFileRoute("/_app/affaires/$affaireId/devis-staffing/$devisId")({
-  head: () => ({ meta: [{ title: "Éditeur de devis" }] }),
+  head: () => ({ meta: [{ title: "Consultation et rédaction du devis — Staffing Setup Paris" }, { name: "description", content: "Devis Staffing, détails et versions conservées en lecture seule après remplacement." }, { property: "og:title", content: "Consultation et rédaction du devis — Staffing Setup Paris" }, { property: "og:description", content: "Détails, montants et historique des versions du devis." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: DevisEditeurPage,
 });
 

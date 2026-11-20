@@ -80,8 +80,24 @@ export async function readData(ctx: McpAppContext, name: ToolName, args: Args): 
     }
     const ordered = query.order("date_opportunite", { ascending: false }).order("id");
     // Filtre texte (code, intitulé, client) appliqué en mémoire : la source RPC n'accepte pas de recherche partielle.
-    const result = args.filtre ? pageRows((await bounded(ordered)).filter(r => matchPipelineFiltre(r, String(args.filtre))), args) as { rows: Row[]; [k: string]: unknown } : await paged(ordered, args);
-    return { ...result, rows: result.rows.map(r => ({ ...r, ca_estime_ht: null, urgence: r.next_action_due_le ? r.next_action_due_le < new Date().toISOString().slice(0,10) : false })), unavailable: ["CA estimé non enregistré dans la source pipeline"] };
+    let result: { rows: Row[]; [k: string]: unknown };
+    if (args.inclure_clos) {
+      let closes = db.rpc("list_opportunites_closes").select("id,numero,nom,client,charge_affaires_id,statut_opportunite,date_opportunite,statut_change_le");
+      if (!ctx.caps.has("opportunites.read.all")) closes = closes.eq("charge_affaires_id", ctx.userId);
+      const all = [...await bounded(ordered), ...await bounded(closes.order("statut_change_le", { ascending: false }).order("id"))];
+      result = pageRows(args.filtre ? all.filter(r => matchPipelineFiltre(r, String(args.filtre))) : all, args) as typeof result;
+    } else result = args.filtre ? pageRows((await bounded(ordered)).filter(r => matchPipelineFiltre(r, String(args.filtre))), args) as typeof result : await paged(ordered, args);
+    const ids = result.rows.map(r => r.id);
+    const retained = ids.length ? await rowsOf(db.rpc("devis_retenu_pipeline", { _affaire_ids: ids })) : [];
+    const estimates = ids.length ? await rowsOf(db.from("affaires").select("id,ca_estime_ht").in("id", ids)) : [];
+    return { ...result, rows: result.rows.map(r => {
+      const d = retained.find(d => d.affaire_id === r.id), estime = estimates.find(a => a.id === r.id)?.ca_estime_ht ?? null;
+      const clos = ["perdu", "gagne"].includes(r.statut_opportunite);
+      return { ...r, ca_estime_ht: estime, montant_retenu_ht: d?.net_ht ?? estime,
+        devis_retenu: d ? { numero: d.numero, version: d.version, statut: d.statut_redaction } : null,
+        source_montant: d?.source_montant ?? (estime != null ? "estime" : null), montant_version: d?.montant_version ?? null,
+        clos, totalisable: !clos, urgence: !clos && !!r.next_action_due_le && r.next_action_due_le < new Date().toISOString().slice(0,10) };
+    }) };
   }
   if (name === "demandes_clients") {
     await requireAllScope(ctx, "demandes_clients.view");

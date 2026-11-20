@@ -21,7 +21,7 @@ export function PipelineChargeAffairesWidget() {
 
   const chartData = useMemo(() => {
     const active = filtered.filter(
-      (o) => o.statut_opportunite === "a_faire" || o.statut_opportunite === "envoye" || o.statut_opportunite === "presque_gagne" || o.statut_opportunite === "gagne",
+      (o) => o.statut_opportunite != null && ["a_faire", "envoye", "a_l_etude", "presque_gagne"].includes(o.statut_opportunite),
     );
     const byCa = new Map<string, { caId: string; caName: string; total: number } & Record<OpportuniteTaille, number>>();
     active.forEach((o) => {

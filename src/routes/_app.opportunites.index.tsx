@@ -1,4 +1,5 @@
 import { originalOpportunityCode } from "@/lib/chantier-code-history";
+import { OpportunitesCloses } from "@/components/opportunites/OpportunitesCloses";
 import { DevisPipelineProvider, DevisSigneChoixDialog } from "@/components/opportunites/DevisPipeline";
 import { createFileRoute, Link, useNavigate, stripSearchParams, type SearchSchemaInput } from "@tanstack/react-router";
 import { requireCapability } from "@/lib/capability-guard";
@@ -237,6 +238,7 @@ function OpportunitesPage() {
   const [devisStatut, setDevisStatut] = useState<Map<string, string | null>>(new Map());
   const [filtres, setFiltresState] = useState<FiltresAvances>(FILTRES_VIDES);
   const [filtresOpen, setFiltresOpen] = useState(false);
+  const [clos, setClos] = useState(false);
 
   // Tri, colonnes repliées et filtres : mémorisés par utilisateur (navigateur).
   const prefKey = `opps-kanban-prefs:${user?.id ?? "anon"}`;
@@ -312,7 +314,7 @@ function OpportunitesPage() {
         void Promise.all([
           supabase.from("affaires").select("id,statut_opportunite_depuis,created_at,date_evenement_debut").in("id", ids),
           supabase.from("affaire_roles").select("affaire_id,role").in("affaire_id", ids),
-          supabase.from("devis").select("affaire_id,version,cree_par_mcp,statut_redaction,modifie_par_humain_le").in("affaire_id", ids).is("supprime_le", null).eq("est_modele", false),
+          supabase.from("devis").select("affaire_id,version,cree_par_mcp,statut_redaction,modifie_par_humain_le").in("affaire_id", ids).is("supprime_le", null).eq("est_modele", false).not("statut_redaction", "in", "(refuse,remplace)"),
         ]).then(([aff, roles, dv]) => {
           if (cancelled) return;
           const depuis = new Map((aff.data ?? []).map((a) => [a.id, a.statut_opportunite_depuis]));
@@ -373,7 +375,7 @@ function OpportunitesPage() {
   const infoDevis = useMemo(() => {
     const m = new Map<string, { statut_redaction: string | null; montant: number | null }>();
     (tousIndicateurs.data?.affaires ?? []).forEach((a) => m.set(a.affaire_id, {
-      statut_redaction: a.devis_id ? (a.numero_progbat ? "transfere" : devisStatut.get(a.affaire_id) ?? "brouillon") : null,
+      statut_redaction: a.devis_id ? a.statut_redaction ?? null : null,
       montant: a.net_ht != null ? Number(a.net_ht) : a.estime != null ? Number(a.estime) : null,
     }));
     return m;
@@ -471,7 +473,7 @@ function OpportunitesPage() {
   // Conversion en TableurRow pour la vue Tableur (filtre "Archivé" si masqué).
   // Filtre « À faire » actif → tri chronologique (plus ancienne en premier),
   // comme la colonne Kanban correspondante.
-  const [signeFiltre, setSigneFiltre] = useState<"tous" | "opps" | "signes">("tous");
+  const [signeFiltre, setSigneFiltre] = useState<"tous" | "opps" | "signes">("opps");
   const aFaireOnly =
     statutsFilter.length === 1 && statutsFilter[0] === "a_faire";
   const tableurRows: TableurRow[] = useMemo(
@@ -600,6 +602,7 @@ function OpportunitesPage() {
       return;
     }
     toast.success(`${moved.numero} → ${targetStatut.replace("_", " ")}`);
+    setRefreshTick(t => t + 1);
     if (targetStatut === "gagne") setSigneChoix(moved.id);
   }
 
@@ -643,12 +646,12 @@ function OpportunitesPage() {
         number="03"
         eyebrow="Chantiers / Pipeline commercial"
         title="Opportunités"
-        description={`${opps.length} opportunité${opps.length > 1 ? "s" : ""} 9XXX en pipeline. ${vue === "kanban" ? "Glissez les cartes entre colonnes pour changer leur statut." : "Saisie ligne par ligne (auto-save)."}`}
+        description={`${opps.length} opportunité${opps.length > 1 ? "s" : ""} actives en pipeline.`}
         actions={
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
           <Link to="/planning-opportunites" className="whitespace-nowrap text-xs font-semibold text-muted-foreground hover:text-primary hover:underline">Planning prévisionnel →</Link>
           <Link to="/affaires" className="whitespace-nowrap text-xs font-semibold text-muted-foreground hover:text-primary hover:underline">Affaires signées (5XXX) →</Link>
-          {canManageOpps && vue === "kanban" && (
+          {canManageOpps && vue === "kanban" && !clos && (
             <Button
               onClick={() => setCreateOpen(true)}
               className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
@@ -662,6 +665,9 @@ function OpportunitesPage() {
 
       {/* Une seule ligne : bouton Filtres + choix de vue */}
       <div className="flex items-center justify-between gap-2">
+        <ToggleGroup type="single" value={clos ? "clos" : "actif"} onValueChange={v => v && setClos(v === "clos")}>
+          <ToggleGroupItem value="actif">Actif</ToggleGroupItem><ToggleGroupItem value="clos">Clos</ToggleGroupItem>
+        </ToggleGroup>
         <Button variant="outline" className="h-9 gap-2 rounded-xl" onClick={() => setFiltresOpen(true)} aria-label="Filtres">
           <Filter className="h-4 w-4" /> Filtres
           {pastilles.length > 0 && <span className="rounded-full bg-primary px-1.5 text-[11px] font-semibold tabular-nums text-primary-foreground">{pastilles.length}</span>}
@@ -725,9 +731,9 @@ function OpportunitesPage() {
         onReset={resetFiltres}
       />
 
-      {vue !== "tableur" && <PipelineIndicateursBandeau data={indicateurs.data} relanceActive={relance} onRelance={() => setRelance((r) => !r)} />}
+      {!clos && vue !== "tableur" && <PipelineIndicateursBandeau data={indicateurs.data} relanceActive={relance} onRelance={() => setRelance((r) => !r)} />}
 
-      {vue === "tableur" && <div className="rounded-2xl border border-border bg-card p-3">
+      {!clos && vue === "tableur" && <div className="rounded-2xl border border-border bg-card p-3">
         <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           Statut
         </div>
@@ -743,7 +749,7 @@ function OpportunitesPage() {
           >
             Tous
           </button>
-          {(vue === "tableur" ? STATUT_ORDER : KANBAN_STATUT_ORDER).map((s) => {
+          {KANBAN_STATUT_ORDER.map((s) => {
             const active = statutsFilter.includes(s);
             return (
               <button
@@ -769,7 +775,7 @@ function OpportunitesPage() {
         </div>
       </div>}
 
-      {loading ? (
+      {clos ? <OpportunitesCloses recherche={searchQuery} chargeId={filterCa} /> : loading ? (
         <div className="flex items-center justify-center p-16">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>

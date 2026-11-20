@@ -80,7 +80,7 @@ const modification = z.discriminatedUnion("cible", [
 const suppression = z.object({ cible: z.enum(["ligne", "heure", "materiau", "libre"]), id: uuid }).strict();
 
 export const devisSchemas = {
-  devis_lister: { affaire_id: uuid.optional(), recherche: z.string().max(120).optional(), statuts: z.array(z.enum(["brouillon", "a_valider", "valide", "transfere", "signe", "refuse"])).max(6).optional(), limit: z.number().int().min(1).max(100).default(25), offset: z.number().int().min(0).default(0) },
+  devis_lister: { affaire_id: uuid.optional(), recherche: z.string().max(120).optional(), statuts: z.array(z.enum(["brouillon", "a_valider", "valide", "transfere", "signe", "refuse", "remplace"])).max(7).optional(), limit: z.number().int().min(1).max(100).default(25), offset: z.number().int().min(0).default(0) },
   devis_lire: { devis_id: uuid,
     vue: z.enum(["resume", "complet"]).default("resume").describe("resume (défaut) : en-tête, totaux et arbre des lignes avec id, type, libellé, quantité, total et nombre d'heures / matériaux / lignes libres. complet : tout le détail (volumineux)."),
     ligne_ids: z.array(uuid).max(20).optional().describe("Détail complet (heures, matériaux, lignes libres, photos) de ces lignes seulement, en plus du résumé.") },
@@ -196,10 +196,17 @@ export async function readDevis(context: McpAppContext, name: DevisReadName, arg
         rows = (r.data ?? []) as any[];
       }
       const ids = rows.map(d => d.id);
-      const extra = ids.length ? await context.db.from("devis").select("id,date_envoi,cree_par_mcp,modifie_par_humain_le").in("id", ids) : { data: [], error: null };
+      const extra = ids.length ? await context.db.from("devis").select("id,affaire_id,date_envoi,cree_par_mcp,modifie_par_humain_le").in("id", ids) : { data: [], error: null };
       if (extra.error) throw new ToolError("Liste des devis indisponible");
       const byId = new Map((extra.data ?? []).map((e: any) => [e.id, e]));
-      data = { rows: rows.map(d => ({ ...d, ...(byId.get(d.id) ?? {}) })) };
+      const affaireIds = [...new Set((extra.data ?? []).flatMap(e => e.affaire_id ? [e.affaire_id] : []))];
+      const retenus = affaireIds.length ? await context.db.rpc("devis_retenu_pipeline", { _affaire_ids: affaireIds }) : { data: [], error: null };
+      if (retenus.error) throw new ToolError("Version retenue indisponible");
+      const retainedIds = new Set((retenus.data ?? []).map((d: { devis_id: string }) => d.devis_id));
+      const active = affaireIds.length ? await context.db.from("affaires").select("id").in("id", affaireIds).eq("phase", "opportunite").is("archived_at", null).in("statut_opportunite", ["a_faire", "envoye", "a_l_etude", "presque_gagne"]) : { data: [], error: null };
+      if (active.error) throw new ToolError("Pipeline indisponible");
+      const activeIds = new Set((active.data ?? []).map(a => a.id));
+      data = { rows: rows.map(d => ({ ...d, ...(byId.get(d.id) ?? {}), retenu_pipeline: retainedIds.has(d.id) && activeIds.has(byId.get(d.id)?.affaire_id) })) };
     } else if (name === "devis_lire") {
       const r = await context.db.rpc("devis_lire", { _devis_id: args.devis_id });
       if (r.error || !r.data) throw new ToolError("Devis introuvable ou accès refusé");

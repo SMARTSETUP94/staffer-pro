@@ -3,7 +3,7 @@ import { ciblePipelineDevis, STATUTS_DEVIS_VISIBLES, statutDevisVisible } from "
 
 describe("Les cinq états des devis et leur correspondance commerciale", () => {
   it("retire l'état intermédiaire et conserve les devis historiques comme brouillons", () => {
-    expect(STATUTS_DEVIS_VISIBLES).toEqual(["brouillon", "valide", "transfere", "signe", "refuse"]);
+    expect(STATUTS_DEVIS_VISIBLES).toEqual(["brouillon", "valide", "transfere", "signe", "refuse", "remplace"]);
     expect(statutDevisVisible("a_valider")).toBe("brouillon");
   });
   it("relie un brouillon à À faire", () => expect(ciblePipelineDevis("brouillon")).toBe("a_faire"));
@@ -12,5 +12,6 @@ describe("Les cinq états des devis et leur correspondance commerciale", () => {
   it("ne signe ni ne refuse automatiquement une opportunité", () => {
     expect(ciblePipelineDevis("signe")).toBeNull();
     expect(ciblePipelineDevis("refuse")).toBeNull();
+    expect(ciblePipelineDevis("remplace")).toBeNull();
   });
 });

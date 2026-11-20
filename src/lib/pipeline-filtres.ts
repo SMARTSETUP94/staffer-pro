@@ -4,9 +4,9 @@
  */
 import { dateUtile, estEnRetard } from "@/lib/pipeline-kanban";
 
-export type StatutDevisFiltre = "sans_devis" | "brouillon" | "a_valider" | "valide" | "transfere" | "envoye";
+export type StatutDevisFiltre = "sans_devis" | "brouillon" | "a_valider" | "valide" | "transfere" | "envoye" | "remplace";
 export const STATUT_DEVIS_FILTRE_LABEL: Record<StatutDevisFiltre, string> = {
-  sans_devis: "Sans devis", brouillon: "Brouillon", a_valider: "À finaliser", valide: "Finalisé", transfere: "Transféré ProGBat", envoye: "Envoyé",
+  sans_devis: "Sans devis", brouillon: "Brouillon", a_valider: "Brouillon", valide: "Finalisé", transfere: "Transféré ProGBat", envoye: "Envoyé", remplace: "Remplacé",
 };
 export type PeriodeFiltre = "" | "ce_mois" | "mois_prochain" | "3_mois" | "libre";
 export const PERIODE_LABEL: Record<Exclude<PeriodeFiltre, "">, string> = {

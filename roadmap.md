@@ -1,5 +1,11 @@
 # Roadmap
 
+## Pipeline commercial juste — 20 novembre, P1/P2 approuvées avec corrections
+- [x] P1/P2 corrigées appliquées + P3 verrou et ouverture ; Actif 82, Clos 26, UI/MCP partagent le retenu, 9503 ouvre la R1 refusée sans doublon.
+- [x] Recette isolée 39 968,28 € / copie / remplacement / repli / action close ; essais retirés, 138 tests verts, manifeste 45 outils, rien publié.
+- [ ] Recette historique 6064 et chantiers d’origine : leurs dates de création sont postérieures à signed_at, donc la règle approuvée les conserve. Attend décision Gabin sur la provenance à utiliser, sans correction réelle exécutée.
+- [ ] Régularisation : bilan 12 versions / 24 actions prêt, attend validation explicite de Gabin ; non exécutée.
+
 ## Responsable d’étape logistique — 15 novembre
 - [x] Remplacer le champ chef de projet bloqué par une désignation modifiable ; suggestion depuis l’équipe projet sans affectation automatique, formulaire de demande clarifié.
 - [x] Saisie et effacement vérifiés connecté à 390/1366 px ; 24 tests existants passent, build OK. Aucune étape réelle modifiée ; sauvegarde non exercée faute d’affaire d’essai disponible dans la liste. Rien publié.

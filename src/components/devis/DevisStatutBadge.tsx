@@ -10,6 +10,7 @@ const CLASSES: Record<DevisStatut, string> = {
   transfere: "border-transparent bg-statut-envoye text-statut-envoye-foreground",
   signe: "border-transparent bg-statut-signe text-statut-signe-foreground",
   refuse: "border-transparent bg-statut-refuse text-statut-refuse-foreground",
+  remplace: "border-border bg-muted text-muted-foreground",
 };
 
 export function DevisStatutBadge({ statut, label, className }: { statut: DevisStatut; label: string; className?: string }) {
