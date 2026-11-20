@@ -63,6 +63,34 @@ export const nomFichierPdf = (vc: Pick<DevisClient, "numero" | "version">, nivea
 const aDims = (t: string) => /dimensions\s*:/i.test(t);
 const aFinition = (t: string) => /finition\s*:/i.test(t);
 /** Détail d'un objet : dimensions et finition une seule fois (le descriptif du modèle les contient souvent déjà). */
+/** Glyphes imprimables par les polices du PDF (Inter/Sora sous-ensemble, Helvetica WinAnsi). */
+const GLYPHE_OK = /[\n\r\t\u0020-\u007e\u00a0-\u00ff\u0152\u0153\u0178\u2009\u2013\u2014\u2018-\u201e\u2022\u2026\u202f\u20ac]/;
+const GLYPHES_REMPLACES: Record<string, string> = {
+  "→": "–", "←": "–", "↔": "–", "⇒": "–", "⇐": "–", "⇔": "–", "➜": "–", "➔": "–", "➝": "–", "⟶": "–", "⟵": "–", "▶": "–", "►": "–",
+  "−": "-", "‐": "-", "‑": "-", "‒": "–", "―": "—", "≥": ">=", "≤": "<=", "≠": "<>", "≈": "~", "✓": "oui", "✔": "oui", "✗": "non", "✘": "non",
+  "▪": "•", "●": "•", "◦": "•", "‣": "•", "·": "·", "\u2002": " ", "\u2003": " ", "\u200a": " ", "\u2007": " ", "\u200b": "", "\u2060": "", "\ufeff": "",
+  "‚": ",", "′": "'", "″": "\"", "ﬁ": "fi", "ﬂ": "fl", "Ω": "ohm", "µ": "µ", "μ": "µ", "∅": "Ø", "⌀": "Ø",
+};
+/** Remplace à l'impression les glyphes absents des polices (→ devient « – ») plutôt que de les perdre. */
+export function textePdf(t: string): string {
+  let out = "";
+  for (const ch of t) {
+    if (GLYPHE_OK.test(ch)) { out += ch; continue; }
+    const r = GLYPHES_REMPLACES[ch];
+    if (r !== undefined) { out += r; continue; }
+    const base = ch.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+    out += base && [...base].every((c) => GLYPHE_OK.test(c)) ? base : "?";
+  }
+  return out;
+}
+/** Capital social au format français (« 40000.00 € » → « 40 000,00 € ») ; un texte libre est conservé. */
+export function capitalFr(c: string): string {
+  const m = c.trim().match(/^([\d\s\u00a0\u202f]+(?:[.,]\d{1,2})?)\s*(?:€|eur(?:os?)?)?$/i);
+  if (!m?.[1]) return c;
+  const v = Number(m[1].replace(/[\s\u00a0\u202f]/g, "").replace(",", "."));
+  return Number.isFinite(v) ? eurPdf(v) : c;
+}
+
 export function detailObjet(l: LigneClient) {
   const desc = (l.descriptif_client ?? "").trim();
   const d = [l.longueur_mm, l.largeur_mm, l.hauteur_mm].filter((x) => x != null && Number(x) > 0).map((x) => String(Number(x)));
@@ -210,6 +238,13 @@ export type OptionsPdf = { polices?: PolicesPdf; logo?: ImagePdf | null };
 
 export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: Record<string, ImagePdf> = {}, opts: OptionsPdf = {}): ArrayBuffer {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
+  { // Toute écriture et toute mesure passent par textePdf : aucun glyphe absent de la police n'est perdu.
+    const d = doc as any, txt = d.text.bind(doc), split = d.splitTextToSize.bind(doc), larg = d.getTextWidth.bind(doc);
+    const san = (t: unknown): any => (typeof t === "string" ? textePdf(t) : Array.isArray(t) ? t.map(san) : t);
+    d.text = (t: unknown, ...a: unknown[]) => txt(san(t), ...a);
+    d.splitTextToSize = (t: unknown, ...a: unknown[]) => split(san(t), ...a);
+    d.getTextWidth = (t: unknown) => larg(san(t));
+  }
   const W = 210, M = 15, BAS = 270;
   const C = CHARTE;
   // Polices : Inter (texte) et Sora (titres) si fournies, sinon Helvetica.
@@ -296,11 +331,13 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   const detaille = niveau === "detaille";
   const corps: any[] = [];
   const vide = { content: "" };
-  const descr = (texte: string) => corps.push([vide, { content: texte, colSpan: 5, styles: { font: T, fontStyle: "italic", textColor: C.gris, fontSize: 8, cellPadding: { top: 0.6, bottom: 2.4, left: 3, right: 3 } } }]);
+  /** Ligne rattachée à la ligne qui la précède (descriptif, vignettes) : jamais séparée d'elle par un saut de page. */
+  const rattache = (row: any[]) => Object.assign(row, { att: true });
+  const descr = (texte: string) => corps.push(rattache([vide, { content: texte, colSpan: 5, styles: { font: T, fontStyle: "italic", textColor: C.gris, fontSize: 8, cellPadding: { top: 0.6, bottom: 2.4, left: 3, right: 3 } } }]));
   const vignettes = (ligneId?: string) => {
     if (!detaille || !ligneId) return;
     const ph = vc.photos.filter((p) => p.ligne_id === ligneId && images[p.thumb_path ?? p.storage_path]).slice(0, 3);
-    if (ph.length) corps.push([vide, { content: "", colSpan: 5, styles: { minCellHeight: 30 }, imgs: ph.map((p) => images[p.thumb_path ?? p.storage_path]) }]);
+    if (ph.length) corps.push(rattache([vide, { content: "", colSpan: 5, styles: { minCellHeight: 30 }, imgs: ph.map((p) => images[p.thumb_path ?? p.storage_path]) }]));
   };
   const ligne = (r: LigneTableau) => {
     if (r.style === "commentaire") { descr(r.designation); return; }
@@ -363,6 +400,20 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   }
   const tableStyles = { font: T, fontSize: 8.6, cellPadding: { top: 1.8, bottom: 1.8, left: 2, right: 2 }, textColor: C.encre, lineColor: C.filet, lineWidth: { bottom: 0.15 }, valign: "top" as const };
   const colonnes = { 0: { cellWidth: 13 }, 1: { cellWidth: 97 }, 2: { cellWidth: 10, halign: "center" as const }, 3: { cellWidth: 12, halign: "right" as const }, 4: { cellWidth: 24, halign: "right" as const }, 5: { cellWidth: 24, halign: "right" as const } };
+  /** Regroupe chaque ligne et ses lignes rattachées : la cellule N° couvre le groupe (rowSpan), qu'autoTable ne coupe pas. */
+  const grouper = (rows: any[]) => {
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i].att) continue;
+      let k = 0; while (rows[i + 1 + k]?.att) k++;
+      if (!k) continue;
+      const c0 = rows[i][0], cell = c0 && typeof c0 === "object" ? c0 : { content: c0 ?? "" };
+      const { lineWidth: _lw, lineColor: _lc, ...st } = (cell.styles ?? {}) as Record<string, unknown>;
+      rows[i][0] = { ...cell, rowSpan: k + 1, styles: st };
+      for (let j = 1; j <= k; j++) rows[i + j].shift();
+      i += k;
+    }
+    return rows;
+  };
   const dessinerImages = (data: any) => {
     const imgs = data.cell?.raw?.imgs as ImagePdf[] | undefined;
     if (!imgs?.length || data.section !== "body") return;
@@ -374,7 +425,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   autoTable(doc, {
     startY: y, margin: { left: M, right: M, bottom: 300 - BAS },
     head: [["N°", "Désignation", "U", "Qté", "PU HT", "Total HT"]],
-    body: corps.length ? corps : [[vide, { content: "Aucune ligne chiffrée", colSpan: 5 }]],
+    body: corps.length ? grouper(corps) : [[vide, { content: "Aucune ligne chiffrée", colSpan: 5 }]], rowPageBreak: "avoid",
     styles: tableStyles, headStyles: { fillColor: C.bleu, textColor: [255, 255, 255], font: T, fontStyle: "bold", lineWidth: 0 },
     columnStyles: colonnes, didDrawCell: dessinerImages,
   });
@@ -389,24 +440,25 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
     const opt = { fillColor: C.fond };
     opts2.forEach((o, i) => {
       const q = Number(o.ligne.quantite ?? 1) > 0 ? Number(o.ligne.quantite) : 1;
-      corpsO.push([{ content: `O${i + 1}`, styles: { textColor: C.gris } }, { content: `${o.ligne.libelle ?? "Option"}${o.zone ? ` — ${o.zone}` : ""}`, styles: { fontStyle: "bold" } }, "ens", String(q),
+      corpsO.push([{ content: `O${i + 1}`, styles: { textColor: C.gris } }, { content: o.ligne.libelle ?? "Option", styles: { fontStyle: "bold" } }, "ens", String(q),
         detaille ? eurPdf(Math.round((o.montant / q) * 100) / 100) : "", { content: eurPdf(o.montant), styles: { fontStyle: "bold" } }]);
       if (!detaille) return; // synthétique : la seule ligne d'option avec son total
-      const d = (o.ligne.descriptif_client ?? "").trim(); if (d) corpsO.push([vide, { content: d, colSpan: 5, styles: { fontStyle: "italic", textColor: C.gris, fontSize: 8 } }]);
+      const d = (o.ligne.descriptif_client ?? "").trim(); if (d) corpsO.push(rattache([vide, { content: d, colSpan: 5, styles: { fontStyle: "italic", textColor: C.gris, fontSize: 8 } }]));
       // Objets de l'option (n°, désignation, descriptif, U, Qté, PU, Total), marqués « option ».
       for (const r of lignesTableau(vc, o.ligne, niveau, `O${i + 1}`)) {
         if (r.style === "commentaire") { corpsO.push([vide, { content: r.designation, colSpan: 5, styles: { fontStyle: "italic", textColor: C.gris, fontSize: 8 } }]); continue; }
         corpsO.push([{ content: r.n, styles: { ...opt, textColor: C.gris } }, { content: `${r.designation}  · option`, styles: opt }, { content: r.unite, styles: opt }, { content: r.qte, styles: opt }, { content: r.pu, styles: opt }, { content: r.total, styles: opt }]);
-        if (r.detail) corpsO.push([vide, { content: r.detail, colSpan: 5, styles: { fontStyle: "italic", textColor: C.gris, fontSize: 8 } }]);
+        if (r.detail) corpsO.push(rattache([vide, { content: r.detail, colSpan: 5, styles: { fontStyle: "italic", textColor: C.gris, fontSize: 8 } }]));
       }
     });
-    autoTable(doc, { startY: y, margin: { left: M, right: M, bottom: 300 - BAS }, body: corpsO, styles: tableStyles, columnStyles: colonnes });
+    autoTable(doc, { startY: y, margin: { left: M, right: M, bottom: 300 - BAS }, body: grouper(corpsO), rowPageBreak: "avoid", styles: tableStyles, columnStyles: colonnes });
     y = (doc as any).lastAutoTable.finalY + 6;
   }
 
   // ── Totaux : tableau TVA + encadré
   const remise = Math.abs(Number(vc.remise ?? 0)), net = Number(vc.net_ht ?? vc.total_ht);
-  place(52);
+  // Totaux et récapitulatif des options restent sur la même page : s'ils ne tiennent pas, le bloc entier passe.
+  place(52 + (opts2.length ? 12 + opts2.length * 8 : 0));
   const xT = W - M - 72;
   const ligneTot = (l: string, v: string, fort = false): RowInput => [{ content: l, styles: fort ? { fontStyle: "bold" } : {} }, { content: v, styles: { halign: "right", ...(fort ? { fontStyle: "bold" } : {}) } }];
   autoTable(doc, {
@@ -466,7 +518,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   }
 
   // ── Pied de page + filigrane
-  const pied = [[s.raison_sociale, ml.forme, ml.capital ? `au capital de ${ml.capital}` : null, ml.telephone ? `Tél. ${ml.telephone}` : null, ml.email].filter(Boolean).join(" · "),
+  const pied = [[s.raison_sociale, ml.forme, ml.capital ? `au capital de ${capitalFr(ml.capital)}` : null, ml.telephone ? `Tél. ${ml.telephone}` : null, ml.email].filter(Boolean).join(" · "),
     [ml.ape ? `APE ${ml.ape}` : null, s.siret ? `SIRET ${s.siret}` : null, ml.tva ? `TVA intracom. ${ml.tva}` : null, ml.iban ? `IBAN ${ml.iban}` : null, ml.bic ? `BIC ${ml.bic}` : null].filter(Boolean).join(" · ")].filter(Boolean);
   const n = doc.getNumberOfPages();
   for (let i = 1; i <= n; i++) {
