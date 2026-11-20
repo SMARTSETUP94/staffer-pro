@@ -53,7 +53,7 @@
 - Client quote PDFs are built only from devis_lire_client (pure pdf-client.ts, shared by app and MCP) and stored in private devis-exports with devis_exports history, so internal costs never reach clients.
 - Quote issuer details and payment terms come from parametres_entreprise through devis_lire_client; optional chantier/signataire fields are human-authored through devis_entete_modifier, never inferred from technical authors, to preserve existing quotes.
 
-- Read subdirectory AGENTS.md before edits. Pipeline/UI/MCP share devis_retenu_pipeline: latest eligible revision with previous-positive fallback; signed-site supplements require post-signature creation. pipeline_indicateurs preserves RLS and dated probabilities; UI only sums its rows.
+- Read subdirectory AGENTS.md before edits. Pipeline/UI/MCP share devis_retenu_pipeline: latest eligible revision with previous-positive fallback; quotes of signed sites never enter pipeline totals. pipeline_indicateurs preserves RLS and dated probabilities; UI only sums its rows.
 - Pipeline opportunity filters are applied through the pure passeFiltres helper (src/lib/pipeline-filtres.ts) and edited in a single Filtres sheet; preferences persist per user in localStorage so tiles, column totals and cards stay filtered consistently.
 - /dispos calls only dispos_public_* definer RPCs; tables stay RLS-only.
 - Logistics date changes move linked non-imported assignments transactionally through a table trigger; invalid shortened periods fail atomically, covering UI and RPC paths without copying historical rows.

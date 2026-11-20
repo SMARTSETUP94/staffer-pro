@@ -97,7 +97,6 @@ export function PipelineFiltresSheet(p: Props) {
               <Inter label={`Brouillon Claude à relire${p.claudeNb ? ` (${p.claudeNb})` : ""}`} checked={p.inter.claude} onChange={(v) => p.setInter("claude", v)} />
               <Inter label="En retard" checked={f.enRetard} onChange={(v) => set({ enRetard: v })} />
               <Inter label="Sans date de montage" checked={f.sansDateMontage} onChange={(v) => set({ sansDateMontage: v })} />
-              <Inter label="Suppléments de chantiers 6XXX uniquement" checked={f.supplements} onChange={(v) => set({ supplements: v })} />
             </div>
           </Section>
           <Section titre="Statut du devis">

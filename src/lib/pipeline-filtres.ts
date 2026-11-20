@@ -24,12 +24,11 @@ export type FiltresAvances = {
   enRetard: boolean;
   montantMin: number | null;
   montantMax: number | null;
-  supplements: boolean; // n'afficher que les suppléments chantiers 6XXX
   client: string;
 };
 export const FILTRES_VIDES: FiltresAvances = {
   statutsDevis: [], typologies: [], tailles: [], periode: "", du: "", au: "", sansDateMontage: false,
-  enRetard: false, montantMin: null, montantMax: null, supplements: false, client: "",
+  enRetard: false, montantMin: null, montantMax: null, client: "",
 };
 
 export type OppFiltrable = {
@@ -58,9 +57,8 @@ export function statutDevisFiltre(d: InfoDevis): StatutDevisFiltre {
   return (d.statut_redaction in STATUT_DEVIS_FILTRE_LABEL ? d.statut_redaction : "brouillon") as StatutDevisFiltre;
 }
 
-/** Vrai si l'opportunité passe les filtres avancés. Le filtre « suppléments » masque toutes les opportunités. */
+/** Vrai si l'opportunité passe les filtres avancés. */
 export function passeFiltres(o: OppFiltrable, d: InfoDevis, f: FiltresAvances, now = new Date()): boolean {
-  if (f.supplements) return false;
   if (f.statutsDevis.length && !f.statutsDevis.includes(statutDevisFiltre(d))) return false;
   if (f.typologies.length && !f.typologies.includes(o.typologie_future ?? "")) return false;
   if (f.tailles.length && !f.tailles.includes(o.taille ?? "")) return false;
@@ -83,7 +81,7 @@ export function passeFiltres(o: OppFiltrable, d: InfoDevis, f: FiltresAvances, n
 /** Nombre de filtres avancés actifs (pour la pastille du bouton). */
 export function nbFiltresAvances(f: FiltresAvances): number {
   return [f.statutsDevis.length > 0, f.typologies.length > 0, f.tailles.length > 0, !!bornesPeriode(f),
-    f.sansDateMontage, f.enRetard, f.montantMin != null, f.montantMax != null, f.supplements, !!f.client.trim()].filter(Boolean).length;
+    f.sansDateMontage, f.enRetard, f.montantMin != null, f.montantMax != null, !!f.client.trim()].filter(Boolean).length;
 }
 
 export function lireFiltres(v: unknown): FiltresAvances {

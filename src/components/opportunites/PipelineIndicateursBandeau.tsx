@@ -5,7 +5,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { kEur, type IndicateurAffaire, type PipelineIndicateurs } from "@/lib/pipeline-indicateurs";
 
-/** Les suppléments 6XXX suivent le filtre chargé d'affaires et la recherche du pipeline. */
 export function usePipelineIndicateurs(affaireIds: string[], filtres: { chargeAffairesId?: string | null; q?: string } = {}, enabled = true) {
   const ids = useMemo(() => [...affaireIds].sort(), [affaireIds]);
   const ca = filtres.chargeAffairesId ?? null, q = filtres.q?.trim() || null;
@@ -62,7 +61,6 @@ export function PipelineIndicateursBandeau({ data, relanceActive, onRelance }: {
         <p className="mb-1 font-semibold">CA pipeline {kEur(t.chiffre + t.estime)}</p>
         <Ligne l="Chiffrés (derniers devis)" v={kEur(t.chiffre)} />
         <Ligne l="Estimés (sans devis)" v={kEur(t.estime)} />
-        {t.supplements_nb > 0 && <Ligne l={`dont suppléments chantiers (${t.supplements_nb})`} v={kEur(t.supplements)} />}
         <p className="mt-2 text-xs text-muted-foreground">{t.nb} opportunité{t.nb > 1 ? "s" : ""}, filtres actifs compris.</p>
       </Case>
       <Case titre="Pondéré" valeur={kEur(t.pondere)}>

@@ -45,7 +45,7 @@ import {
   type OpportuniteStatut,
   type OpportuniteTaille,
 } from "@/lib/opportunites";
-import { KanbanColonne, SupplementsColonne } from "@/components/opportunites/KanbanColonne";
+import { KanbanColonne } from "@/components/opportunites/KanbanColonne";
 import { PipelineFiltresSheet } from "@/components/opportunites/PipelineFiltresSheet";
 import { FILTRES_VIDES, lireFiltres, nbFiltresAvances, passeFiltres, PERIODE_LABEL, STATUT_DEVIS_FILTRE_LABEL, type FiltresAvances } from "@/lib/pipeline-filtres";
 import { IndicateursCtx, PipelineIndicateursBandeau, usePipelineIndicateurs } from "@/components/opportunites/PipelineIndicateursBandeau";
@@ -402,8 +402,7 @@ function OpportunitesPage() {
     });
   }, [opps, filterCa, noCa, noD, noRp, claude, claudeIds, actionsDues, sevenDaysAhead, normalizedQuery, filtres, infoDevis]);
 
-  // Filtres propres aux opportunités : aucun supplément 6XXX ne correspond.
-  const filtreOppSeul = noCa || noD || noRp || actionsDues || claude || (nbFiltresAvances(filtres) - (filtres.supplements ? 1 : 0) - (filtres.client.trim() ? 1 : 0)) > 0;
+  const filtreOppSeul = noCa || noD || noRp || actionsDues || claude || (nbFiltresAvances(filtres) - (filtres.client.trim() ? 1 : 0)) > 0;
   // Indicateurs (tuiles + montants) : respectent les filtres actifs ; « À relancer » filtre ensuite le Kanban.
   const indicateurs = usePipelineIndicateurs(useMemo(() => oppsFiltrees.map((o) => o.id), [oppsFiltrees]), {
     chargeAffairesId: filtreOppSeul ? "00000000-0000-0000-0000-000000000000" : filterCa !== "__all__" ? filterCa : null,
@@ -432,7 +431,6 @@ function OpportunitesPage() {
     if (f.enRetard) out.push({ cle: "ret", label: "En retard", retirer: () => setFiltres({ ...f, enRetard: false }) });
     if (f.montantMin != null) out.push({ cle: "min", label: `≥ ${f.montantMin.toLocaleString("fr-FR")} €`, retirer: () => setFiltres({ ...f, montantMin: null }) });
     if (f.montantMax != null) out.push({ cle: "max", label: `≤ ${f.montantMax.toLocaleString("fr-FR")} €`, retirer: () => setFiltres({ ...f, montantMax: null }) });
-    if (f.supplements) out.push({ cle: "sup", label: "Suppléments 6XXX", retirer: () => setFiltres({ ...f, supplements: false }) });
     if (f.client.trim()) out.push({ cle: "cli", label: `Client : ${f.client.trim()}`, retirer: () => setFiltres({ ...f, client: "" }) });
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -727,7 +725,7 @@ function OpportunitesPage() {
         f={filtres} setF={setFiltres}
         typologies={AFFAIRE_TYPOLOGIES.map((t) => ({ value: t, label: AFFAIRE_TYPOLOGIE_LABELS[t] }))}
         tailles={TAILLE_ORDER.map((t) => ({ value: t, label: TAILLE_LABEL[t] }))}
-        nbResultats={filtres.supplements ? (indicateurs.data?.supplements.length ?? 0) : oppsKanban.filter((o) => vue === "tableur" ? showArchived || o.statut_opportunite !== "termine" : o.statut_opportunite !== "termine").length}
+        nbResultats={oppsKanban.filter((o) => vue === "tableur" ? showArchived || o.statut_opportunite !== "termine" : o.statut_opportunite !== "termine").length}
         onReset={resetFiltres}
       />
 
@@ -839,13 +837,6 @@ function OpportunitesPage() {
                 }}
               />
             ))}
-            {!relance && !filtreOppSeul && (indicateurs.data?.supplements.length ?? 0) > 0 && (
-              <SupplementsColonne
-                items={indicateurs.data!.supplements}
-                repliee={filtres.supplements ? false : replis.supplements ?? true}
-                onToggle={() => { const next = { ...replis, supplements: !(replis.supplements ?? true) }; setReplis(next); savePrefs({ replis: next }); }}
-              />
-            )}
           </div>
           <DragOverlay>
             {activeOpp && (
