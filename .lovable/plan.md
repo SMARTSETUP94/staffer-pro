@@ -1,58 +1,138 @@
-# Connecteur Claude (devis) — corrections à la suite du retour du 18/11 (9539-R1)
+# Transfert des devis vers Pennylane — plan (rien appliqué)
 
-Plan seulement : aucune modification, migration ni publication avant relecture.
+## Constat
+- 5 devis Staffing au statut « signé » aujourd'hui ; **aucun client n'a d'identifiant Pennylane** → le rapprochement des clients est un préalable.
+- Le transfert ProGBat reste en place, inchangé.
+- Secret `PENNYLANE_API_TOKEN` absent : Gabin l'ajoute lui-même dans Paramètres du projet → Secrets.
 
-## Constats vérifiés dans le code
-- `runDevisWrite` (src/lib/mcp/devis.ts) transforme toute exception non `ToolError` en « Écriture indisponible » et écrit dans `mcp_audit_log` avec `arguments: {}` : la cause est perdue.
-- `controlerFichier` vérifie l'alphabet (`=` final seulement) mais ni la longueur modulo 4 ni le rembourrage ; `atob` peut alors lever une DOMException non typée. Hypothèse principale, non encore reproduite : l'étape 1 la confirme par un essai avec les tailles signalées (9 à 13 Ko, base64 tronqué par le client).
-- Autres exceptions non typées possibles dans l'aperçu : `crypto.subtle.digest` (`sha256`, `argumentsHash`), `devis_mcp_etat` / `mcp_assert_write` qui lèvent au lieu de renvoyer `error`, `lireDocumentAffaire`, `mcp_write_preview`, insertion du journal elle-même.
-- `mcp_audit_log` a déjà `arguments` et `diff` (jsonb) : on peut y mettre la cause sans nouvelle colonne.
+## Parcours
+1. **Rapprochement clients** (une fois, puis au fil de l'eau) — admin + commercial.
+2. **Sur un devis signé** : bouton « Transférer vers Pennylane » → fenêtre options retenues → récapitulatif → transfert.
+3. **Après** : lien « Ouvrir le devis dans Pennylane » + numéro Pennylane ; l'acompte se crée à la main dans Pennylane.
 
-## 1. Erreurs explicites
-- `controlerFichier` : retire préfixe `data:…;base64,`, espaces et retours à la ligne ; accepte base64url (`-_`) ; ajoute le rembourrage manquant si longueur % 4 ∈ {2,3} ; refuse % 4 = 1 avec « Base64 invalide : N caractères reçus après nettoyage, longueur impossible (probablement tronqué) » ; `atob` dans un try → ToolError avec longueur. Message de taille avec octets reçus / max ; type avec signature détectée.
-- `runDevisWrite` et `runWrite` : chaque appel RPC/stockage traduit en ToolError nommé (droits, quota, aperçu, journal, dépôt). Filet final : « Erreur interne pendant <étape> (<NomErreur>) » — plus jamais de message sans cause.
-- Journal : `arguments` = `{ etape, erreur_type, erreur_message (≤300 car.), longueur_base64?, taille_octets? }`, jamais le contenu ni le base64.
+## Écrans (maquette texte)
 
-## 2. `fichier_ref` (fichier envoyé une seule fois)
-- À l'aperçu, le serveur contrôle le fichier puis le dépose dans un dossier temporaire privé `mcp-tmp/<user_id>/<sha256>.<ext>` (bucket privé existant `devis-photos` ou nouveau bucket privé, sans politique utilisateur : accès serveur seul) et renvoie `fichier_ref` = SHA-256.
-- Confirmation : `fichier_ref` à la place de `fichier_base64`. L'empreinte des arguments est calculée sur une forme normalisée où le fichier est remplacé par son SHA-256 (aperçu en base64 et confirmation en `fichier_ref` donnent la même empreinte ; tout autre argument modifié la change).
-- À la confirmation : relecture du temporaire, recalcul SHA-256, contrôle type/taille, copie vers le chemin définitif, retrait du temporaire.
-- Purge : fichiers temporaires de plus de 10 minutes retirés à chaque aperçu/confirmation (balayage borné du dossier de l'appelant) et par une tâche planifiée existante ou nouvelle toutes les 10 minutes.
-- `devis_ajouter_photos` : jusqu'à 20 images (ligne_id, source, légende chacune), un aperçu groupé, une confirmation groupée, tout ou rien ; passe par le même circuit `devis_mcp_appliquer` (un appel par image dans la même transaction de dispatch ou une variante groupée de la fonction — à arbitrer en lisant la fonction actuelle).
+### A. Paramètres › Pennylane › Rapprochement clients
+```text
+Rapprochement Pennylane            [Relire les clients Pennylane]
+Filtre : (•) À valider  ( ) Sûrs  ( ) Sans correspondance  ( ) Rapprochés
+--------------------------------------------------------------------
+Client Staffing   | SIRET / TVA     | Proposition Pennylane | Motif       | Action
+ACME SAS          | 812 345 678 ... | ACME (id 4411)        | SIRET égal  | [Valider]
+Studio Nord       | — / FR12...     | Studio Nord SARL      | TVA égale   | [Valider]
+Galerie B.        | — / —           | Galerie Bxl ?  (2)    | nom proche  | [Choisir ▾]
+Maison X          | —               | aucune                |             | [Créer dans Pennylane…]
+```
+- Appariement : SIRET (14 chiffres, puis SIREN 9) → TVA intracom → nom normalisé.
+- « Sûr » = un seul candidat par SIRET ou TVA ; tout le reste « à valider ». **Rien n'est enregistré sans clic humain**, y compris les cas sûrs (bouton « Valider les N sûrs » avec liste).
+- « Créer dans Pennylane… » : panneau qui montre exactement les champs envoyés, puis confirmation. Désactivé tant que le droit d'écriture clients n'est pas accordé au jeton.
+- 390 px : cartes, une par client, même actions.
 
-## 3. `documents_affaire_televerser`
-- Écriture aperçu → confirmation : affaire, `fichier_base64` ou `fichier_ref`, nom lisible, catégorie parmi les catégories existantes de `affaire_documents`.
-- Droits : `section.affaires` + accès en écriture à l'affaire (règle existante `user_can_write_affaire`), sous les droits de l'appelant (aucun client admin métier).
-- JPG/PNG/PDF par signature, 10 Mo ; dépôt dans le stockage privé `affaires-photos` ; doublon détecté par empreinte (renvoie le document existant) ; renvoie `document_id`. Aucune suppression.
-- Ajout à la liste autorisée `mcp_dispatch_write` / `mcp_dispatch_actif`, journal et idempotence comme les autres écritures.
-- OneDrive : non développé. Permission minimale à proposer à Gabin : Microsoft Graph `Files.Read` déléguée (fichiers de l'utilisateur connecté) ; pour les sites SharePoint, `Sites.Selected` en application, limité au(x) site(s) choisi(s). Détail dans le compte rendu.
+### B. Devis signé — en-tête
+```text
+Pennylane : non transféré            [Transférer vers Pennylane]
+  ⚠ Client non rapproché → [Rapprocher]   (bouton grisé tant que manquant)
+Après : Pennylane D-2026-11-0042 · transféré le 24/11 par Gabin C · [Ouvrir dans Pennylane ↗]
+        ⚠ Écart total HT : Staffing 6 563,05 € / Pennylane 6 563,04 € — laissé en brouillon
+```
 
-## 4. `devis_lire` allégé
-- Paramètres `vue` (`resume` par défaut | `complet`) et `ligne_ids` (≤ 20).
-- `resume` : en-tête, totaux, arbre des lignes (id, parent, type, libellé, quantité, total ligne, nb heures/matériaux/libres), sans détail ni historique long.
-- `ligne_ids` : détail complet de ces lignes seulement. Coûts toujours masqués sans `devis.couts` (filtrage appliqué après la lecture actuelle, pas de nouveau lecteur de coûts).
-- Description de l'outil mise à jour ; objectif mesuré sur 9539-R1 : résumé < 15 000 caractères.
+### C. Fenêtre « Options retenues »
+```text
+Options du devis 9524-R1                          
+[ ] O1 Proposition 1 ............ 15 453,62 € HT
+[x] O2 Proposition 2 ............ 17 295,97 € HT
+[ ] O3 ... [ ] O4 ...
+Total HT sans options     6 563,05 €
+Total HT avec sélection  23 859,02 €   (remise appliquée)
+TVA 20 % · TTC ...
+Aucune e-mail ne sera envoyé. Le PDF Staffing (avec ces options) sera joint.
+                                   [Annuler]  [Transférer]
+```
 
-## 5. `par_unite`
-- Lecture de `devis_calculer_interne` et `src/lib/devis/calcul.ts` pour établir le comportement réel des heures, matériaux et lignes libres, puis description des champs `quantite` / `par_unite` dans `devis_remplir`. Calcul inchangé.
+## Fonctionnement serveur (fonction protégée, jeton jamais côté navigateur)
+1. Vérifie droit `devis.pennylane`, statut signé, client rapproché, pas déjà transféré ; **réserve** le transfert (verrou en base, un seul à la fois, second refus définitif si un devis Pennylane existe).
+2. Calcule le contenu via le calcul unique (`devis_lire_client` / `devis_calculer`) avec les options retenues traitées comme comprises.
+3. Vérifie la numérotation devis Pennylane (`GET /numberings`) ; sans numérotation → arrêt avant création.
+4. `POST /quotes` : `customer_id`, `date`, `deadline`, `pdf_invoice_subject` = libellé affaire, `external_reference` = « 9524-R1 », `invoice_line_sections` = zones, `invoice_lines` = objets (+ forfaits, transport, lignes libres) avec `label`, `description` = descriptif client, `quantity`, `unit`, `raw_currency_unit_price` = PU HT, `vat_rate` (FR_200 pour 20 % ; autre taux → table de correspondance, sinon arrêt), `section_rank` ; remise globale en `discount`.
+5. Relit le devis créé (`GET /quotes/:id`) : total HT Pennylane = total HT Staffing au centime, sinon alerte + statut Staffing « écart », devis Pennylane laissé en brouillon (jamais de changement de statut côté Pennylane par Staffing).
+6. Génère le PDF Staffing avec les options retenues, le dépose dans les exports existants et le joint (`POST /quotes/:id/appendices`).
+7. Enregistre identifiant, numéro, date, auteur, options retenues, totaux, et chaque étape dans le journal.
+- **Jamais** `send_by_email`, `update_status`, ni création de facture.
+- Reprise : si le serveur s'interrompt après création, une nouvelle tentative recherche d'abord un devis Pennylane portant le même `external_reference` et reprend (pas de doublon).
 
-## 6. Divers
-- `devis_creer_brouillon` : l'aperçu ne renvoie plus de `devis_id` (remplacé par « id attribué à la confirmation »).
-- `materiaux_proposer` : à vérifier d'abord le circuit « Prix proposés » existant (`materiaux-propositions.ts`, onglet admin). Crée seulement une proposition statut `propose` (désignation, unité, prix, fournisseur, source), jamais un article validé ; validation admin inchangée. Aperçu → confirmation, liste autorisée.
-- Démarrage ~20 s : mesure de l'initialisation (`/mcp` à froid vs à chaud) ; si démarrage à froid du serveur, dire s'il existe un levier simple (ex. imports lourds chargés à la demande dans les outils PDF/IA), sinon rien.
-- Liste des articles du catalogue sans prix exploitable (prix nul/vide), lecture seule, livrée dans le compte rendu ; aucun prix modifié.
+## Points à arbitrer
+1. Une remise en % ou en montant : envoi en `discount` global (à confirmer : type fixe ou pourcentage accepté par l'API).
+2. Option retenue avec enfants : envoyée comme **une section par option** avec ses objets (proposé), ou une seule ligne au total de l'option ?
+3. Unités Staffing (u, ens, m², forfait…) → liste des unités acceptées par Pennylane : correspondance à valider au premier essai.
+4. Faut-il lier le devis Pennylane à un modèle (`quote_template_id`) ? Proposé : non.
 
-## Base (migration additive, montrée avant application)
-- Ajout de `documents_affaire_televerser`, `materiaux_proposer`, `devis_ajouter_photos` aux listes autorisées (redéfinition explicite des fonctions lues à l'état actuel, sans réécriture dynamique).
-- Éventuelle fonction SECURITY DEFINER d'insertion de proposition / document : `REVOKE EXECUTE FROM PUBLIC, anon`, garde de dispatch MCP.
-- Bucket temporaire privé si nécessaire (créé par l'outil de stockage, pas par migration).
+## Scopes du jeton Pennylane
+- `quotes:all` — créer, relire, joindre le PDF.
+- `customers:readonly` — rapprochement.
+- `customers:all` — **seulement** si la création de client depuis Staffing est voulue ; sinon les clients se créent dans Pennylane.
+- Lecture de la numérotation : scope exact à vérifier au premier appel (documenté sans scope dédié) ; en cas de refus, contrôle remplacé par la vérification du numéro au retour.
+- Pas de `customer_invoices`, pas de `products` (lignes libres sans produit).
 
-## Tests
-- base64 : tronqué, mal rembourré, sans rembourrage, retours à la ligne, préfixe `data:`, base64url, longueur % 4 = 1.
-- empreinte identique aperçu base64 / confirmation `fichier_ref`, différente si un argument change ; `fichier_ref` inconnu ou expiré refusé.
-- journal : cause présente, aucun contenu de fichier.
-- `devis_lire` résumé vs complet vs `ligne_ids`, coûts masqués.
-- Essais réels sur un devis et des documents d'essai, retirés ensuite ; manifeste MCP régénéré ; rien publié.
+## À configurer dans Pennylane (par Gabin)
+- Ventes › Paramètres › **Numérotation des devis** (préfixe, compteur de départ) : sans elle, le devis est créé sans numéro.
+- Mentions légales, conditions de paiement, IBAN, logo sur les documents de vente.
+- **Comptes** : compte de produit (706 prestations / 701 selon le cas) et compte de TVA collectée 20 % par défaut pour les lignes sans produit ; nous ne passons pas `ledger_account_id`.
+- Clients : vérifier SIRET / TVA renseignés pour un rapprochement automatique.
+- Jeton développeur de la société (pas de cabinet) avec les scopes ci-dessus.
 
-## Ordre
-1 erreurs + reproduction → 4 → 5 → 6 (aperçu brouillon) → migration (relecture) → 2 → 3 → `materiaux_proposer` → tests, manifeste, compte rendu (écran / base / tests).
+## Technique
+- Fonctions serveur `createServerFn` + `requireSupabaseAuth`, droit vérifié en base, jeton lu dans le serveur uniquement ; client Pennylane avec délais, limitation de débit et pagination par curseur.
+- Règles pures testées : appariement clients, construction de la charge utile, sélection des options, contrôle des totaux.
+- Aucune donnée réelle modifiée pendant les essais : tests sur un devis d'essai, appel Pennylane réel seulement quand Gabin a mis le jeton et donne son accord.
+
+## Migration proposée (non appliquée)
+```sql
+-- Droit dédié
+INSERT INTO capabilities(key,label,description,category,sort_order)
+VALUES ('devis.pennylane','Transférer les devis vers Pennylane','Rapprochement clients et transfert des devis signés','devis',905)
+ON CONFLICT (key) DO NOTHING;
+INSERT INTO role_capabilities(role,capability,granted,scope) VALUES
+ ('admin','devis.pennylane',true,'all'),('commercial','devis.pennylane',true,'all')
+ON CONFLICT DO NOTHING;
+
+-- Rapprochement client (pennylane_id existe déjà)
+ALTER TABLE public.clients
+  ADD COLUMN IF NOT EXISTS pennylane_rapproche_le timestamptz,
+  ADD COLUMN IF NOT EXISTS pennylane_rapproche_par uuid,
+  ADD COLUMN IF NOT EXISTS pennylane_rapprochement_motif text;
+CREATE UNIQUE INDEX IF NOT EXISTS clients_pennylane_id_uniq ON public.clients(pennylane_id) WHERE pennylane_id IS NOT NULL;
+
+-- Transfert sur le devis
+ALTER TABLE public.devis
+  ADD COLUMN IF NOT EXISTS pennylane_quote_id text,
+  ADD COLUMN IF NOT EXISTS pennylane_numero text,
+  ADD COLUMN IF NOT EXISTS pennylane_transfere_le timestamptz,
+  ADD COLUMN IF NOT EXISTS pennylane_transfere_par uuid,
+  ADD COLUMN IF NOT EXISTS pennylane_options_retenues uuid[],
+  ADD COLUMN IF NOT EXISTS pennylane_total_ht numeric(12,2),
+  ADD COLUMN IF NOT EXISTS pennylane_etat text CHECK (pennylane_etat IN ('en_cours','transfere','ecart','echec'));
+CREATE UNIQUE INDEX IF NOT EXISTS devis_pennylane_quote_uniq ON public.devis(pennylane_quote_id) WHERE pennylane_quote_id IS NOT NULL;
+
+-- Journal
+CREATE TABLE public.devis_pennylane_journal (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  devis_id uuid NOT NULL REFERENCES public.devis(id),
+  etape text NOT NULL,             -- reservation, creation, relecture, piece_jointe, ecart, echec, rapprochement
+  detail jsonb NOT NULL DEFAULT '{}',  -- ids, totaux, code HTTP ; jamais le jeton ni de coût
+  auteur uuid DEFAULT auth.uid(),
+  cree_le timestamptz NOT NULL DEFAULT now()
+);
+GRANT SELECT ON public.devis_pennylane_journal TO authenticated;
+GRANT ALL ON public.devis_pennylane_journal TO service_role;
+ALTER TABLE public.devis_pennylane_journal ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pennylane_journal_lire ON public.devis_pennylane_journal FOR SELECT TO authenticated
+  USING (current_user_has_capability('devis.pennylane'));
+
+-- RPC (SECURITY DEFINER, REVOKE PUBLIC/anon, GRANT authenticated ; vérifient devis.pennylane, posent app.devis_rpc)
+--  devis_pennylane_reserver(_devis_id, _options uuid[]) : signé, client rapproché, options ∈ options du devis,
+--      pas de pennylane_quote_id, verrou FOR UPDATE, état 'en_cours', journal ; refuse si déjà transféré.
+--  devis_pennylane_enregistrer(_devis_id, _quote_id, _numero, _total_ht, _etat) : fin de transfert + journal.
+--  devis_pennylane_echec(_devis_id, _detail) : libère la réservation si aucun devis Pennylane créé.
+--  client_pennylane_rapprocher(_client_id, _pennylane_id, _motif) : écrit pennylane_id + traçabilité + journal ;
+--      refuse un identifiant déjà attribué à un autre client.
+```
