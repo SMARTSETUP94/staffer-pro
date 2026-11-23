@@ -1030,6 +1030,13 @@
       "when": 1795174227818,
       "tag": "0146_devis_client_email",
       "breakpoints": true
+    },
+    {
+      "idx": 147,
+      "version": "7",
+      "when": 1795471264401,
+      "tag": "0147_devis_bareme_versionne",
+      "breakpoints": true
     }
   ]
 }

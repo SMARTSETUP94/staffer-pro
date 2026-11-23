@@ -9047,6 +9047,25 @@ export type Database = {
         Args: { _devis_id: string }
         Returns: undefined
       }
+      devis_bareme_enregistrer: {
+        Args: {
+          _changements: Json
+          _confirmer_passe?: boolean
+          _date_effet: string
+        }
+        Returns: number
+      }
+      devis_bareme_historique: {
+        Args: { _cle?: string; _niveau?: string; _poste_id?: string }
+        Returns: {
+          auteur: string
+          cout: number
+          cree_le: string
+          date_effet: string
+          unite: string
+          vente: number
+        }[]
+      }
       devis_bibliotheque_rechercher: {
         Args: { _limit?: number; _q: string }
         Returns: {
