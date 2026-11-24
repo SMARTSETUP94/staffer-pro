@@ -1044,6 +1044,13 @@
       "when": 1795498038152,
       "tag": "0148_pennylane_transfert_devis",
       "breakpoints": true
+    },
+    {
+      "idx": 149,
+      "version": "7",
+      "when": 1795499076453,
+      "tag": "0149_content_lecture_comptes_avec_role",
+      "breakpoints": true
     }
   ]
 }
