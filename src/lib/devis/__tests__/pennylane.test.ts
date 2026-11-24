@@ -97,3 +97,35 @@ describe("Pennylane — 9524-R1 avec O2 retenue (données réelles, lecture seul
     expect(construirePennylane(v, new Set(), { customerId: 1, reference: "9524-R1" }).attendu.total_ht).toBe(6563.05);
   });
 });
+
+describe("Pennylane — option retenue avec enfants imbriqués (sans appel réseau)", () => {
+  const v = (): DonneesPennylane => ({
+    ...devis(), total_ht: 1000, remise_mode: "montant", remise_valeur: 33.33,
+    lignes: [
+      L({ id: "z", type: "zone", libelle: "Socle", ordre: 1 }),
+      L({ id: "o1", type: "objet", parent_id: "z", montant: 1000, libelle: "Table" }),
+      L({ id: "opt", type: "option", parent_id: "z", ordre: 2, libelle: "Mobilier", montant: 10.01 }),
+      L({ id: "a", type: "objet", parent_id: "opt", ordre: 1, montant: 333.33, libelle: "Chaise" }),
+      L({ id: "sz", type: "zone", parent_id: "opt", ordre: 2, libelle: "Éclairage" }),
+      L({ id: "b", type: "objet", parent_id: "sz", ordre: 1, montant: 0.07, libelle: "Ampoule" }),
+      L({ id: "c", type: "objet", parent_id: "sz", ordre: 2, montant: 199.99, libelle: "Lampe" }),
+      L({ id: "nr", type: "option", ordre: 3, libelle: "Non retenue", montant: 500 }),
+    ],
+  });
+  const { payload, attendu } = construirePennylane(v(), new Set(["opt"]), { customerId: 7, reference: "TEST-1" });
+  const centimes = (ls: typeof payload.invoice_lines) => ls.reduce((s, l) => s + Math.round(l.quantity * Number(l.raw_currency_unit_price) * 100), 0);
+  it("option = 10,01 + 333,33 + 0,07 + 199,99 = 543,40 € dans sa propre section", () => {
+    const s = payload.invoice_line_sections.find((x) => x.title.includes("Option : Mobilier"))!;
+    expect(s).toBeDefined();
+    expect(centimes(payload.invoice_lines.filter((l) => l.section_rank === s.rank))).toBe(54340);
+  });
+  it("total HT 1 543,40 €, remise 33,33 €, net 1 510,07 € au centime ; option non retenue absente", () => {
+    expect(attendu.total_ht).toBe(1543.4);
+    expect(centimes(payload.invoice_lines)).toBe(154340);
+    expect(payload.discount).toEqual({ type: "absolute", value: "33.33" });
+    expect(attendu.net_ht).toBe(1510.07);
+    expect(payload.invoice_lines.some((l) => l.label.includes("Non retenue"))).toBe(false);
+    expect(controleTotal(attendu.net_ht, "1510.07").ok).toBe(true);
+    expect(controleTotal(attendu.net_ht, "1510.08").ecart).toBe(0.01);
+  });
+});
