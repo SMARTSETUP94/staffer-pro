@@ -56,7 +56,7 @@ export function DevisMontantLigne({ affaireId }: { affaireId: string }) {
   const badge = ctx?.badges.get(affaireId);
   if (!ind) return null;
   if (ind.net_ht != null && ind.devis_id) {
-    const statut = badge ? libelleStatutDevis(badge.statut_redaction, badge.numero_progbat, badge.date_envoi, STATUT_LABEL).toLowerCase() : null;
+    const statut = badge ? `${libelleStatutDevis(badge.statut_redaction, badge.numero_progbat, badge.date_envoi, STATUT_LABEL).toLowerCase()}${badge.date_envoi ? " · envoyé" : ""}` : null;
     const devisId = ind.devis_id;
     return (
       <div className="mt-1 flex flex-wrap items-center gap-1.5" {...stop}>

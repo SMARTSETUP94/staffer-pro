@@ -116,12 +116,11 @@ describe("Transfert ProGBat", () => {
     expect(ecartTransfert(9510.99, 9510.99)).toBe(0);
     expect(ecartTransfert(9510.99, 9511)).toBe(0.01);
   });
-  it("transféré ProGBat et envoyé sont deux faits distincts ; un ancien « transfere » sans numéro reste « Envoyé »", () => {
-    expect(libelleStatutDevis("transfere", null, "2026-11-03")).toBe("Envoyé");
-    expect(libelleStatutDevis("transfere", "D-202611-0012", null)).toBe("Transféré ProGBat");
-    expect(libelleStatutDevis("transfere", "D-202611-0012", "2026-11-03")).toBe("Transféré ProGBat · envoyé");
-    expect(libelleStatutDevis("valide", null, null, { valide: "Validé" })).toBe("Validé");
+  it("le statut transféré garde un seul libellé ; envoi et numéro restent à part", () => {
+    expect(libelleStatutDevis("transfere", null, "2026-11-03")).toBe("Transféré");
+    expect(libelleStatutDevis("transfere", "D-202611-0012", "2026-11-03")).toBe("Transféré");
   });
+
 });
 
 describe("transfert ProGBat en deux temps", () => {
@@ -133,7 +132,7 @@ describe("transfert ProGBat en deux temps", () => {
   it("affiche ProGBat S003800 (brouillon) puis ProGBat D-202611-0012", () => {
     expect(libelleNumeroProgbat("S003800")).toBe("ProGBat S003800 (brouillon)");
     expect(libelleNumeroProgbat("D-202611-0012")).toBe("ProGBat D-202611-0012");
-    expect(libelleStatutDevis("transfere", "S003800", null)).toBe("Importé ProGBat (brouillon)");
+    expect(libelleStatutDevis("transfere", "S003800", null)).toBe("Transféré");
   });
   it("consignes : case des titres cochée, devis ProGBat neuf et vide", () => {
     const t = CONSIGNES_PROGBAT.join(" ");

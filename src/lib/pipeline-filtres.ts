@@ -1,13 +1,12 @@
+import { STATUT_DEVIS_LABEL, type StatutDevisVisible } from "@/lib/devis/statuts";
 /**
  * Filtres avancés du pipeline opportunités (module pur, testable).
  * Tous les filtres sont regroupés dans la fenêtre « Filtres » ; mémorisés par utilisateur.
  */
 import { dateUtile, estEnRetard } from "@/lib/pipeline-kanban";
 
-export type StatutDevisFiltre = "sans_devis" | "brouillon" | "a_valider" | "valide" | "transfere" | "envoye" | "remplace";
-export const STATUT_DEVIS_FILTRE_LABEL: Record<StatutDevisFiltre, string> = {
-  sans_devis: "Sans devis", brouillon: "Brouillon", a_valider: "Brouillon", valide: "Finalisé", transfere: "Transféré ProGBat", envoye: "Envoyé", remplace: "Remplacé",
-};
+export type StatutDevisFiltre = "sans_devis" | StatutDevisVisible;
+export const STATUT_DEVIS_FILTRE_LABEL: Record<StatutDevisFiltre, string> = { sans_devis: "Sans devis", ...STATUT_DEVIS_LABEL };
 export type PeriodeFiltre = "" | "ce_mois" | "mois_prochain" | "3_mois" | "libre";
 export const PERIODE_LABEL: Record<Exclude<PeriodeFiltre, "">, string> = {
   ce_mois: "Ce mois-ci", mois_prochain: "Mois prochain", "3_mois": "3 prochains mois", libre: "Dates libres",

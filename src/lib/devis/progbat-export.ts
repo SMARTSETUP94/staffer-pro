@@ -1,3 +1,4 @@
+import { libelleStatut } from "./statuts";
 /**
  * Export ProGBat d'un devis Staffing (module pur, testable sans base).
  * Construit uniquement depuis devis_progbat_donnees (vue client + heures par ligne) : aucun taux, coût,
@@ -188,12 +189,9 @@ export function ecartTransfert(netStaffing: number, totalProgbat: number) {
   return (cents(totalProgbat) - cents(netStaffing)) / 100;
 }
 
-/** Libellé de statut fondé sur les faits : transfert ProGBat (numéro) et envoi client (date) sont distincts. */
-export function libelleStatutDevis(st: string, numeroProgbat?: string | null, dateEnvoi?: string | null, base: Record<string, string> = {}) {
-  if (st !== "transfere") return base[st] ?? st;
-  if (numeroProgbat && NUMERO_PROGBAT_PROVISOIRE_RE.test(numeroProgbat)) return dateEnvoi ? "Importé ProGBat (brouillon) · envoyé" : "Importé ProGBat (brouillon)";
-  if (numeroProgbat) return dateEnvoi ? `Transféré ProGBat · envoyé` : "Transféré ProGBat";
-  return "Envoyé";
+/** Un seul libellé par statut ; numéro ProGBat et date d'envoi restent affichés à part. */
+export function libelleStatutDevis(st: string, _numeroProgbat?: string | null, _dateEnvoi?: string | null, base: Record<string, string> = {}) {
+  return base[st] ?? libelleStatut(st);
 }
 
 /** Référence affichée : « ProGBat S003800 (brouillon) » puis « ProGBat D-202611-0012 ». */

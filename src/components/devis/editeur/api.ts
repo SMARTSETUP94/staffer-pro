@@ -1,3 +1,4 @@
+import { STATUT_DEVIS_LABEL } from "@/lib/devis/statuts";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,9 +77,7 @@ export function usePatchCache(id: string) {
   return (mut: (d: DevisData) => DevisData) => qc.setQueryData<DevisData>(devisKey(id), (d) => (d ? mut(d) : d));
 }
 
-export const STATUT_LABEL: Record<DevisStatut, string> = {
-  brouillon: "Brouillon", a_valider: "Brouillon", valide: "Finalisé", transfere: "Envoyé", signe: "Signé", refuse: "Refusé", remplace: "Remplacé",
-};
+export const STATUT_LABEL: Record<DevisStatut, string> = STATUT_DEVIS_LABEL;
 export const TYPE_LABEL: Record<LigneType, string> = {
   zone: "Zone", objet: "Objet", commentaire: "Commentaire", chapitre_suivi: "Suivi et plans",
   chapitre_pose: "Pose", chapitre_depose: "Dépose", option: "Option",

@@ -1,10 +1,11 @@
 # Roadmap
 
 ## Finitions des devis — 24 novembre 2026
-- [ ] Présenter le plan et toutes les migrations proposées ; attendre l’accord avant application.
-- [ ] Contrôles avant soumission/finalisation, liens vers les lignes, confirmation des avertissements et journal commun UI/MCP.
+- [x] Plan et migration proposée présentés ; plan accepté.
+- [ ] Application de la migration : attend la réponse explicite de Gabin (question posée).
+- [ ] Règles pures « Avant de valider » testées (9 tests) ; reste fenêtre, journal et garde en base après migration. Contrôles avant soumission/finalisation, liens vers les lignes, confirmation des avertissements et journal commun UI/MCP.
 - [ ] CGV admin versionnées à date d’effet et option par devis, PDF selon la date du devis, sans texte juridique inventé.
-- [ ] Sept libellés de statuts distincts dans filtres, badges et MCP.
+- [x] Sept libellés de statuts distincts dans filtres, badges et MCP (statut_libelle) ; tests verts.
 - [ ] Écran admin Articles sans prix : recherche/famille, saisie différée groupée et historique, aucune saisie réelle par l’agent.
 - [ ] Vérifier les sources société du PDF ; tests, captures 390/1366 et PDF 9524-R1 inspectés sans export enregistré.
 - Relances commerciales puis listes de chantier IA : lots suivants, non démarrés.

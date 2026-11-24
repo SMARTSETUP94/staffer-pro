@@ -1,3 +1,4 @@
+import { libelleStatut } from "@/lib/devis/statuts";
 import { ToolError } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { compactResult, safeAuditArguments, type McpAppContext } from "./policy";
@@ -210,7 +211,7 @@ export async function readDevis(context: McpAppContext, name: DevisReadName, arg
       const active = affaireIds.length ? await context.db.from("affaires").select("id").in("id", affaireIds).eq("phase", "opportunite").is("archived_at", null).in("statut_opportunite", ["a_faire", "envoye", "a_l_etude", "presque_gagne"]) : { data: [], error: null };
       if (active.error) throw new ToolError("Pipeline indisponible");
       const activeIds = new Set((active.data ?? []).map(a => a.id));
-      data = { rows: rows.map(d => ({ ...d, ...(byId.get(d.id) ?? {}), retenu_pipeline: retainedIds.has(d.id) && activeIds.has(byId.get(d.id)?.affaire_id) })) };
+      data = { rows: rows.map(d => ({ ...d, ...(byId.get(d.id) ?? {}), statut_libelle: libelleStatut(d.statut_redaction), retenu_pipeline: retainedIds.has(d.id) && activeIds.has(byId.get(d.id)?.affaire_id) })) };
     } else if (name === "devis_lire") {
       const r = await context.db.rpc("devis_lire", { _devis_id: args.devis_id });
       if (r.error || !r.data) throw new ToolError("Devis introuvable ou accès refusé");
