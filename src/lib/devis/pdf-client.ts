@@ -33,6 +33,8 @@ export type DevisClient = {
   /** Encadré de mentions (paramètres entreprise), une ligne par mention ; défaut MENTIONS_MODELE. */
   mentions_devis?: string | null;
   cgv?: string | null;
+  joindre_cgv?: boolean | null;
+  cgv_date_effet?: string | null;
   logo_storage_path?: string | null;
   reglement?: { mode?: string | null; acompte_pct?: number | null; delai_jours?: number | null } | null;
 };

@@ -6,6 +6,6 @@ export function champsPdfManquants(vc: DevisClient): string[] {
   if (!vc.logo_storage_path?.trim()) manque.push('Logo');
   if (!vc.mentions_legales?.iban?.trim()) manque.push('IBAN');
   if (!vc.mentions_legales?.bic?.trim()) manque.push('BIC');
-  if (!vc.cgv?.trim()) manque.push('CGV');
+  if (vc.joindre_cgv !== false && !vc.cgv?.trim()) manque.push('CGV');
   return manque;
 }

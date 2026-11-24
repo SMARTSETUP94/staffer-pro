@@ -79,6 +79,7 @@ export function DevisArbre({ lignes, montants, racines, selected, readOnly, acti
             setOver({ id: l.id, pos: inside ? "inside" : "before" });
           }}
           onDrop={(e) => { e.preventDefault(); if (over) drop(l, over.pos); setOver(null); setDrag(null); }}
+          data-ligne-id={l.id}
           onClick={() => actions.select(l.id)}
           className={cn(
             "group flex cursor-pointer items-start gap-1 rounded px-1 py-1 text-sm [&>svg]:mt-0.5 [&>button]:mt-0.5",

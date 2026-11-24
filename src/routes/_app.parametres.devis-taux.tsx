@@ -15,6 +15,7 @@ import { estParametreHorsBareme } from "@/lib/devis/bareme";
 import { BaremeTableur } from "@/components/devis/bareme/BaremeTableur";
 import { DevisSupprimesCard } from "@/components/devis/DevisSupprimesCard";
 import { EntrepriseDevisParametres } from "@/components/devis/EntrepriseDevisParametres";
+import { CgvVersions } from "@/components/devis/parametres/CgvVersions";
 
 export const Route = createFileRoute("/_app/parametres/devis-taux")({
   beforeLoad: () => requireCapability("devis.parametres"),
@@ -60,7 +61,7 @@ function DevisTauxPage() {
         <h1 className="text-2xl font-semibold">Devis — barème coût et vente</h1>
         <p className="text-sm text-muted-foreground">
           Modifiez les cellules puis « Enregistrer » : chaque changement crée une version datée, les devis déjà rédigés gardent leurs prix.{" "}
-          <Link to="/parametres/devis-materiaux" className="underline">Catalogue matériaux →</Link>{" "}<Link to="/parametres/devis-modeles" className="underline">Modèles →</Link>{" "}<Link to="/parametres/pennylane" className="underline">Rapprochement Pennylane →</Link>
+          <Link to="/parametres/devis-materiaux" className="underline">Catalogue matériaux →</Link>{" "}<Link to="/parametres/devis-modeles" className="underline">Modèles →</Link>{" "}<Link to="/parametres/pennylane" className="underline">Rapprochement Pennylane →</Link>{" "}<Link to="/parametres/articles-sans-prix" className="underline">Articles sans prix →</Link>
         </p>
       </div>
       <BaremeTableur />
@@ -75,6 +76,7 @@ function DevisTauxPage() {
         </Collapsible>
       </Card>
       <EntrepriseDevisParametres />
+      <CgvVersions />
       <DevisSupprimesCard />
     </div>
   );

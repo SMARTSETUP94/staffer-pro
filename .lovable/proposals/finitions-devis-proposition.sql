@@ -1,4 +1,4 @@
--- PROPOSITION UNIQUEMENT — NE PAS APPLIQUER SANS ACCORD EXPLICITE DE GABIN.
+-- Finitions des devis, appliquée le 24/11/2026 après accord de Gabin et diff des redéfinitions.
 -- Finitions des devis, état lu le 24/11/2026. Aucun seed, backfill ni prix saisi.
 -- Les INSERT/UPDATE ci-dessous sont dans les fonctions ; leur définition seule ne les exécute pas.
 
@@ -114,7 +114,7 @@ BEGIN
     points:=points||jsonb_build_array(jsonb_build_object('code','CONTACT_ABSENT','niveau','avertissement','cible','contact','message','Aucun contact choisi'));
   END IF;
   IF nullif(trim(d.signataire_prenom),'') IS NULL OR nullif(trim(d.signataire_nom),'') IS NULL
-     OR nullif(trim(d.signataire_email),'') IS NULL OR nullif(trim(d.signataire_telephone),'') IS NULL THEN
+     OR nullif(trim(d.signataire_email),'') IS NULL THEN
     points:=points||jsonb_build_array(jsonb_build_object('code','SIGNATAIRE_INCOMPLET','niveau','avertissement','cible','signataire','message','Signataire incomplet'));
   END IF;
   -- Même somme récursive que prixLignes : montants propres calculés, pas de revalorisation.
@@ -179,6 +179,7 @@ CREATE FUNCTION public.devis_controles_accepter_interne(_devis_id uuid,_cible pu
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $function$
 DECLARE controles jsonb;
 BEGIN
+  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Aucun utilisateur identifié' USING ERRCODE='42501'; END IF;
   PERFORM 1 FROM public.devis WHERE id=_devis_id FOR UPDATE;
   controles:=public.devis_controles_lire(_devis_id);
   IF (controles->>'bloquants')::int>0 THEN RAISE EXCEPTION 'Contrôles bloquants' USING DETAIL=controles::text; END IF;
@@ -199,6 +200,9 @@ DECLARE controles jsonb;
 BEGIN
   IF NEW.statut_redaction IS DISTINCT FROM OLD.statut_redaction
     AND OLD.statut_redaction IN ('brouillon','a_valider') AND NEW.statut_redaction IN ('a_valider','valide') THEN
+    IF auth.uid() IS NULL THEN
+      RAISE EXCEPTION 'Passage en % refusé : aucun utilisateur identifié (les contrôles avant validation exigent une action humaine ou un appel Claude authentifié)', NEW.statut_redaction USING ERRCODE='42501';
+    END IF;
     controles:=public.devis_controles_lire(OLD.id);
     IF (controles->>'bloquants')::int>0 THEN RAISE EXCEPTION 'Contrôles bloquants' USING DETAIL=controles::text; END IF;
     IF NOT EXISTS(SELECT 1 FROM public.devis_controles_journal j WHERE j.devis_id=OLD.id

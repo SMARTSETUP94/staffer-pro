@@ -1051,6 +1051,20 @@
       "when": 1795499076453,
       "tag": "0149_content_lecture_comptes_avec_role",
       "breakpoints": true
+    },
+    {
+      "idx": 150,
+      "version": "7",
+      "when": 1795502292025,
+      "tag": "0150_devis_finitions_controles_cgv_prix",
+      "breakpoints": true
+    },
+    {
+      "idx": 151,
+      "version": "7",
+      "when": 1795502661629,
+      "tag": "0151_devis_controles_guard_nom_variable",
+      "breakpoints": true
     }
   ]
 }

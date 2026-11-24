@@ -43,4 +43,10 @@ describe("Avant de valider", () => {
     expect(peutFinaliser({ bloquants: 0, avertissements: 3 }, true)).toBe(true);
     expect(peutFinaliser({ bloquants: 1, avertissements: 0 }, true)).toBe(false);
   });
+  it("signataire sans téléphone : aucun avertissement (le PDF n'imprime que prénom, nom, e-mail)", () => {
+    expect(codes({ ...complet, signataire: { prenom: "Ana", nom: "Roy", email: "ana@client.fr", telephone: "" } })).not.toContain("avertissement:SIGNATAIRE_INCOMPLET");
+  });
+  it("signataire sans e-mail : avertissement", () => {
+    expect(codes({ ...complet, signataire: { prenom: "Ana", nom: "Roy", email: "", telephone: "0600000000" } })).toContain("avertissement:SIGNATAIRE_INCOMPLET");
+  });
 });

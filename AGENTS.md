@@ -67,3 +67,5 @@
 
 - Opportunity planning is read-only, separate from real load: reader opportunites_planning_lire + pure src/lib/opportunites/planning-previsionnel.ts; params are opp_plan_* keys in devis_parametres.
 
+- Quote transitions to a_valider/valide pass the database devis_controles_guard: blocking checks refuse, warnings need a same-transaction journal row from devis_controles_accepter_interne ("je confirme"), and a missing auth.uid() fails clearly; UI uses devis_finaliser/devis_soumettre with the read empreinte, MCP gets the list in preview and confirms only in conversation.
+- Client-PDF CGV come from dated devis_cgv_versions (version in force at date_devis) and only when devis.joindre_cgv; parametres_entreprise.cgv_devis is deprecated. Missing-price articles are priced only by admins through materiaux_sans_prix_enregistrer with materiaux_prix_historique.

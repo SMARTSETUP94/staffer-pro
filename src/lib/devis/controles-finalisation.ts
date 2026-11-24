@@ -37,7 +37,7 @@ export function controlesFinalisation(e: EntreeControles): { points: PointContro
   }
   if (!e.contactId) add({ code: "CONTACT_ABSENT", niveau: "avertissement", cible: "contact", message: "Aucun contact choisi" });
   const s = e.signataire;
-  if (vide(s.prenom) || vide(s.nom) || vide(s.email) || vide(s.telephone)) add({ code: "SIGNATAIRE_INCOMPLET", niveau: "avertissement", cible: "signataire", message: "Signataire incomplet" });
+  if (vide(s.prenom) || vide(s.nom) || vide(s.email)) add({ code: "SIGNATAIRE_INCOMPLET", niveau: "avertissement", cible: "signataire", message: "Signataire incomplet" });
 
   const prix = prixLignes(e.lignes, (id) => Number(e.montants[id] ?? 0));
   const enfants = (id: string) => e.lignes.filter((l) => l.parent_id === id);

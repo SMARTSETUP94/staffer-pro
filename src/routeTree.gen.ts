@@ -110,6 +110,7 @@ import { Route as AppLogistiqueVehiculesPlanningRouteImport } from './routes/_ap
 import { Route as AppOpportunitesIndexRouteImport } from './routes/_app.opportunites.index'
 import { Route as AppOpportunitesAffaireIdRouteImport } from './routes/_app.opportunites.$affaireId'
 import { Route as AppOpportunitesImportRouteImport } from './routes/_app.opportunites.import'
+import { Route as AppParametresArticlesSansPrixRouteImport } from './routes/_app.parametres.articles-sans-prix'
 import { Route as AppParametresAutorisationsVehiculesRouteImport } from './routes/_app.parametres.autorisations-vehicules'
 import { Route as AppParametresCompetencesEquipeRouteImport } from './routes/_app.parametres.competences-equipe'
 import { Route as AppParametresDevisMateriauxRouteImport } from './routes/_app.parametres.devis-materiaux'
@@ -666,6 +667,12 @@ const AppOpportunitesImportRoute = AppOpportunitesImportRouteImport.update({
   path: '/import',
   getParentRoute: () => AppOpportunitesRoute,
 } as any)
+const AppParametresArticlesSansPrixRoute =
+  AppParametresArticlesSansPrixRouteImport.update({
+    id: '/parametres/articles-sans-prix',
+    path: '/parametres/articles-sans-prix',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppParametresAutorisationsVehiculesRoute =
   AppParametresAutorisationsVehiculesRouteImport.update({
     id: '/parametres/autorisations-vehicules',
@@ -998,6 +1005,7 @@ export interface FileRoutesByFullPath {
   '/logistique/vehicules-planning': typeof AppLogistiqueVehiculesPlanningRoute
   '/opportunites/$affaireId': typeof AppOpportunitesAffaireIdRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
+  '/parametres/articles-sans-prix': typeof AppParametresArticlesSansPrixRoute
   '/parametres/autorisations-vehicules': typeof AppParametresAutorisationsVehiculesRoute
   '/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
   '/parametres/devis-materiaux': typeof AppParametresDevisMateriauxRoute
@@ -1138,6 +1146,7 @@ export interface FileRoutesByTo {
   '/logistique/vehicules-planning': typeof AppLogistiqueVehiculesPlanningRoute
   '/opportunites/$affaireId': typeof AppOpportunitesAffaireIdRoute
   '/opportunites/import': typeof AppOpportunitesImportRoute
+  '/parametres/articles-sans-prix': typeof AppParametresArticlesSansPrixRoute
   '/parametres/autorisations-vehicules': typeof AppParametresAutorisationsVehiculesRoute
   '/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
   '/parametres/devis-materiaux': typeof AppParametresDevisMateriauxRoute
@@ -1283,6 +1292,7 @@ export interface FileRoutesById {
   '/_app/logistique/vehicules-planning': typeof AppLogistiqueVehiculesPlanningRoute
   '/_app/opportunites/$affaireId': typeof AppOpportunitesAffaireIdRoute
   '/_app/opportunites/import': typeof AppOpportunitesImportRoute
+  '/_app/parametres/articles-sans-prix': typeof AppParametresArticlesSansPrixRoute
   '/_app/parametres/autorisations-vehicules': typeof AppParametresAutorisationsVehiculesRoute
   '/_app/parametres/competences-equipe': typeof AppParametresCompetencesEquipeRoute
   '/_app/parametres/devis-materiaux': typeof AppParametresDevisMateriauxRoute
@@ -1428,6 +1438,7 @@ export interface FileRouteTypes {
     | '/logistique/vehicules-planning'
     | '/opportunites/$affaireId'
     | '/opportunites/import'
+    | '/parametres/articles-sans-prix'
     | '/parametres/autorisations-vehicules'
     | '/parametres/competences-equipe'
     | '/parametres/devis-materiaux'
@@ -1568,6 +1579,7 @@ export interface FileRouteTypes {
     | '/logistique/vehicules-planning'
     | '/opportunites/$affaireId'
     | '/opportunites/import'
+    | '/parametres/articles-sans-prix'
     | '/parametres/autorisations-vehicules'
     | '/parametres/competences-equipe'
     | '/parametres/devis-materiaux'
@@ -1712,6 +1724,7 @@ export interface FileRouteTypes {
     | '/_app/logistique/vehicules-planning'
     | '/_app/opportunites/$affaireId'
     | '/_app/opportunites/import'
+    | '/_app/parametres/articles-sans-prix'
     | '/_app/parametres/autorisations-vehicules'
     | '/_app/parametres/competences-equipe'
     | '/_app/parametres/devis-materiaux'
@@ -2490,6 +2503,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOpportunitesImportRouteImport
       parentRoute: typeof AppOpportunitesRoute
     }
+    '/_app/parametres/articles-sans-prix': {
+      id: '/_app/parametres/articles-sans-prix'
+      path: '/parametres/articles-sans-prix'
+      fullPath: '/parametres/articles-sans-prix'
+      preLoaderRoute: typeof AppParametresArticlesSansPrixRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/parametres/autorisations-vehicules': {
       id: '/_app/parametres/autorisations-vehicules'
       path: '/parametres/autorisations-vehicules'
@@ -2975,6 +2995,7 @@ interface AppRouteChildren {
   AppLogistiqueImprimerRoute: typeof AppLogistiqueImprimerRoute
   AppLogistiqueImprimerEquipesRoute: typeof AppLogistiqueImprimerEquipesRoute
   AppLogistiqueVehiculesPlanningRoute: typeof AppLogistiqueVehiculesPlanningRoute
+  AppParametresArticlesSansPrixRoute: typeof AppParametresArticlesSansPrixRoute
   AppParametresAutorisationsVehiculesRoute: typeof AppParametresAutorisationsVehiculesRoute
   AppParametresCompetencesEquipeRoute: typeof AppParametresCompetencesEquipeRoute
   AppParametresDevisMateriauxRoute: typeof AppParametresDevisMateriauxRoute
@@ -3076,6 +3097,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppLogistiqueImprimerRoute: AppLogistiqueImprimerRoute,
   AppLogistiqueImprimerEquipesRoute: AppLogistiqueImprimerEquipesRoute,
   AppLogistiqueVehiculesPlanningRoute: AppLogistiqueVehiculesPlanningRoute,
+  AppParametresArticlesSansPrixRoute: AppParametresArticlesSansPrixRoute,
   AppParametresAutorisationsVehiculesRoute:
     AppParametresAutorisationsVehiculesRoute,
   AppParametresCompetencesEquipeRoute: AppParametresCompetencesEquipeRoute,

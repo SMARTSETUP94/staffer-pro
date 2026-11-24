@@ -3006,7 +3006,7 @@
             "note": {
               "type": "string",
               "maxLength": 8000,
-              "description": "Ce qui reste à confirmer par le chargé d'affaires."
+              "description": "Ce qui reste à confirmer par le chargé d'affaires. Si des avertissements sont confirmés, la note doit contenir « je confirme »."
             },
             "mode": {
               "type": "string",
@@ -3015,6 +3015,10 @@
                 "conversation"
               ],
               "description": "autonomie = tâche planifiée ou initiative de Claude : refusé si un humain a repris le brouillon. conversation = l'utilisateur demande explicitement dans la conversation de compléter ce devis."
+            },
+            "confirmer_avertissements": {
+              "type": "boolean",
+              "description": "true seulement après accord explicite de l'utilisateur, en mode conversation, sur la liste « Avant de valider » renvoyée par l'aperçu."
             },
             "confirmation_id": {
               "type": "string",

@@ -28,7 +28,8 @@ import { ExportPdfDialog, EnvoiEmailDialog } from "@/components/devis/DevisPdfEn
 import { ProgbatExportDialog, EnregistrerTransfertDialog } from "@/components/devis/ProgbatTransfert";
 import { libelleNumeroProgbat, libelleStatutDevis, NUMERO_PROGBAT_PROVISOIRE_RE } from "@/lib/devis/progbat-export";
 import { BibliothequeDialog } from "./BibliothequeDialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AvantValiderDialog } from "./AvantValiderDialog";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ChevronDown, MoreHorizontal } from "lucide-react";
 import { SupprimerDevisDialog, SUPPRESSION_REFUSEE, devisSupprimable } from "@/components/devis/SupprimerDevis";
 import { useAutosave } from "./useAutosave";
@@ -65,6 +66,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
   const [modele, setModele] = useState({ nom: "", categorie: "", description: "" });
   const [envoiDlg, setEnvoiDlg] = useState(false);
   const [pdfDlg, setPdfDlg] = useState(false);
+  const [avantValider, setAvantValider] = useState<null | "valide" | "a_valider">(null);
   const [pgDlg, setPgDlg] = useState(false);
   const [trDlg, setTrDlg] = useState(false);
   const [mailDlg, setMailDlg] = useState(false);
@@ -257,7 +259,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
           const valideOuEnvoye = ["valide", "transfere"].includes(st);
           const peutEnvoyer = (st === "valide" || (st === "transfere" && !!d.devis.numero_progbat && !d.devis.date_envoi)) && v && aff;
           const ouvrirEnvoi = () => { setEnvoiDate(new Date().toISOString().slice(0, 10)); setEnvoiDlg(true); };
-          const cta = (st === "brouillon" || st === "a_valider") && v ? <Button size="sm" onClick={() => void changerStatut("valide")}><CheckCircle2 className="mr-1 h-3.5 w-3.5" />Finaliser le devis</Button>
+          const cta = (st === "brouillon" || st === "a_valider") && v ? <Button size="sm" onClick={() => setAvantValider("valide")}><CheckCircle2 className="mr-1 h-3.5 w-3.5" />Finaliser le devis</Button>
             : peutEnvoyer ? <Button size="sm" onClick={ouvrirEnvoi}><Mail className="mr-1 h-3.5 w-3.5" />Marquer envoyé</Button>
             : valideOuEnvoye && v && aff && nonSigne ? <Button size="sm" onClick={() => void clientSigne()}><PenLine className="mr-1 h-3.5 w-3.5" />Client signé</Button>
             : null;
@@ -267,7 +269,8 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               <DropdownMenuContent align="end" className="w-60">
                 <DropdownMenuLabel>Changer le statut</DropdownMenuLabel>
                 {st === "a_valider" && e && <DropdownMenuItem onClick={() => void changerStatut("brouillon")}>Brouillon</DropdownMenuItem>}
-                {(st === "brouillon" || st === "a_valider") && v && <DropdownMenuItem onClick={() => void changerStatut("valide")}>Finalisé</DropdownMenuItem>}
+                {st === "brouillon" && e && <DropdownMenuItem onClick={() => setAvantValider("a_valider")}>À valider…</DropdownMenuItem>}
+                {(st === "brouillon" || st === "a_valider") && v && <DropdownMenuItem onClick={() => setAvantValider("valide")}>Finalisé…</DropdownMenuItem>}
                 {peutEnvoyer && <DropdownMenuItem onClick={ouvrirEnvoi}>Envoyé…</DropdownMenuItem>}
                 {st === "transfere" && NUMERO_PROGBAT_PROVISOIRE_RE.test(d.devis.numero_progbat ?? "") && v && <DropdownMenuItem onClick={() => setTrDlg(true)}>Numéro définitif ProGBat…</DropdownMenuItem>}
                 {valideOuEnvoye && v && aff && nonSigne && <DropdownMenuItem onClick={() => void clientSigne()}>Signé</DropdownMenuItem>}
@@ -284,6 +287,10 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
                 <DropdownMenuLabel>Exports et partage</DropdownMenuLabel>
                 <DropdownMenuItem onClick={() => setVueClient(true)}><Eye className="mr-2 h-4 w-4" />Vue client</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setPdfDlg(true)}><FileDown className="mr-2 h-4 w-4" />Exporter en PDF</DropdownMenuItem>
+                <DropdownMenuCheckboxItem checked={d.devis.joindre_cgv !== false} disabled={st !== "brouillon" || !e}
+                  onCheckedChange={(c) => void call("devis_joindre_cgv_modifier", { _devis_id: devisId, _joindre: c === true })}>
+                  Joindre les CGV au PDF{st !== "brouillon" ? " (brouillon seulement)" : ""}
+                </DropdownMenuCheckboxItem>
                 {v && aff && <DropdownMenuItem disabled={!valideOuEnvoye} onClick={() => setMailDlg(true)}><Mail className="mr-2 h-4 w-4" />Envoyer par email{!valideOuEnvoye && " (après finalisation)"}</DropdownMenuItem>}
                 {aff && <DropdownMenuItem disabled={!valideOuEnvoye} onClick={() => setPgDlg(true)}><FileDown className="mr-2 h-4 w-4" />Vers ProGBat{!valideOuEnvoye && " (après finalisation)"}</DropdownMenuItem>}
                 <DropdownMenuSeparator />
@@ -314,12 +321,17 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
             {d.devis.numero_progbat && <p className="mt-1 text-xs">Réf. <strong>{libelleNumeroProgbat(d.devis.numero_progbat)}</strong>{d.devis.transfere_progbat_le ? ` · transféré le ${new Date(d.devis.transfere_progbat_le).toLocaleDateString("fr-FR")}` : ""}</p>}
             {!d.devis.est_modele && <PennylaneTransfert devisId={devisId} statut={st} />}
           </div>
-          {!d.devis.est_modele && (
+          {!d.devis.est_modele && (<div id="devis-interlocuteurs">
             <DevisInterlocuteurs devisId={devisId} affaireId={d.devis.affaire_id} codeChantier={d.affaire?.numero ?? d.affaire?.code_opportunite ?? ""}
               statut={st} peutEcrire={d.droits.ecrire} client={d.client} contactId={d.devis.contact_id}
               clientFinal={d.client_final ?? null} enregistrer={setEntete} rafraichir={() => q.refetch()}
               changerClient={async (id) => { await setEntete({ client_id: id }); if (d.affaire) setAskMajClient({ id }); }} />
-          )}
+          </div>)}
+          {avantValider && <AvantValiderDialog devisId={devisId} cible={avantValider} open onOpenChange={(o) => { if (!o) setAvantValider(null); }}
+            onAller={({ cible, ligneId }) => {
+              if (ligneId) { setSelected(ligneId); setTimeout(() => document.querySelector(`[data-ligne-id="${ligneId}"]`)?.scrollIntoView({ block: "center" }), 50); }
+              else if (cible === "totaux" || cible === "dates") window.scrollTo({ top: 0 }); else document.getElementById("devis-interlocuteurs")?.scrollIntoView({ block: "center" });
+            }} />}
           {d.devis.est_modele && (
             <div className="grid flex-1 gap-2 md:grid-cols-3">
               <Input defaultValue={d.devis.modele_nom ?? ""} placeholder="Nom" disabled={readOnly} onBlur={(e) => void setEntete({ modele_nom: e.target.value })} />

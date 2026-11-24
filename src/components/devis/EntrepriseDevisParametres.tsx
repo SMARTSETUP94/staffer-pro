@@ -42,7 +42,7 @@ function Formulaire({ entreprise, refresh }: { entreprise: Entreprise; refresh: 
   };
   return <div className="space-y-4"><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{champs.map(([key, label]) => <div key={key} className="space-y-1"><Label htmlFor={`entreprise-${key}`}>{label}</Label><Input id={`entreprise-${key}`} value={value(key)} autoComplete="off" onChange={(e) => setPatch((p) => ({ ...p, [key]: e.target.value }))} /></div>)}</div>
     <LogoEntrepriseUpload entrepriseId={entreprise.id} path={entreprise.logo_storage_path} refresh={refresh} />
-    {([["mentions_devis", "Mentions du devis"], ["cgv_devis", "Conditions générales de vente"]] as const).map(([key, label]) => <div key={key} className="space-y-1"><Label htmlFor={`entreprise-${key}`}>{label}</Label><Textarea id={`entreprise-${key}`} rows={key === "cgv_devis" ? 8 : 4} value={value(key)} onChange={(e) => setPatch((p) => ({ ...p, [key]: e.target.value }))} /></div>)}
+    {([["mentions_devis", "Mentions du devis"]] as const).map(([key, label]) => <div key={key} className="space-y-1"><Label htmlFor={`entreprise-${key}`}>{label}</Label><Textarea id={`entreprise-${key}`} rows={4} value={value(key)} onChange={(e) => setPatch((p) => ({ ...p, [key]: e.target.value }))} /></div>)}
     <Button disabled={busy || !Object.keys(patch).length} onClick={() => void save()}><Save className="mr-2 h-4 w-4" />Enregistrer l’entreprise</Button>
   </div>;
 }

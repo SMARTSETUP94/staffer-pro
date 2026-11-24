@@ -121,7 +121,8 @@ export const devisSchemas = {
     total_progbat: num.min(0).describe("Total net HT relu dans ProGBat, en euros."),
     motif: z.string().trim().min(1).max(1000).optional().describe("Obligatoire si le total ProGBat diffère du net HT Staffing au centime."),
     mode: z.enum(["autonomie", "conversation"]).describe("conversation obligatoire, avec l'accord explicite de l'utilisateur ; autonomie refusée."), ...confirmationSchema },
-  devis_soumettre: { devis_id: uuid, note: z.string().max(8000).describe("Ce qui reste à confirmer par le chargé d'affaires."), mode, ...confirmationSchema },
+  devis_soumettre: { devis_id: uuid, note: z.string().max(8000).describe("Ce qui reste à confirmer par le chargé d'affaires. Si des avertissements sont confirmés, la note doit contenir « je confirme »."), mode,
+    confirmer_avertissements: z.boolean().optional().describe("true seulement après accord explicite de l'utilisateur, en mode conversation, sur la liste « Avant de valider » renvoyée par l'aperçu."), ...confirmationSchema },
 } as const;
 
 export function devisReadEnabled(context: McpAppContext, name: DevisReadName) { return context.caps.has(DEVIS_READ_CAPS[name]); }
@@ -425,6 +426,17 @@ export async function runDevisWrite(context: McpAppContext, name: DevisWriteName
     const depots = fichiers ?? (fichier ? [fichier] : []);
     mesure.taille_octets = depots.reduce((n, f) => n + f.bytes.length, 0) || undefined;
     const hash = await argumentsHash(hashArgs);
+    if (name === "devis_soumettre") {
+      etape = "contrôles avant validation";
+      const ctl = await context.db.rpc("devis_controles_lire", { _devis_id: args.devis_id });
+      if (ctl.error) throw echec("Contrôles indisponibles", ctl.error);
+      const c = ctl.data as { points: { niveau: string; message: string }[]; bloquants: number; avertissements: number; empreinte: string };
+      const liste = c.points.map((p) => `${p.niveau === "bloquant" ? "BLOQUANT" : "avertissement"} : ${p.message}`).join(" ; ");
+      if (c.bloquants > 0) throw new ToolError(`Avant de valider — à corriger : ${liste}`);
+      if (c.avertissements > 0 && args.confirmer_avertissements !== true)
+        throw new ToolError(`Avant de valider — ${c.avertissements} avertissement(s) : ${liste}. Montrez cette liste à l'utilisateur ; s'il accepte explicitement, renvoyez en mode conversation avec confirmer_avertissements = true et « je confirme » dans la note.`);
+      (payload as Record<string, unknown>).empreinte_controles = c.empreinte;
+    }
     etape = "simulation";
     const sim = await context.db.rpc("devis_mcp_simuler", { _tool: dbTool, _payload: payload as never, _affaire_id: affaireId });
     if (sim.error) throw echec("Aperçu indisponible", sim.error);

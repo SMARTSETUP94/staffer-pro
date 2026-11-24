@@ -2326,6 +2326,7 @@ export type Database = {
           fichier_source: string | null
           heures_be_fige: number | null
           id: string
+          joindre_cgv: boolean
           libelle: string | null
           livre_le: string | null
           livre_par: string | null
@@ -2409,6 +2410,7 @@ export type Database = {
           fichier_source?: string | null
           heures_be_fige?: number | null
           id?: string
+          joindre_cgv?: boolean
           libelle?: string | null
           livre_le?: string | null
           livre_par?: string | null
@@ -2492,6 +2494,7 @@ export type Database = {
           fichier_source?: string | null
           heures_be_fige?: number | null
           id?: string
+          joindre_cgv?: boolean
           libelle?: string | null
           livre_le?: string | null
           livre_par?: string | null
@@ -2622,6 +2625,102 @@ export type Database = {
           {
             foreignKeyName: "devis_version_precedente_id_fkey"
             columns: ["version_precedente_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["devis_id"]
+          },
+        ]
+      }
+      devis_cgv_versions: {
+        Row: {
+          created_at: string
+          created_by: string
+          date_effet: string
+          id: string
+          texte: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          date_effet: string
+          id?: string
+          texte: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          date_effet?: string
+          id?: string
+          texte?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_cgv_versions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      devis_controles_journal: {
+        Row: {
+          auteur: string
+          avertissements_confirmes: boolean
+          cible: Database["public"]["Enums"]["devis_redaction_statut"]
+          confirmation: string | null
+          controles: Json
+          created_at: string
+          devis_id: string
+          empreinte: string
+          id: string
+          source: string
+          transaction_id: number
+        }
+        Insert: {
+          auteur: string
+          avertissements_confirmes?: boolean
+          cible: Database["public"]["Enums"]["devis_redaction_statut"]
+          confirmation?: string | null
+          controles: Json
+          created_at?: string
+          devis_id: string
+          empreinte: string
+          id?: string
+          source: string
+          transaction_id: number
+        }
+        Update: {
+          auteur?: string
+          avertissements_confirmes?: boolean
+          cible?: Database["public"]["Enums"]["devis_redaction_statut"]
+          confirmation?: string | null
+          controles?: Json
+          created_at?: string
+          devis_id?: string
+          empreinte?: string
+          id?: string
+          source?: string
+          transaction_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devis_controles_journal_auteur_fkey"
+            columns: ["auteur"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_controles_journal_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "devis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_controles_journal_devis_id_fkey"
+            columns: ["devis_id"]
             isOneToOne: false
             referencedRelation: "v_devis_consommation"
             referencedColumns: ["devis_id"]
@@ -6028,6 +6127,57 @@ export type Database = {
           },
         ]
       }
+      materiaux_prix_historique: {
+        Row: {
+          ancien_prix: number | null
+          ancienne_date_tarif: string | null
+          auteur: string
+          created_at: string
+          id: string
+          lot_id: string
+          materiau_id: string
+          nouveau_prix: number
+          nouvelle_date_tarif: string
+        }
+        Insert: {
+          ancien_prix?: number | null
+          ancienne_date_tarif?: string | null
+          auteur: string
+          created_at?: string
+          id?: string
+          lot_id: string
+          materiau_id: string
+          nouveau_prix: number
+          nouvelle_date_tarif: string
+        }
+        Update: {
+          ancien_prix?: number | null
+          ancienne_date_tarif?: string | null
+          auteur?: string
+          created_at?: string
+          id?: string
+          lot_id?: string
+          materiau_id?: string
+          nouveau_prix?: number
+          nouvelle_date_tarif?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materiaux_prix_historique_auteur_fkey"
+            columns: ["auteur"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materiaux_prix_historique_materiau_id_fkey"
+            columns: ["materiau_id"]
+            isOneToOne: false
+            referencedRelation: "materiaux_catalogue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       materiaux_synonymes: {
         Row: {
           created_at: string
@@ -9169,6 +9319,14 @@ export type Database = {
       }
       devis_calculer: { Args: { _devis_id: string }; Returns: Json }
       devis_calculer_interne: { Args: { _devis_id: string }; Returns: Json }
+      devis_cgv_enregistrer: {
+        Args: {
+          _confirmer_passe?: boolean
+          _date_effet: string
+          _texte: string
+        }
+        Returns: string
+      }
       devis_charge_affaires_actuel: {
         Args: { _devis_id: string }
         Returns: {
@@ -9229,6 +9387,16 @@ export type Database = {
           telephone: string
         }[]
       }
+      devis_controles_accepter_interne: {
+        Args: {
+          _cible: Database["public"]["Enums"]["devis_redaction_statut"]
+          _confirmer: boolean
+          _devis_id: string
+          _empreinte: string
+        }
+        Returns: undefined
+      }
+      devis_controles_lire: { Args: { _devis_id: string }; Returns: Json }
       devis_copier_sous_arbre: {
         Args: {
           _dst_devis: string
@@ -9305,12 +9473,24 @@ export type Database = {
         Returns: Json
       }
       devis_exports_lister: { Args: { _devis_id: string }; Returns: Json }
+      devis_finaliser: {
+        Args: {
+          _confirmer_avertissements: boolean
+          _devis_id: string
+          _empreinte_controles: string
+        }
+        Returns: undefined
+      }
       devis_heure_enregistrer: {
         Args: { _h: Json; _ligne_id: string }
         Returns: string
       }
       devis_heures_be: { Args: { _devis_id: string }; Returns: number }
       devis_heures_be_net: { Args: { _devis_id: string }; Returns: number }
+      devis_joindre_cgv_modifier: {
+        Args: { _devis_id: string; _joindre: boolean }
+        Returns: undefined
+      }
       devis_libre_enregistrer: {
         Args: { _f: Json; _ligne_id: string }
         Returns: string
@@ -9578,10 +9758,17 @@ export type Database = {
         Args: { _devis_id: string }
         Returns: Json
       }
-      devis_soumettre: {
-        Args: { _devis_id: string; _note: string }
-        Returns: Json
-      }
+      devis_soumettre:
+        | { Args: { _devis_id: string; _note: string }; Returns: Json }
+        | {
+            Args: {
+              _confirmer_avertissements: boolean
+              _devis_id: string
+              _empreinte_controles: string
+              _note: string
+            }
+            Returns: Json
+          }
       devis_statut_changer: {
         Args: {
           _devis_id: string
@@ -10120,6 +10307,19 @@ export type Database = {
         }[]
       }
       materiaux_reprendre_hors_catalogue: { Args: never; Returns: Json }
+      materiaux_sans_prix_enregistrer: {
+        Args: { _changements: Json; _date_tarif: string }
+        Returns: Json
+      }
+      materiaux_sans_prix_lire: {
+        Args: {
+          _famille?: string
+          _limit?: number
+          _offset?: number
+          _recherche?: string
+        }
+        Returns: Json
+      }
       mcp_assert_legacy_oauth_write: {
         Args: { _fn: string }
         Returns: undefined
