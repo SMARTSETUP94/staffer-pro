@@ -27,8 +27,10 @@ export async function chargerImages(sb: SupabaseClient<Database>, vc: DevisClien
   return out;
 }
 
-export async function exporterDevisPdf(sb: SupabaseClient<Database>, devisId: string, niveau: NiveauPdf) {
-  const vc = await lireDevisClient(sb, devisId);
+/** `transformer` : variante du contenu (ex. options retenues pour Pennylane), même rendu et même historique. */
+export async function exporterDevisPdf(sb: SupabaseClient<Database>, devisId: string, niveau: NiveauPdf, transformer?: (vc: DevisClient) => DevisClient) {
+  const lu = await lireDevisClient(sb, devisId);
+  const vc = transformer ? { ...transformer(lu), numero_progbat: lu.numero_progbat } : lu;
   const images = niveau === "detaille" ? await chargerImages(sb, vc) : {};
   let logo: ImagePdf | null = null;
   if (vc.logo_storage_path) {

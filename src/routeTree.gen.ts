@@ -117,6 +117,7 @@ import { Route as AppParametresDevisTauxRouteImport } from './routes/_app.parame
 import { Route as AppParametresFormulaireLogistiqueRouteImport } from './routes/_app.parametres.formulaire-logistique'
 import { Route as AppParametresLieuxRouteImport } from './routes/_app.parametres.lieux'
 import { Route as AppParametresMetiersRouteImport } from './routes/_app.parametres.metiers'
+import { Route as AppParametresPennylaneRouteImport } from './routes/_app.parametres.pennylane'
 import { Route as AppParametresPostesRouteImport } from './routes/_app.parametres.postes'
 import { Route as AppParametresReferentsRolesRouteImport } from './routes/_app.parametres.referents-roles'
 import { Route as AppParametresRolesFabricationRouteImport } from './routes/_app.parametres.roles-fabrication'
@@ -704,6 +705,11 @@ const AppParametresMetiersRoute = AppParametresMetiersRouteImport.update({
   path: '/parametres/metiers',
   getParentRoute: () => AppRoute,
 } as any)
+const AppParametresPennylaneRoute = AppParametresPennylaneRouteImport.update({
+  id: '/parametres/pennylane',
+  path: '/parametres/pennylane',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppParametresPostesRoute = AppParametresPostesRouteImport.update({
   id: '/parametres/postes',
   path: '/parametres/postes',
@@ -999,6 +1005,7 @@ export interface FileRoutesByFullPath {
   '/parametres/formulaire-logistique': typeof AppParametresFormulaireLogistiqueRoute
   '/parametres/lieux': typeof AppParametresLieuxRoute
   '/parametres/metiers': typeof AppParametresMetiersRoute
+  '/parametres/pennylane': typeof AppParametresPennylaneRoute
   '/parametres/postes': typeof AppParametresPostesRoute
   '/parametres/referents-roles': typeof AppParametresReferentsRolesRoute
   '/parametres/roles-fabrication': typeof AppParametresRolesFabricationRoute
@@ -1138,6 +1145,7 @@ export interface FileRoutesByTo {
   '/parametres/formulaire-logistique': typeof AppParametresFormulaireLogistiqueRoute
   '/parametres/lieux': typeof AppParametresLieuxRoute
   '/parametres/metiers': typeof AppParametresMetiersRoute
+  '/parametres/pennylane': typeof AppParametresPennylaneRoute
   '/parametres/postes': typeof AppParametresPostesRoute
   '/parametres/referents-roles': typeof AppParametresReferentsRolesRoute
   '/parametres/roles-fabrication': typeof AppParametresRolesFabricationRoute
@@ -1282,6 +1290,7 @@ export interface FileRoutesById {
   '/_app/parametres/formulaire-logistique': typeof AppParametresFormulaireLogistiqueRoute
   '/_app/parametres/lieux': typeof AppParametresLieuxRoute
   '/_app/parametres/metiers': typeof AppParametresMetiersRoute
+  '/_app/parametres/pennylane': typeof AppParametresPennylaneRoute
   '/_app/parametres/postes': typeof AppParametresPostesRoute
   '/_app/parametres/referents-roles': typeof AppParametresReferentsRolesRoute
   '/_app/parametres/roles-fabrication': typeof AppParametresRolesFabricationRoute
@@ -1426,6 +1435,7 @@ export interface FileRouteTypes {
     | '/parametres/formulaire-logistique'
     | '/parametres/lieux'
     | '/parametres/metiers'
+    | '/parametres/pennylane'
     | '/parametres/postes'
     | '/parametres/referents-roles'
     | '/parametres/roles-fabrication'
@@ -1565,6 +1575,7 @@ export interface FileRouteTypes {
     | '/parametres/formulaire-logistique'
     | '/parametres/lieux'
     | '/parametres/metiers'
+    | '/parametres/pennylane'
     | '/parametres/postes'
     | '/parametres/referents-roles'
     | '/parametres/roles-fabrication'
@@ -1708,6 +1719,7 @@ export interface FileRouteTypes {
     | '/_app/parametres/formulaire-logistique'
     | '/_app/parametres/lieux'
     | '/_app/parametres/metiers'
+    | '/_app/parametres/pennylane'
     | '/_app/parametres/postes'
     | '/_app/parametres/referents-roles'
     | '/_app/parametres/roles-fabrication'
@@ -2527,6 +2539,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppParametresMetiersRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/parametres/pennylane': {
+      id: '/_app/parametres/pennylane'
+      path: '/parametres/pennylane'
+      fullPath: '/parametres/pennylane'
+      preLoaderRoute: typeof AppParametresPennylaneRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/parametres/postes': {
       id: '/_app/parametres/postes'
       path: '/parametres/postes'
@@ -2963,6 +2982,7 @@ interface AppRouteChildren {
   AppParametresFormulaireLogistiqueRoute: typeof AppParametresFormulaireLogistiqueRoute
   AppParametresLieuxRoute: typeof AppParametresLieuxRoute
   AppParametresMetiersRoute: typeof AppParametresMetiersRoute
+  AppParametresPennylaneRoute: typeof AppParametresPennylaneRoute
   AppParametresPostesRoute: typeof AppParametresPostesRoute
   AppParametresReferentsRolesRoute: typeof AppParametresReferentsRolesRoute
   AppParametresRolesFabricationRoute: typeof AppParametresRolesFabricationRoute
@@ -3065,6 +3085,7 @@ const AppRouteChildren: AppRouteChildren = {
     AppParametresFormulaireLogistiqueRoute,
   AppParametresLieuxRoute: AppParametresLieuxRoute,
   AppParametresMetiersRoute: AppParametresMetiersRoute,
+  AppParametresPennylaneRoute: AppParametresPennylaneRoute,
   AppParametresPostesRoute: AppParametresPostesRoute,
   AppParametresReferentsRolesRoute: AppParametresReferentsRolesRoute,
   AppParametresRolesFabricationRoute: AppParametresRolesFabricationRoute,

@@ -1853,6 +1853,9 @@ export type Database = {
           pays: string
           pays_livraison: string | null
           pennylane_id: string | null
+          pennylane_rapproche_le: string | null
+          pennylane_rapproche_par: string | null
+          pennylane_rapprochement_motif: string | null
           plateforme_facturation: string | null
           prenom_facturation: string | null
           raison_sociale: string | null
@@ -1900,6 +1903,9 @@ export type Database = {
           pays?: string
           pays_livraison?: string | null
           pennylane_id?: string | null
+          pennylane_rapproche_le?: string | null
+          pennylane_rapproche_par?: string | null
+          pennylane_rapprochement_motif?: string | null
           plateforme_facturation?: string | null
           prenom_facturation?: string | null
           raison_sociale?: string | null
@@ -1947,6 +1953,9 @@ export type Database = {
           pays?: string
           pays_livraison?: string | null
           pennylane_id?: string | null
+          pennylane_rapproche_le?: string | null
+          pennylane_rapproche_par?: string | null
+          pennylane_rapprochement_motif?: string | null
           plateforme_facturation?: string | null
           prenom_facturation?: string | null
           raison_sociale?: string | null
@@ -2334,6 +2343,14 @@ export type Database = {
           numero: string
           numero_progbat: string | null
           numero_progbat_provisoire: string | null
+          pennylane_etat: string | null
+          pennylane_lien: string | null
+          pennylane_numero: string | null
+          pennylane_options_retenues: string[] | null
+          pennylane_quote_id: string | null
+          pennylane_total_ht: number | null
+          pennylane_transfere_le: string | null
+          pennylane_transfere_par: string | null
           progbat_finalise_le: string | null
           progbat_finalise_par: string | null
           redige_dans_staffing: boolean
@@ -2409,6 +2426,14 @@ export type Database = {
           numero: string
           numero_progbat?: string | null
           numero_progbat_provisoire?: string | null
+          pennylane_etat?: string | null
+          pennylane_lien?: string | null
+          pennylane_numero?: string | null
+          pennylane_options_retenues?: string[] | null
+          pennylane_quote_id?: string | null
+          pennylane_total_ht?: number | null
+          pennylane_transfere_le?: string | null
+          pennylane_transfere_par?: string | null
           progbat_finalise_le?: string | null
           progbat_finalise_par?: string | null
           redige_dans_staffing?: boolean
@@ -2484,6 +2509,14 @@ export type Database = {
           numero?: string
           numero_progbat?: string | null
           numero_progbat_provisoire?: string | null
+          pennylane_etat?: string | null
+          pennylane_lien?: string | null
+          pennylane_numero?: string | null
+          pennylane_options_retenues?: string[] | null
+          pennylane_quote_id?: string | null
+          pennylane_total_ht?: number | null
+          pennylane_transfere_le?: string | null
+          pennylane_transfere_par?: string | null
           progbat_finalise_le?: string | null
           progbat_finalise_par?: string | null
           redige_dans_staffing?: boolean
@@ -6937,6 +6970,58 @@ export type Database = {
         }
         Relationships: []
       }
+      pennylane_journal: {
+        Row: {
+          auteur: string | null
+          client_id: string | null
+          cree_le: string
+          detail: Json
+          devis_id: string | null
+          etape: string
+          id: string
+        }
+        Insert: {
+          auteur?: string | null
+          client_id?: string | null
+          cree_le?: string
+          detail?: Json
+          devis_id?: string | null
+          etape: string
+          id?: string
+        }
+        Update: {
+          auteur?: string | null
+          client_id?: string | null
+          cree_le?: string
+          detail?: Json
+          devis_id?: string | null
+          etape?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pennylane_journal_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pennylane_journal_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "devis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pennylane_journal_devis_id_fkey"
+            columns: ["devis_id"]
+            isOneToOne: false
+            referencedRelation: "v_devis_consommation"
+            referencedColumns: ["devis_id"]
+          },
+        ]
+      }
       postes_catalogue: {
         Row: {
           actif: boolean
@@ -8882,6 +8967,10 @@ export type Database = {
         Args: { p_affaire_id: string }
         Returns: Json
       }
+      client_pennylane_rapprocher: {
+        Args: { _client_id: string; _motif: string; _pennylane_id: string }
+        Returns: undefined
+      }
       compute_affaire_typologie: { Args: { num: string }; Returns: string }
       consume_mcp_rate_limit: {
         Args: { _arguments?: Json; _tool?: string }
@@ -9409,6 +9498,26 @@ export type Database = {
           _valeur: number
         }
         Returns: string
+      }
+      devis_pennylane_echec: {
+        Args: { _detail: Json; _devis_id: string }
+        Returns: undefined
+      }
+      devis_pennylane_enregistrer: {
+        Args: {
+          _detail: Json
+          _devis_id: string
+          _ecart: boolean
+          _lien: string
+          _numero: string
+          _quote_id: string
+          _total_ht: number
+        }
+        Returns: undefined
+      }
+      devis_pennylane_reserver: {
+        Args: { _devis_id: string; _options: string[] }
+        Returns: Json
       }
       devis_peut_ecrire: { Args: { _devis_id: string }; Returns: boolean }
       devis_peut_lire: { Args: { _devis_id: string }; Returns: boolean }

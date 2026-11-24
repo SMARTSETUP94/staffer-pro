@@ -1037,6 +1037,13 @@
       "when": 1795471264401,
       "tag": "0147_devis_bareme_versionne",
       "breakpoints": true
+    },
+    {
+      "idx": 148,
+      "version": "7",
+      "when": 1795498038152,
+      "tag": "0148_pennylane_transfert_devis",
+      "breakpoints": true
     }
   ]
 }

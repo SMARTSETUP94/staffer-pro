@@ -23,6 +23,7 @@ import { DevisArbre } from "./DevisArbre";
 import { ObjetPanel } from "./ObjetPanel";
 import { DevisVueClient } from "./DevisVueClient";
 import { DevisInterlocuteurs } from "@/components/devis/DevisInterlocuteurs";
+import { PennylaneTransfert } from "@/components/devis/PennylaneTransfert";
 import { ExportPdfDialog, EnvoiEmailDialog } from "@/components/devis/DevisPdfEnvoi";
 import { ProgbatExportDialog, EnregistrerTransfertDialog } from "@/components/devis/ProgbatTransfert";
 import { libelleNumeroProgbat, libelleStatutDevis, NUMERO_PROGBAT_PROVISOIRE_RE } from "@/lib/devis/progbat-export";
@@ -311,6 +312,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
               {d.modele_origine && ` · modèle : ${d.modele_origine}`}
             </p>
             {d.devis.numero_progbat && <p className="mt-1 text-xs">Réf. <strong>{libelleNumeroProgbat(d.devis.numero_progbat)}</strong>{d.devis.transfere_progbat_le ? ` · transféré le ${new Date(d.devis.transfere_progbat_le).toLocaleDateString("fr-FR")}` : ""}</p>}
+            {!d.devis.est_modele && <PennylaneTransfert devisId={devisId} statut={st} />}
           </div>
           {!d.devis.est_modele && (
             <DevisInterlocuteurs devisId={devisId} affaireId={d.devis.affaire_id} codeChantier={d.affaire?.numero ?? d.affaire?.code_opportunite ?? ""}

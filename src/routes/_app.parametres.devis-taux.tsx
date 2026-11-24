@@ -60,7 +60,7 @@ function DevisTauxPage() {
         <h1 className="text-2xl font-semibold">Devis — barème coût et vente</h1>
         <p className="text-sm text-muted-foreground">
           Modifiez les cellules puis « Enregistrer » : chaque changement crée une version datée, les devis déjà rédigés gardent leurs prix.{" "}
-          <Link to="/parametres/devis-materiaux" className="underline">Catalogue matériaux →</Link>{" "}<Link to="/parametres/devis-modeles" className="underline">Modèles →</Link>
+          <Link to="/parametres/devis-materiaux" className="underline">Catalogue matériaux →</Link>{" "}<Link to="/parametres/devis-modeles" className="underline">Modèles →</Link>{" "}<Link to="/parametres/pennylane" className="underline">Rapprochement Pennylane →</Link>
         </p>
       </div>
       <BaremeTableur />
