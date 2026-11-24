@@ -1,183 +1,203 @@
 /**
- * Export PDF du planning des équipes (logistique).
+ * Export PDF du planning des équipes (logistique), en vrai texte.
  *
- * Les deux vues affichées à l'écran sont capturées puis assemblées en A4 :
- * « jour par jour » en portrait, une page par jour ; « par employé » en paysage.
- * Le fichier est fabriqué par l'application, donc sans lien, sans titre d'onglet
- * et sans date ajoutés par la fenêtre d'impression du navigateur.
- *
- * La pagination respecte les blocs (jour, intervention, ligne d'employé) : une
- * intervention ou une ligne n'est jamais coupée entre deux pages, et le bandeau
- * de tête (jour ou jours de la semaine) est recopié en haut de chaque page.
- *
- * jspdf et html-to-image ne sont importés qu'ici, et ce module n'est chargé qu'au
- * clic sur « Enregistrer en PDF » : ils restent hors du chunk initial de la page.
+ * Le PDF est construit à partir des données (jspdf + jspdf-autotable), et non
+ * plus d'une capture d'écran : le texte est sélectionnable et cherchable.
+ * « Jour par jour » en portrait, une page par jour ; « par employé » en paysage.
+ * Une intervention n'est jamais coupée entre deux pages et l'en-tête des
+ * tableaux est répété. Module chargé uniquement au clic.
  */
-import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
-import { paginer, paginerHauteurFixe, type Bloc, type Page } from "./planning-equipes-pagination";
+import autoTable from "jspdf-autotable";
+import type { BlocExport } from "./planning-equipes";
+import { commentaires, ENTETE_BLOC, horaire } from "./planning-equipes";
 
 export type VuePlanning = "jours" | "employes";
+type RGB = [number, number, number];
+
+/** Couleurs des types d'étape (équivalents sRGB des teintes de l'écran). */
+export const COULEURS_ETAPE: Record<string, RGB> = {
+  appro: [154, 110, 200], emballage: [206, 128, 64], chargement: [214, 88, 70],
+  livraison: [44, 120, 200], tracage: [128, 84, 172], rotation: [204, 72, 162],
+  montage: [52, 148, 88], finitions: [36, 152, 160], permanence: [190, 160, 30],
+  demontage: [200, 50, 70], dechargement: [92, 104, 130],
+};
+const PRIMAIRE: RGB = [52, 36, 150];
+const GRIS: RGB = [240, 240, 243];
+const BORD: RGB = [215, 215, 222];
+
+/** Remplace les glyphes absents de la police standard plutôt que de les perdre. */
+export function texte(s: string | null | undefined): string {
+  return (s ?? "")
+    .replace(/[→⇒➜]/g, "->").replace(/[←]/g, "<-").replace(/[★☆]/g, "*")
+    .replace(/[\u202F\u00A0]/g, " ").replace(/[“”«»]/g, '"').replace(/[‘’]/g, "'")
+    .replace(/…/g, "...");
+}
+
+type CaseEmploye = { etape: BlocExport["etape"]; chef: boolean };
+export type LigneEmploye = { personne: { nom: string; prenom: string }; jours: CaseEmploye[][] };
 
 export type ExportPlanningEquipes = {
   vue: VuePlanning;
-  /** « Planning du 16 novembre au 22 novembre 2026 » */
   titre: string;
-  /** Conteneur de la vue active : liste des jours, ou tableau par employé. */
-  contenu: HTMLElement;
-  /** Bandeau de légende des couleurs, recopié en tête de chaque page. */
-  legende?: HTMLElement | null;
+  dates: string[];
+  blocs: BlocExport[];
+  lignes: LigneEmploye[];
+  libelles: Record<string, string>;
+  titreJour: (iso: string) => string;
+  dateCourte: (iso: string) => string;
   nomFichier: string;
 };
 
 const MARGE = 10;
-const TETE = 16;
-const PIED = 8;
-const PIXEL_RATIO = 1.5;
-const QUALITE = 0.92;
 
-/** k : pixels CSS → pixels image ; echelle : pixels image → millimètres. */
-type Capture = { img: HTMLImageElement; k: number; echelle: number; x: number; largeurMm: number; entete: Bloc; pages: Page[] };
-
-/** Capture un élément en PNG, chargé et prêt à être découpé. */
-async function versImage(el: HTMLElement): Promise<HTMLImageElement> {
-  const url = await toPng(el, { pixelRatio: PIXEL_RATIO, backgroundColor: "#ffffff", cacheBust: true });
-  const img = new Image();
-  img.src = url;
-  await new Promise<void>((ok, ko) => {
-    img.onload = () => ok();
-    img.onerror = () => ko(new Error("capture illisible"));
-  });
-  return img;
-}
-
-/**
- * Copie hors écran d'un élément, remise à une largeur de bureau.
- * Sur un téléphone la vue « jour par jour » est plus large que l'écran : sans
- * cette copie, le PDF perdrait les colonnes de droite.
- */
-function horsEcran(el: HTMLElement, largeur: number) {
-  const conteneur = document.createElement("div");
-  conteneur.style.cssText = `position:fixed;left:-100000px;top:0;width:${largeur}px;background:#ffffff`;
-  const clone = el.cloneNode(true) as HTMLElement;
-  clone.style.width = `${largeur}px`;
-  conteneur.appendChild(clone);
-  document.body.appendChild(conteneur);
-  return { clone, fermer: () => conteneur.remove() };
-}
-
-/**
- * Blocs de l'élément, en pixels CSS, le premier servant de tête répétable :
- * titre du jour (vue jour par jour) ou ligne des jours (vue par employé).
- */
-function blocsDe(el: HTMLElement, vue: VuePlanning): Bloc[] {
-  const r = el.getBoundingClientRect();
-  const noeuds: Element[] =
-    vue === "employes"
-      ? [el.querySelector("thead"), ...Array.from(el.querySelectorAll("tbody > tr"))].filter(Boolean) as Element[]
-      : Array.from(el.children);
-  return noeuds
-    .map(n => { const b = n.getBoundingClientRect(); return { top: b.top - r.top, height: b.height }; })
-    .filter(b => b.height > 0);
-}
-
-/** Découpe l'image entre deux positions CSS ; renvoie la hauteur en pixels image. */
-function tranche(img: HTMLImageElement, k: number, from: number, to: number) {
-  const sy = Math.max(0, Math.round(from * k));
-  const ey = Math.min(img.naturalHeight, Math.round(to * k));
-  const sh = Math.max(1, ey - sy);
-  const canvas = document.createElement("canvas");
-  canvas.width = img.naturalWidth;
-  canvas.height = sh;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("canvas indisponible");
-  ctx.drawImage(img, 0, sy, img.naturalWidth, sh, 0, 0, img.naturalWidth, sh);
-  return { data: canvas.toDataURL("image/jpeg", QUALITE), px: sh };
-}
-
-async function capturer(el: HTMLElement, vue: VuePlanning, dispoW: number, dispoH: number): Promise<Capture> {
-  const largeur = el.getBoundingClientRect().width || el.offsetWidth;
-  const cible = vue === "jours" ? Math.max(largeur, 1000) : largeur;
-  const copie = cible > largeur + 1 ? horsEcran(el, cible) : null;
-  const source = copie ? copie.clone : el;
-  try {
-    const img = await versImage(source);
-    const k = img.naturalWidth / cible;
-    // Réduction pour tenir dans la page, jamais au-delà de la taille naturelle (96 dpi) :
-    // sur un écran étroit, le planning reste à taille lisible au lieu d'être étiré.
-    const mmParPx = Math.min(dispoW / cible, 0.2646);
-    const echelle = mmParPx / k; // px image → mm
-    const largeurMm = cible * mmParPx;
-    const x = MARGE + (dispoW - largeurMm) / 2;
-    // Hauteur de page exprimée en pixels CSS.
-    const hauteurPx = dispoH / mmParPx;
-    const blocs = blocsDe(source, vue);
-    if (!blocs.length) return { img, k, echelle, x, largeurMm, entete: { top: 0, height: 0 }, pages: paginerHauteurFixe(img.naturalHeight / k, hauteurPx) };
-    const { entete, pages } = paginer(blocs, hauteurPx);
-    return { img, k, echelle, x, largeurMm, entete, pages };
-  } finally {
-    copie?.fermer();
+function tete(pdf: jsPDF, p: ExportPlanningEquipes) {
+  const pageW = pdf.internal.pageSize.getWidth();
+  pdf.setFont("helvetica", "bold"); pdf.setFontSize(13); pdf.setTextColor(20);
+  pdf.text(texte(p.titre), MARGE, MARGE + 5);
+  pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor(110);
+  pdf.text(p.vue === "employes" ? "Vue par employé" : "Vue jour par jour", pageW - MARGE, MARGE + 5, { align: "right" });
+  // Légende des couleurs
+  let x = MARGE; const y = MARGE + 9;
+  pdf.setFontSize(7); pdf.setFont("helvetica", "bold");
+  for (const [t, c] of Object.entries(COULEURS_ETAPE)) {
+    const l = texte(p.libelles[t] ?? t); const w = pdf.getTextWidth(l) + 3;
+    if (x + w > pageW - MARGE) break;
+    pdf.setFillColor(...c); pdf.roundedRect(x, y - 2.8, w, 4, 0.8, 0.8, "F");
+    pdf.setTextColor(255); pdf.text(l, x + 1.5, y);
+    x += w + 1.5;
   }
+  pdf.setDrawColor(...BORD); pdf.setLineWidth(0.2);
+  pdf.line(MARGE, MARGE + 13, pageW - MARGE, MARGE + 13);
+  pdf.setTextColor(0); pdf.setFont("helvetica", "normal");
+}
+
+function vueJours(pdf: jsPDF, p: ExportPlanningEquipes) {
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const largeur = pageW - MARGE * 2;
+  let premiere = true;
+  for (const jour of p.dates) {
+    const duJour = p.blocs.filter(b => b.jour === jour);
+    if (!duJour.length) continue;
+    if (!premiere) pdf.addPage();
+    premiere = false;
+    tete(pdf, p);
+    let y = MARGE + 16;
+    const nbPers = duJour.reduce((n, b) => n + b.personnes.length, 0);
+    pdf.setFillColor(...PRIMAIRE); pdf.roundedRect(MARGE, y, largeur, 8, 1, 1, "F");
+    pdf.setTextColor(255); pdf.setFont("helvetica", "bold"); pdf.setFontSize(12);
+    const titre = texte(p.titreJour(jour));
+    const titreCap = titre.charAt(0).toUpperCase() + titre.slice(1);
+    const sous = ` · ${duJour.length} intervention${duJour.length > 1 ? "s" : ""} · ${nbPers} pers.`;
+    const w1 = pdf.getTextWidth(titreCap); pdf.setFontSize(9); pdf.setFont("helvetica", "normal");
+    const w2 = pdf.getTextWidth(sous);
+    const x0 = pageW / 2 - (w1 + w2) / 2;
+    pdf.setFont("helvetica", "bold"); pdf.setFontSize(12); pdf.text(titreCap, x0, y + 5.6);
+    pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.text(sous, x0 + w1, y + 5.6);
+    pdf.setTextColor(0);
+    y += 11;
+
+    for (const b of duJour) {
+      const couleur = COULEURS_ETAPE[b.etape.type] ?? [200, 200, 200];
+      const equipe: { content: string; styles?: Record<string, unknown> }[][] = [];
+      if (!b.personnes.length) {
+        equipe.push([{ content: "Équipe à compléter", colSpan: 6, styles: { fillColor: [252, 232, 232], textColor: [190, 40, 40], fontStyle: "italic" } } as never]);
+      } else {
+        for (let r = 0; r < Math.ceil(b.personnes.length / 6); r++) {
+          equipe.push(Array.from({ length: 6 }, (_, c) => {
+            const pe = b.personnes[r * 6 + c];
+            const chef = pe?.role === "chef_equipe";
+            return { content: texte(pe?.nom ?? ""), styles: chef ? { fontStyle: "bold", fillColor: [226, 222, 245] } : { fillColor: [248, 248, 250] } };
+          }));
+        }
+      }
+      autoTable(pdf, {
+        startY: y,
+        margin: { left: MARGE, right: MARGE, top: MARGE + 16 },
+        tableWidth: largeur,
+        rowPageBreak: "avoid",
+        head: [ENTETE_BLOC.map(h => h.toUpperCase())],
+        body: [
+          [
+            { content: texte(b.etape.numero), styles: { fillColor: couleur, textColor: 255, fontStyle: "bold", fontSize: 11 } },
+            { content: texte(b.etape.nom), styles: { fontStyle: "bold", fontSize: 10 } },
+            { content: texte(b.etape.responsable ?? "") },
+            { content: texte(p.libelles[b.etape.type] ?? b.etape.type), styles: { textColor: couleur, fontStyle: "bold" } },
+            { content: texte(b.etape.lieu ?? "") },
+            { content: texte(commentaires(b.etape)), styles: { textColor: [100, 100, 110] } },
+          ],
+          ...equipe,
+        ] as never,
+        theme: "grid",
+        styles: { font: "helvetica", fontSize: 8.5, cellPadding: 1.6, lineColor: BORD, lineWidth: 0.2, textColor: [25, 25, 35], overflow: "linebreak" },
+        headStyles: { fillColor: GRIS, textColor: [110, 110, 120], fontSize: 7, fontStyle: "normal" },
+        columnStyles: { 0: { cellWidth: 24 }, 1: { cellWidth: 36 }, 2: { cellWidth: 28 }, 3: { cellWidth: 22 }, 4: { cellWidth: 40 } },
+      });
+      // Espace entre deux interventions ; nouvelle page si la place manque.
+      const fin = (pdf as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
+      y = fin + 4;
+      if (y > pageH - MARGE - 10) { pdf.addPage(); tete(pdf, p); y = MARGE + 16; }
+    }
+  }
+  if (premiere) { tete(pdf, p); pdf.setFontSize(10); pdf.text("Aucune étape cette semaine.", MARGE, MARGE + 22); }
+}
+
+function vueEmployes(pdf: jsPDF, p: ExportPlanningEquipes) {
+  const pageW = pdf.internal.pageSize.getWidth();
+  const weekend = (iso: string) => { const j = new Date(`${iso}T12:00:00Z`).getUTCDay(); return j === 0 || j === 6; };
+  const body = p.lignes.map(l => {
+    const nbJ = l.jours.filter(j => j.length).length;
+    return [
+      { content: `${texte(l.personne.nom.toLocaleUpperCase("fr"))} ${texte(l.personne.prenom)}\n${nbJ} j travaillé${nbJ > 1 ? "s" : ""}`, styles: { fontStyle: "bold" } },
+      ...l.jours.map((cases, i) => ({
+        content: cases.map(c => [
+          `${texte(p.libelles[c.etape.type] ?? c.etape.type).toUpperCase()}${horaire(c.etape) ? ` ${horaire(c.etape)}` : ""}`,
+          `${texte(c.etape.numero)} ${texte(c.etape.nom)}${c.chef ? " * chef" : ""}`,
+          c.etape.lieu ? texte(c.etape.lieu) : "",
+        ].filter(Boolean).join("\n")).join("\n\n"),
+        styles: weekend(p.dates[i]!) ? { fillColor: [244, 244, 246] } : {},
+        _cases: cases,
+      })),
+    ];
+  });
+  tete(pdf, p);
+  autoTable(pdf, {
+    startY: MARGE + 16,
+    margin: { left: MARGE, right: MARGE, top: MARGE + 16 },
+    tableWidth: pageW - MARGE * 2,
+    rowPageBreak: "avoid",
+    head: [["Nom Prénom", ...p.dates.map(d => texte(p.dateCourte(d)))]],
+    body: body as never,
+    theme: "grid",
+    styles: { font: "helvetica", fontSize: 7, cellPadding: 1.4, lineColor: BORD, lineWidth: 0.2, valign: "top", overflow: "linebreak" },
+    headStyles: { fillColor: PRIMAIRE, textColor: 255, fontStyle: "bold" },
+    columnStyles: { 0: { cellWidth: 34 } },
+    didDrawCell: d => {
+      // Liseré de couleur du type à gauche de chaque case remplie.
+      if (d.section !== "body" || d.column.index === 0) return;
+      const cases = (d.cell.raw as { _cases?: CaseEmploye[] })._cases;
+      const c = cases?.[0];
+      if (!c) return;
+      pdf.setFillColor(...(COULEURS_ETAPE[c.etape.type] ?? [180, 180, 180]));
+      pdf.rect(d.cell.x, d.cell.y, 1, d.cell.height, "F");
+    },
+    didDrawPage: d => { if (d.pageNumber > 1) tete(pdf, p); },
+  });
+  if (!p.lignes.length) { pdf.setFontSize(10); pdf.text("Aucun employé affecté cette semaine.", MARGE, MARGE + 30); }
 }
 
 export async function exporterPlanningEquipesPdf(p: ExportPlanningEquipes): Promise<{ pages: number }> {
   const pdf = new jsPDF({ orientation: p.vue === "employes" ? "landscape" : "portrait", unit: "mm", format: "a4" });
+  pdf.setProperties({ title: texte(p.titre) });
+  if (p.vue === "jours") vueJours(pdf, p); else vueEmployes(pdf, p);
+  const total = pdf.getNumberOfPages();
   const pageW = pdf.internal.pageSize.getWidth();
   const pageH = pdf.internal.pageSize.getHeight();
-  const dispoW = pageW - MARGE * 2;
-  const dispoH = pageH - MARGE * 2 - TETE - PIED;
-  if (dispoH <= 0) throw new Error("hauteur de page insuffisante");
-
-  // Une page par jour en vue « jour par jour », un seul bloc en vue « par employé ».
-  const sections = p.vue === "jours" ? Array.from(p.contenu.querySelectorAll<HTMLElement>(":scope > section")) : [];
-  const cibles = sections.length ? sections : [p.contenu];
-
-  const captures: Capture[] = [];
-  for (const el of cibles) captures.push(await capturer(el, p.vue, dispoW, dispoH));
-  const total = captures.reduce((n, c) => n + c.pages.length, 0);
-  const legende = p.legende ? await versImage(p.legende) : null;
-
-  let numero = 0;
-  for (const c of captures) {
-    for (const page of c.pages) {
-      if (numero > 0) pdf.addPage();
-      numero++;
-
-      // Tête de page : titre de la semaine, vue, légende des couleurs.
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(13);
-      pdf.setTextColor(20);
-      pdf.text(p.titre, MARGE, MARGE + 5);
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(9);
-      pdf.setTextColor(110);
-      pdf.text(p.vue === "employes" ? "Vue par employé" : "Vue jour par jour", pageW - MARGE, MARGE + 5, { align: "right" });
-      if (legende) {
-        const s = Math.min((dispoW * 0.92) / legende.naturalWidth, 7 / legende.naturalHeight);
-        pdf.addImage(legende.src, "PNG", MARGE, MARGE + 7, legende.naturalWidth * s, legende.naturalHeight * s);
-      }
-      pdf.setDrawColor(215);
-      pdf.setLineWidth(0.2);
-      pdf.line(MARGE, MARGE + TETE - 2, pageW - MARGE, MARGE + TETE - 2);
-
-      const haut = MARGE + TETE;
-      let y = haut;
-      if (c.entete.height > 0) {
-        const tete = tranche(c.img, c.k, 0, c.entete.height);
-        const h = Math.min(tete.px * c.echelle, dispoH * 0.4);
-        pdf.addImage(tete.data, "JPEG", c.x, y, c.largeurMm, h);
-        y += h;
-      }
-      const corps = tranche(c.img, c.k, page.start, page.end);
-      if (page.end - page.start > 0.5) pdf.addImage(corps.data, "JPEG", c.x, y, c.largeurMm, Math.min(corps.px * c.echelle, haut + dispoH - y));
-
-      pdf.setFontSize(8);
-      pdf.setTextColor(140);
-      pdf.text(`Page ${numero} / ${total}`, pageW / 2, pageH - 5, { align: "center" });
-      pdf.setTextColor(0);
-    }
+  for (let i = 1; i <= total; i++) {
+    pdf.setPage(i); pdf.setFontSize(8); pdf.setTextColor(140);
+    pdf.text(`Page ${i} / ${total}`, pageW / 2, pageH - 5, { align: "center" });
   }
-
   pdf.save(p.nomFichier);
   return { pages: total };
 }

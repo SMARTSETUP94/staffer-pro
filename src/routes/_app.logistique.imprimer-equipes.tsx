@@ -49,14 +49,13 @@ function ImprimerEquipes() {
 
   /** Fabrique le PDF dans l'application : ni lien, ni titre d'onglet, ni date du navigateur. */
   const exporter = async () => {
-    const cible = vue === "jours" ? joursRef.current : tableRef.current;
-    if (!cible || enCours) return;
+    if (!q.data || enCours) return;
     setEnCours(true);
     setErreur(false);
     try {
       const { exporterPlanningEquipesPdf } = await import("@/lib/imports/planning-equipes-pdf");
       await exporterPlanningEquipesPdf({
-        vue, titre, contenu: cible, legende: legendeRef.current,
+        vue, titre, dates, blocs, lignes, libelles: L, titreJour, dateCourte,
         nomFichier: `planning-equipes-${debut}${vue === "employes" ? "-employes" : ""}.pdf`,
       });
     } catch {
