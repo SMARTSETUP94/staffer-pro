@@ -66,7 +66,7 @@ export function construirePennylane(v: DonneesPennylane, retenues: ReadonlySet<s
   if (!vat) throw new Error(`Taux de TVA ${d.tva_pct} % non pris en charge pour Pennylane`);
   if (!d.date_devis) throw new Error("Date du devis manquante");
   const deadline = d.date_validite ?? ajoutJours(d.date_devis, d.validite_jours ?? 30);
-  const { lignes, fiche } = construireProgbat({ ...d, heures: {} } as DonneesProgbat);
+  const { lignes, fiche } = construireProgbat({ ...d, lignes: optionsEnSections(d.lignes), heures: {} } as DonneesProgbat);
   const sections: SectionPennylane[] = [];
   const out: LignePennylane[] = [];
   let rang = 0;
@@ -80,7 +80,7 @@ export function construirePennylane(v: DonneesPennylane, retenues: ReadonlySet<s
       else if (sections.length) { const s = sections[sections.length - 1]!; s.description = ajoutDescription(s.description, l.designation); }
     } else if (l.kind === "ligne") {
       if (!rang) { rang = 1; sections.push({ title: d.libelle?.trim() || "Devis", rank: 1 }); }
-      out.push({ label: `${l.n} ${l.designation.replace(/^Option : /, "")}`.slice(0, 250), quantity: l.quantite, unit: l.unite,
+      out.push({ label: `${l.n} ${l.designation.replace(/^Option : /, "")}`.slice(0, 250), quantity: l.quantite, unit: unitePennylane(l.unite),
         raw_currency_unit_price: l.pu.toFixed(2), vat_rate: vat, section_rank: rang });
     }
   }
@@ -93,6 +93,29 @@ export function construirePennylane(v: DonneesPennylane, retenues: ReadonlySet<s
   };
   const sommeLignes = out.reduce((s, l) => s + Math.round(l.quantity * cents(Number(l.raw_currency_unit_price))), 0) / 100;
   return { payload, attendu: { total_ht: d.total_ht, remise, net_ht: d.net_ht ?? d.total_ht, somme_lignes: sommeLignes, controle_lignes: fiche.controle_ok }, donnees: d };
+}
+
+/** Correspondance des unités Staffing → libellés Pennylane (à valider au premier essai réel). */
+export const UNITES_PENNYLANE: Record<string, string> = {
+  u: "piece", ens: "forfait", forfait: "forfait", h: "hour", j: "day", m: "m", ml: "m", m2: "m2", "m²": "m2", m3: "m3", "m³": "m3", kg: "kg", l: "l",
+};
+export const unitePennylane = (u: string | null | undefined) => UNITES_PENNYLANE[(u ?? "u").trim().toLowerCase()] ?? "piece";
+
+/**
+ * Une section Pennylane par option retenue avec ses objets : chaque option devient un chapitre racine
+ * (placé après les chapitres existants, dans l'ordre du devis). Option sans objet = une ligne forfait.
+ */
+export function optionsEnSections(lignes: LigneClient[]): LigneClient[] {
+  const options = lignes.filter((l) => l.type === "option");
+  if (!options.length) return lignes;
+  const aEnfants = new Set(lignes.map((l) => l.parent_id).filter(Boolean) as string[]);
+  const rang = new Map([...lignes].sort((a, b) => a.ordre - b.ordre).map((l, i) => [l.id, i]));
+  return lignes.map((l) => {
+    if (l.type !== "option") return l;
+    if (aEnfants.has(l.id) && Number(l.quantite ?? 1) !== 1)
+      throw new Error(`Option « ${l.libelle ?? ""} » : quantité ${l.quantite} avec objets, non transférable en section`);
+    return { ...l, type: "zone", parent_id: null, ordre: 1_000_000 + (rang.get(l.id) ?? 0), libelle: `Option : ${l.libelle?.trim() || "Option"}` };
+  });
 }
 
 function ajoutJours(iso: string, j: number) {

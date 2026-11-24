@@ -9,7 +9,7 @@ export class PennylaneErreur extends Error {
 
 export function jetonPennylane(): string {
   const t = process.env["PENNYLANE_API_TOKEN"];
-  if (!t) throw new PennylaneErreur("Jeton Pennylane non configuré (secret PENNYLANE_API_TOKEN)", null);
+  if (!t) throw new PennylaneErreur("Clé Pennylane absente", null);
   return t;
 }
 

@@ -70,3 +70,30 @@ describe("transfert Pennylane", () => {
     expect(r.map((x) => [x.statut, x.candidats[0]?.id])).toEqual([["sur", "1"], ["sur", "2"], ["douteux", "3"], ["aucun", undefined]]);
   });
 });
+
+import fixture9524 from "./fixtures/9524-R1-pennylane.json";
+describe("Pennylane — 9524-R1 avec O2 retenue (données réelles, lecture seule)", () => {
+  const v = fixture9524 as unknown as DonneesPennylane;
+  const O2 = "34f64269-4ad1-48ec-9a5a-f1d66837c2ea";
+  const { payload, attendu } = construirePennylane(v, new Set([O2]), { customerId: 1, reference: "9524-R1" });
+  const somme = (ls: typeof payload.invoice_lines) => Math.round(ls.reduce((s, l) => s + l.quantity * Number(l.raw_currency_unit_price) * 100, 0)) / 100;
+  it("total HT = 6 563,05 + 17 295,97 = 23 859,02 € au centime", () => {
+    expect(attendu.total_ht).toBe(23859.02);
+    expect(attendu.somme_lignes).toBe(23859.02);
+    expect(somme(payload.invoice_lines)).toBe(23859.02);
+    expect(attendu.controle_lignes).toBe(true);
+  });
+  it("une section dédiée à O2 dont les lignes totalisent 17 295,97 €", () => {
+    const s = payload.invoice_line_sections.filter((x) => x.title.includes("Option : Proposition 2"));
+    expect(s).toHaveLength(1);
+    expect(somme(payload.invoice_lines.filter((l) => l.section_rank === s[0]!.rank))).toBe(17295.97);
+    expect(payload.invoice_line_sections.some((x) => /Proposition [134]/.test(x.title))).toBe(false);
+  });
+  it("aucune remise, unités traduites, TVA FR_200", () => {
+    expect(payload.discount).toBeUndefined();
+    expect(payload.invoice_lines.every((l) => l.vat_rate === "FR_200" && ["piece", "forfait"].includes(l.unit))).toBe(true);
+  });
+  it("sans option retenue : 6 563,05 €", () => {
+    expect(construirePennylane(v, new Set(), { customerId: 1, reference: "9524-R1" }).attendu.total_ht).toBe(6563.05);
+  });
+});

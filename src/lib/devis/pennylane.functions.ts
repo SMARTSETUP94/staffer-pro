@@ -43,7 +43,7 @@ export const preparerTransfert = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ devisId: z.string().uuid(), options: z.array(z.string().uuid()).max(200) }).parse(d))
   .handler(async ({ data, context }) => {
     await exigerDroit(context.supabase);
-    if (!process.env["PENNYLANE_API_TOKEN"]) throw new Error("Jeton Pennylane non configuré");
+    if (!process.env["PENNYLANE_API_TOKEN"]) throw new Error("Clé Pennylane absente");
     const { error } = await context.supabase.rpc("devis_pennylane_reserver", { _devis_id: data.devisId, _options: data.options });
     if (error) throw new Error(error.message);
     return { ok: true };

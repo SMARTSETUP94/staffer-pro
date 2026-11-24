@@ -54,7 +54,7 @@ function PagePennylane() {
         <p className="text-sm text-muted-foreground">Associez chaque client Staffing à son client Pennylane avant de transférer un devis. Rien n'est enregistré sans votre clic ; aucun client n'est créé dans Pennylane depuis cet écran.</p>
       </div>
       {etat.data && !etat.data.jeton && (
-        <Card className="border-destructive/50"><CardContent className="p-4 text-sm">Le jeton Pennylane n'est pas encore configuré. Gabin doit l'ajouter dans les paramètres du projet, rubrique Secrets, sous le nom <strong>PENNYLANE_API_TOKEN</strong>.</CardContent></Card>
+        <Card className="border-destructive/50"><CardContent className="p-4 text-sm">Clé Pennylane absente. Gabin doit l'ajouter dans les paramètres du projet, rubrique Secrets, sous le nom <strong>PENNYLANE_API_TOKEN</strong>.</CardContent></Card>
       )}
       <div className="flex flex-wrap items-center gap-2">
         <Button size="sm" disabled={!etat.data?.jeton || r.isFetching} onClick={() => { setLancer(true); void recharger(); }}><RefreshCw className={`mr-1 h-4 w-4 ${r.isFetching ? "animate-spin" : ""}`} />Relire les clients Pennylane</Button>
