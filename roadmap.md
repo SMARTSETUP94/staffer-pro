@@ -1,5 +1,14 @@
 # Roadmap
 
+## Finitions des devis — 24 novembre 2026
+- [ ] Présenter le plan et toutes les migrations proposées ; attendre l’accord avant application.
+- [ ] Contrôles avant soumission/finalisation, liens vers les lignes, confirmation des avertissements et journal commun UI/MCP.
+- [ ] CGV admin versionnées à date d’effet et option par devis, PDF selon la date du devis, sans texte juridique inventé.
+- [ ] Sept libellés de statuts distincts dans filtres, badges et MCP.
+- [ ] Écran admin Articles sans prix : recherche/famille, saisie différée groupée et historique, aucune saisie réelle par l’agent.
+- [ ] Vérifier les sources société du PDF ; tests, captures 390/1366 et PDF 9524-R1 inspectés sans export enregistré.
+- Relances commerciales puis listes de chantier IA : lots suivants, non démarrés.
+
 ## Pipeline commercial juste — 20 novembre, P1/P2 approuvées avec corrections
 - [x] P1/P2 corrigées appliquées + P3 verrou et ouverture ; Actif 82, Clos 26, UI/MCP partagent le retenu, 9503 ouvre la R1 refusée sans doublon.
 - [x] Recette isolée 39 968,28 € / copie / remplacement / repli / action close ; essais retirés, 138 tests verts, manifeste 45 outils, rien publié.
