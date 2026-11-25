@@ -14,7 +14,7 @@ export function actionsStatutListe(st: DevisStatut, ecrire: boolean, valider: bo
     if (st === "valide") actions.push("transfere");
     actions.push("signe");
   }
-  if (ecrire && valider && ["a_valider", "valide", "transfere"].includes(st)) actions.push("refuse");
+  if (ecrire && valider && ["brouillon", "a_valider", "valide", "transfere"].includes(st)) actions.push("refuse", "remplace");
   if (ecrire && st !== "brouillon") actions.push("revision");
   return actions;
 }

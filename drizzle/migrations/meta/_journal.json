@@ -1072,6 +1072,13 @@
       "when": 1795543591811,
       "tag": "0152_restreindre_lecture_referentiels",
       "breakpoints": true
+    },
+    {
+      "idx": 153,
+      "version": "7",
+      "when": 1795595186386,
+      "tag": "0153_devis_statut_refuse_remplace",
+      "breakpoints": true
     }
   ]
 }

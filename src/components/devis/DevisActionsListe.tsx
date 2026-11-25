@@ -95,7 +95,7 @@ export function DevisStatutListe({ row }: { row: DevisLigneAction }) {
       <PopoverContent align="start" className="w-64 p-1">
         <p className="px-2 py-2 text-xs font-semibold">Statut · {row.numero}</p>
         {droits.isFetching ? <p className="p-2 text-sm text-muted-foreground">Chargement…</p> : droits.error ? <p role="alert" className="p-2 text-sm text-destructive">Droits indisponibles.</p> : <>
-          {actions.map((a) => <Button key={a} variant="ghost" className={`h-auto w-full justify-start py-2 text-sm ${a === "refuse" ? "text-destructive" : ""}`} onClick={() => {
+          {actions.map((a) => <Button key={a} variant="ghost" className={`h-auto w-full justify-start py-2 text-sm ${a === "refuse" || a === "remplace" ? "text-destructive" : ""}`} onClick={() => {
             setOpen(false); setDate(new Date().toISOString().slice(0, 10));
             if (avantFinal && (a === "envoye" || a === "signe")) { setSuite(a); setAction("valide"); } else { setSuite(null); setAction(a); }
           }}>{label(a)}</Button>)}

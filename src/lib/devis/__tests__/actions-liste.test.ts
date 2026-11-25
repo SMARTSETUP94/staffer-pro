@@ -7,16 +7,16 @@ describe("Actions rapides de la liste des devis", () => {
   });
   it("réserve la finalisation au validateur", () => {
     expect(actionsStatutListe("brouillon", true, false, null, null)).toEqual(["a_valider"]);
-    expect(actionsStatutListe("brouillon", true, true, null, null)).toEqual(["a_valider", "valide", "envoye", "signe"]);
+    expect(actionsStatutListe("brouillon", true, true, null, null)).toEqual(["a_valider", "valide", "envoye", "signe", "refuse", "remplace"]);
   });
   it("propose transfert et signature seulement après finalisation", () => {
-    expect(actionsStatutListe("valide", true, true, null, null)).toEqual(["envoye", "transfere", "signe", "refuse", "revision"]);
+    expect(actionsStatutListe("valide", true, true, null, null)).toEqual(["envoye", "transfere", "signe", "refuse", "remplace", "revision"]);
   });
   it("ne renvoie pas une version signée ou remplacée en brouillon", () => {
     expect(actionsStatutListe("signe", true, true, null, null)).toEqual(["revision"]);
     expect(actionsStatutListe("remplace", true, true, null, null)).toEqual(["revision"]);
   });
   it("garde l'envoi distinct du transfert déjà envoyé", () => {
-    expect(actionsStatutListe("transfere", true, true, "D-202611-0012", "2026-11-25")).toEqual(["signe", "refuse", "revision"]);
+    expect(actionsStatutListe("transfere", true, true, "D-202611-0012", "2026-11-25")).toEqual(["signe", "refuse", "remplace", "revision"]);
   });
 });
