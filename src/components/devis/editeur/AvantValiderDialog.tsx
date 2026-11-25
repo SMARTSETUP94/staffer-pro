@@ -13,9 +13,10 @@ type Point = { code: string; niveau: "bloquant" | "avertissement"; cible: CibleC
 type Controles = { points: Point[]; bloquants: number; avertissements: number; empreinte: string };
 
 /** Liste « Avant de valider » lue en base ; la base refait les mêmes contrôles au passage de statut. */
-export function AvantValiderDialog({ devisId, cible, open, onOpenChange, onAller }: {
+export function AvantValiderDialog({ devisId, cible, open, onOpenChange, onAller, onDone }: {
   devisId: string; cible: "valide" | "a_valider"; open: boolean; onOpenChange: (o: boolean) => void;
   onAller: (p: { cible: CibleControle; ligneId?: string }) => void;
+  onDone?: () => void;
 }) {
   const qc = useQueryClient();
   const [c, setC] = useState<Controles | null>(null);
@@ -40,6 +41,7 @@ export function AvantValiderDialog({ devisId, cible, open, onOpenChange, onAller
     await qc.invalidateQueries({ queryKey: devisKey(devisId) });
     if (r.error) { toast.error(r.error.message); void lire(); return; }
     toast.success(cible === "valide" ? "Devis finalisé" : "Devis passé « à valider »");
+    onDone?.();
     onOpenChange(false);
   };
 

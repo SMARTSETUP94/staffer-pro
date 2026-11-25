@@ -1,5 +1,9 @@
 # Roadmap
 
+## Modification rapide des devis — 25 novembre 2026
+- [x] Statut et chargé d’affaires modifiables depuis la liste, avec les droits et confirmations existants ; aucune migration.
+- [x] 24 tests ciblés, menus et recherche/confirmation vérifiés en session admin à 390/1366 px ; contrôles avant validation ouverts depuis la liste. Confirmations annulées pour préserver les devis réels ; sauvegarde réelle non exercée. Rien publié.
+
 ## Finitions des devis — 24 novembre 2026
 - [x] Plan et migration proposée présentés ; plan accepté.
 - [ ] Application de la migration : attend la réponse explicite de Gabin (question posée).
