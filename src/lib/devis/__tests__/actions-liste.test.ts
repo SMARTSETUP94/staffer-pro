@@ -7,7 +7,7 @@ describe("Actions rapides de la liste des devis", () => {
   });
   it("réserve la finalisation au validateur", () => {
     expect(actionsStatutListe("brouillon", true, false, null, null)).toEqual(["a_valider"]);
-    expect(actionsStatutListe("brouillon", true, true, null, null)).toEqual(["a_valider", "valide"]);
+    expect(actionsStatutListe("brouillon", true, true, null, null)).toEqual(["a_valider", "valide", "envoye", "signe"]);
   });
   it("propose transfert et signature seulement après finalisation", () => {
     expect(actionsStatutListe("valide", true, true, null, null)).toEqual(["envoye", "transfere", "signe", "refuse", "revision"]);

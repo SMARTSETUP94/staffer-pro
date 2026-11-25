@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { ChevronDown, Check } from "lucide-react";
@@ -10,6 +10,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DevisStatutBadge } from "./DevisStatutBadge";
 import { AvantValiderDialog } from "./editeur/AvantValiderDialog";
+import { SignerOpportuniteDialog } from "@/components/opportunites/SignerOpportuniteDialog";
+import type { TypologieFuture } from "@/lib/typologie-future";
 import { EnregistrerTransfertDialog } from "./ProgbatTransfert";
 import { STATUT_LABEL, devisKey, type DevisStatut, type DevisData } from "./editeur/api";
 import { libelleStatutDevis } from "@/lib/devis/progbat-export";
@@ -40,6 +42,9 @@ export function DevisStatutListe({ row }: { row: DevisLigneAction }) {
   const [action, setAction] = useState<ActionStatut | null>(null);
   const [busy, setBusy] = useState(false);
   const [date, setDate] = useState("");
+  const [suite, setSuite] = useState<ActionStatut | null>(null);
+  const valideOk = useRef(false);
+  const [signOpp, setSignOpp] = useState<{ code: string; client: string | null; typologie: TypologieFuture | null } | null>(null);
   const refresh = useRafraichirListe(row.id);
   const navigate = useNavigate();
   const droits = useQuery({
@@ -52,18 +57,21 @@ export function DevisStatutListe({ row }: { row: DevisLigneAction }) {
     },
   });
   const actions = actionsStatutListe(row.statut_redaction, droits.data?.ecrire ?? false, droits.data?.valider ?? false, row.numero_progbat, row.date_envoi);
-  const label = (a: ActionStatut) => a === "envoye" ? "Marquer envoyé…" : a === "revision" ? "Réviser · nouvelle version…" : `${STATUT_LABEL[a]}${["a_valider", "valide", "transfere"].includes(a) ? "…" : ""}`;
+  const avantFinal = row.statut_redaction === "brouillon" || row.statut_redaction === "a_valider";
+  const label = (a: ActionStatut) => avantFinal && a === "envoye" ? "Finaliser puis marquer envoyé…" : avantFinal && a === "signe" ? "Finaliser puis signé…" : a === "envoye" ? "Marquer envoyé…" : a === "revision" ? "Réviser · nouvelle version…" : `${STATUT_LABEL[a]}${["a_valider", "valide", "transfere"].includes(a) ? "…" : ""}`;
   const enregistrer = async () => {
     if (!action || busy) return;
     setBusy(true);
+    let opp: typeof signOpp = null;
     try {
       if (action === "signe") {
-        const { data: affaire, error } = await supabase.from("affaires").select("phase,statut_opportunite").eq("id", row.affaire_id).single();
+        const { data: affaire, error } = await supabase.from("affaires").select("phase,statut_opportunite,numero,code_opportunite,typologie_future,clients(nom)").eq("id", row.affaire_id).single();
         if (error) throw error;
         if (affaire.phase === "opportunite" && affaire.statut_opportunite !== "gagne") {
           const { error: err } = await supabase.rpc("app_modifier_affaire", { _id: row.affaire_id, _patch: { statut_opportunite: "gagne" } });
           if (err) throw err;
         }
+        if (affaire.phase === "opportunite") opp = { code: affaire.code_opportunite ?? affaire.numero ?? "", client: (affaire.clients as { nom: string } | null)?.nom ?? null, typologie: (affaire.typologie_future ?? null) as TypologieFuture | null };
       }
       const result = action === "envoye"
         ? await supabase.rpc("devis_marquer_envoye", { _devis_id: row.id, _date: date })
@@ -74,6 +82,7 @@ export function DevisStatutListe({ row }: { row: DevisLigneAction }) {
             : await supabase.rpc("devis_statut_changer", { _devis_id: row.id, _statut: action as DevisStatut });
       if (result.error) throw result.error;
       await refresh(); setAction(null);
+      if (opp) setSignOpp(opp);
       toast.success(action === "revision" ? "Nouvelle version en brouillon créée" : "Statut du devis mis à jour");
     } catch (e) { toast.error(e instanceof Error ? e.message : typeof e === "object" && e && "message" in e ? String(e.message) : "Modification impossible"); }
     finally { setBusy(false); }
@@ -87,15 +96,18 @@ export function DevisStatutListe({ row }: { row: DevisLigneAction }) {
         <p className="px-2 py-2 text-xs font-semibold">Statut · {row.numero}</p>
         {droits.isFetching ? <p className="p-2 text-sm text-muted-foreground">Chargement…</p> : droits.error ? <p role="alert" className="p-2 text-sm text-destructive">Droits indisponibles.</p> : <>
           {actions.map((a) => <Button key={a} variant="ghost" className={`h-auto w-full justify-start py-2 text-sm ${a === "refuse" ? "text-destructive" : ""}`} onClick={() => {
-            setOpen(false); setDate(new Date().toISOString().slice(0, 10)); setAction(a);
+            setOpen(false); setDate(new Date().toISOString().slice(0, 10));
+            if (avantFinal && (a === "envoye" || a === "signe")) { setSuite(a); setAction("valide"); } else { setSuite(null); setAction(a); }
           }}>{label(a)}</Button>)}
           {!actions.length && <p className="p-2 text-sm text-muted-foreground">Aucun changement autorisé.</p>}
         </>}
       </PopoverContent>
     </Popover>
-    {(action === "valide" || action === "a_valider") && <AvantValiderDialog devisId={row.id} cible={action} open onOpenChange={(o) => { if (!o) setAction(null); }} onDone={() => void refresh()}
+    {(action === "valide" || action === "a_valider") && <AvantValiderDialog devisId={row.id} cible={action} open onOpenChange={(o) => { if (!o) { const ok = valideOk.current; valideOk.current = false; setAction(ok && suite ? suite : null); setSuite(null); } }} onDone={() => { valideOk.current = true; void refresh(); }}
       onAller={({ ligneId }) => void navigate({ to: "/affaires/$affaireId/devis-staffing/$devisId", params: { affaireId: row.affaire_id, devisId: row.id }, ...(ligneId ? { hash: `ligne-${ligneId}` } : {}) })} />}
     {action === "transfere" && <EnregistrerTransfertDialog devisId={row.id} netHt={Number(row.net_ht ?? 0)} numeroActuel={row.numero_progbat} open onOpenChange={(o) => { if (!o) setAction(null); }} onDone={() => void refresh()} />}
+    {signOpp && <SignerOpportuniteDialog open onOpenChange={(o) => { if (!o) setSignOpp(null); }} affaireId={row.affaire_id} oldCode={signOpp.code} clientLabel={signOpp.client} typologieFuture={signOpp.typologie}
+      onSigned={() => { setSignOpp(null); void refresh(); toast.success("Opportunité convertie en chantier. La fabrication reste à créer depuis l’affaire."); }} />}
     <Dialog open={!!action && !["a_valider", "valide", "transfere"].includes(action)} onOpenChange={(o) => { if (!o && !busy) setAction(null); }}>
       <DialogContent><DialogHeader><DialogTitle>{action ? label(action) : "Changer le statut"} · {row.numero}</DialogTitle>
         <DialogDescription>{action === "signe" ? "Confirmez que le client a signé ce devis. L’opportunité passe en « Gagné », cette version devient signée et les autres versions ouvertes sont refusées. La conversion en chantier et la création de fabrication restent à effectuer dans l’affaire."
