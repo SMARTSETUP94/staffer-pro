@@ -26,6 +26,8 @@ export const KANBAN_STATUT_ORDER: OpportuniteStatut[] = [
   "envoye",
   "a_l_etude",
   "presque_gagne",
+  "gagne",
+  "perdu",
 ];
 
 export const STATUT_LABEL: Record<OpportuniteStatut, string> = {

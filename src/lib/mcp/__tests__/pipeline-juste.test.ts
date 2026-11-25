@@ -39,7 +39,7 @@ describe("Pipeline juste — règles Gabin du 20 novembre", () => {
   it.each(["perdu", "gagne"])("%s ne crée pas d'urgence", statut_opportunite => {
     expect(estEnRetard({ id: "x", statut_opportunite, next_action_due_le: "2026-01-01" }, new Date("2026-11-20"))).toBe(false);
   });
-  it("le Kanban ne compte que les quatre états actifs", () => expect(KANBAN_STATUT_ORDER).toEqual(["a_faire", "envoye", "a_l_etude", "presque_gagne"]));
+  it("le Kanban affiche les quatre états actifs plus gagné et perdu", () => expect(KANBAN_STATUT_ORDER).toEqual(["a_faire", "envoye", "a_l_etude", "presque_gagne", "gagne", "perdu"]));
   it("sans retenu, la version refusée est ouverte et jamais créée en R1", () => {
     expect(devisPipelineAction({ statut: "envoye", badge: { devis_id: "r1", version: 1, statut_redaction: "refuse" }, peutRediger: true, flag: true })).toBe("ouvrir");
   });
