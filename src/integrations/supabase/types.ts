@@ -9552,10 +9552,17 @@ export type Database = {
           version: number
         }[]
       }
-      devis_marquer_envoye: {
-        Args: { _date?: string; _devis_id: string }
-        Returns: Json
-      }
+      devis_marquer_envoye:
+        | { Args: { _date?: string; _devis_id: string }; Returns: Json }
+        | {
+            Args: {
+              _canal: string
+              _date: string
+              _devis_id: string
+              _note: string
+            }
+            Returns: Json
+          }
       devis_marquer_signe: { Args: { _devis_id: string }; Returns: Json }
       devis_materiau_enregistrer: {
         Args: { _ligne_id: string; _m: Json }
@@ -9756,6 +9763,10 @@ export type Database = {
       }
       devis_signer_vers_fabrication: {
         Args: { _devis_id: string }
+        Returns: Json
+      }
+      devis_signer_version: {
+        Args: { _date: string; _devis_id: string; _remplacer_autres?: boolean }
         Returns: Json
       }
       devis_soumettre:
@@ -10689,6 +10700,19 @@ export type Database = {
       submit_quiz_answer: {
         Args: { p_answer_index: number; p_quiz_id: string }
         Returns: Json
+      }
+      suivi_ecarts_lire: {
+        Args: never
+        Returns: {
+          affaire_id: string
+          client: string
+          devis_id: string
+          devis_numero: string
+          ecart: string
+          montant_ht: number
+          nom: string
+          numero: string
+        }[]
       }
       sync_equipes_from_plan:
         | { Args: { p_plan_id: string; p_user_id?: string }; Returns: Json }

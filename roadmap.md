@@ -262,3 +262,7 @@
 - [x] M1/M2 appliquées (dérivés + catégories + propositions), essai 9518 réussi, copies orphelines retirées côté serveur.
 - [ ] Extraction automatique au relevé périodique non branchée (extraction au clic « Trier et extraire » ou « Proposer les images »).
 - [x] En-tête devis « Client & interlocuteurs » (validé Gabin)
+
+## Suivi des devis (25 nov. 2026)
+- [x] Migration appliquée (envoi daté, signature d une version avec Remplacé décochable, refus Envoyé sans devis, lecture des écarts).
+- [ ] Écrans : Marquer envoyé le…, Signer cette version, liste des écarts, captures 390/1366.
