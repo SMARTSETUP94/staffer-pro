@@ -608,6 +608,14 @@ function OpportunitesPage() {
 
   const [signeChoix, setSigneChoix] = useState<string | null>(null);
 
+  async function handleClore(opp: OpportuniteCardData) {
+    if (!window.confirm(`Clôturer ${opp.numero} ? Elle passera dans l'onglet « Clos ».`)) return;
+    const { error } = await supabase.from("affaires").update({ statut_opportunite: "termine" }).eq("id", opp.id);
+    if (error) { toast.error("Clôture impossible", { description: error.message }); return; }
+    toast.success(`${opp.numero} clôturée`);
+    setRefreshTick((t) => t + 1);
+  }
+
   function handleSign(opp: OpportuniteCardData) {
     setSignTarget(opp);
   }
@@ -826,6 +834,7 @@ function OpportunitesPage() {
                 items={byStatut.get(s) ?? []}
                 chargesById={chargesById}
                 onSign={handleSign}
+                onClore={canManageOpps ? handleClore : undefined}
                 onDelete={canManageOpps ? handleDeleteRequest : undefined}
                 draggable={canManageOpps}
                 tri={tri}

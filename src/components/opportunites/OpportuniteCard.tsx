@@ -74,6 +74,7 @@ interface Props {
   opp: OpportuniteCardData;
   chargesById: Map<string, ChargeAffaires>;
   onSign?: (opp: OpportuniteCardData) => void;
+  onClore?: (opp: OpportuniteCardData) => void;
   /** v0.28.1 — callback suppression. Si non défini → menu masqué. */
   onDelete?: (opp: OpportuniteCardData) => void;
   /** Si false, le drag est désactivé (lecture seule). */
@@ -90,6 +91,7 @@ export function OpportuniteCard({
   opp,
   chargesById,
   onSign,
+  onClore,
   onDelete,
   draggable = true,
 }: Props) {
@@ -302,6 +304,11 @@ export function OpportuniteCard({
               className="mt-2 h-7 w-full rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
             >
               <Trophy className="mr-1 h-3 w-3" /> Signer cette opportunité
+            </Button>
+          )}
+          {(isGagne || opp.statut_opportunite === "perdu") && onClore && (
+            <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); onClore(opp); }} className="mt-2 h-7 w-full rounded-md">
+              Clôturer
             </Button>
           )}
         </div>

@@ -1100,6 +1100,13 @@
       "when": 1795681911182,
       "tag": "0156_relances_prochaine_action_recente",
       "breakpoints": true
+    },
+    {
+      "idx": 157,
+      "version": "7",
+      "when": 1795683859452,
+      "tag": "0157_opportunites_cloture_manuelle",
+      "breakpoints": true
     }
   ]
 }

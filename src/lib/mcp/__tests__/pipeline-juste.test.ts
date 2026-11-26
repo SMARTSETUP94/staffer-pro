@@ -28,9 +28,9 @@ describe("Pipeline juste — règles Gabin du 20 novembre", () => {
     const c = ctx(); const r = await readData(c, "pipeline_opportunites", { limit: 25, cursor: "0" });
     expect(r.rows).toHaveLength(1); expect(c.db.rpc).not.toHaveBeenCalledWith("list_opportunites_closes");
   });
-  it("inclure_clos expose les perdus sans urgence ni totalisation", async () => {
+  it("un perdu non clôturé reste hors totaux et sans urgence (clôture manuelle)", async () => {
     const r = await readData(ctx(), "pipeline_opportunites", { inclure_clos: true, limit: 25, cursor: "0" });
-    expect(r.rows[1]).toMatchObject({ montant_retenu_ht: 900, clos: true, totalisable: false, urgence: false });
+    expect(r.rows[1]).toMatchObject({ montant_retenu_ht: 900, clos: false, totalisable: false, urgence: false });
   });
   it("conserve 900 € de la version précédente pendant le brouillon vide", async () => {
     const r = await readData(ctx({ ...retained, version: 2, net_ht: 900, source_montant: "version_precedente", montant_version: 1 }), "pipeline_opportunites", { limit: 25, cursor: "0" });

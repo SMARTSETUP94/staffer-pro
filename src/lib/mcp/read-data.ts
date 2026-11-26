@@ -103,11 +103,11 @@ export async function readData(ctx: McpAppContext, name: ToolName, args: Args): 
     const estimates = ids.length ? await rowsOf(db.from("affaires").select("id,ca_estime_ht").in("id", ids)) : [];
     return { ...result, rows: result.rows.map(r => {
       const d = retained.find(d => d.affaire_id === r.id), estime = estimates.find(a => a.id === r.id)?.ca_estime_ht ?? null;
-      const clos = ["perdu", "gagne"].includes(r.statut_opportunite);
+      const clos = r.statut_opportunite === "termine", gagnePerdu = ["perdu", "gagne"].includes(r.statut_opportunite);
       return { ...r, ca_estime_ht: estime, montant_retenu_ht: d?.net_ht ?? estime,
         devis_retenu: d ? { numero: d.numero, version: d.version, statut: d.statut_redaction } : null,
         source_montant: d?.source_montant ?? (estime != null ? "estime" : null), montant_version: d?.montant_version ?? null,
-        clos, totalisable: !clos, urgence: !clos && !!r.next_action_due_le && r.next_action_due_le < new Date().toISOString().slice(0,10) };
+        clos, totalisable: !clos && !gagnePerdu, urgence: !clos && !gagnePerdu && !!r.next_action_due_le && r.next_action_due_le < new Date().toISOString().slice(0,10) };
     }) };
   }
   if (name === "demandes_clients") {

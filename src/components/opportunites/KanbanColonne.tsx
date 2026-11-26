@@ -20,6 +20,7 @@ interface Props {
   items: OpportuniteCardData[];
   chargesById: Map<string, ChargeAffaires>;
   onSign?: (opp: OpportuniteCardData) => void;
+  onClore?: (opp: OpportuniteCardData) => void;
   onDelete?: (opp: OpportuniteCardData) => void;
   draggable?: boolean;
   tri: TriCartes;
@@ -32,7 +33,7 @@ interface Props {
  * En-tête sur deux lignes fixes (statut · nombre / montant) ; une colonne repliée
  * devient une bande étroite (nom vertical + nombre), toujours droppable.
  */
-export function KanbanColonne({ statut, items, chargesById, onSign, onDelete, draggable = true, tri, repliee, onToggle }: Props) {
+export function KanbanColonne({ statut, items, chargesById, onSign, onClore, onDelete, draggable = true, tri, repliee, onToggle }: Props) {
   const tone = STATUT_TONE[statut];
   const { setNodeRef, isOver } = useDroppable({ id: `col::${statut}` });
   const parAffaire = useContext(IndicateursCtx);
@@ -112,6 +113,7 @@ export function KanbanColonne({ statut, items, chargesById, onSign, onDelete, dr
                 opp={opp}
                 chargesById={chargesById}
                 onSign={onSign}
+                onClore={onClore}
                 onDelete={onDelete}
                 draggable={draggable}
               />
