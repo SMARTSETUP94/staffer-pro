@@ -21,7 +21,9 @@ function colonnesNumeriques(cellules: Cellule[][]) {
   return cs;
 }
 
-export async function construirePdfEquipe(res: ResultatEquipe): Promise<ArrayBuffer> {
+export type ImageEquipe = { bytes: Uint8Array; format: "PNG" | "JPEG" };
+
+export async function construirePdfEquipe(res: ResultatEquipe, images: Record<string, ImageEquipe> = {}): Promise<ArrayBuffer> {
   const { jsPDF } = await import("jspdf");
   const { default: autoTable } = await import("jspdf-autotable");
   const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "landscape" });
@@ -94,6 +96,59 @@ export async function construirePdfEquipe(res: ResultatEquipe): Promise<ArrayBuf
     });
     y = (doc as any).lastAutoTable.finalY + 6;
   };
+
+  // Fiches objets : description synthétique, commentaire, images (3 par ligne).
+  const piedPage = () => {
+    doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(...GRIS);
+    doc.text(`Version équipe — ${res.fiche.numero} · page ${doc.getNumberOfPages()}`, M, 204);
+  };
+  if (res.fiches_objets.length) {
+    doc.addPage(); y = 16; piedPage();
+    titre("Descriptions des objets");
+    const L = W - 2 * M;
+    for (const f of res.fiches_objets) {
+      const imgs = f.photos.filter((p) => images[p.chemin]);
+      const desc = f.descriptif ? doc.splitTextToSize(f.descriptif, L - 4) as string[] : [];
+      const com = f.commentaires.length ? doc.splitTextToSize(f.commentaires.join("\n"), L - 4) as string[] : [];
+      const H_IMG = 42;
+      const hauteur = 7 + (desc.length ? 4 + desc.length * 3.6 : 0) + (com.length ? 4 + com.length * 3.6 : 0) + (imgs.length ? H_IMG + 3 : 0) + 3;
+      if (y + Math.min(hauteur, 120) > BAS) { doc.addPage(); y = 16; piedPage(); }
+      doc.setFillColor(...FOND); doc.rect(M, y - 4, L, 6.5, "F");
+      doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); doc.setTextColor(...ENCRE);
+      doc.text(`${f.numero}  ${f.libelle}`, M + 2, y);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(...GRIS);
+      const meta = [f.type, `Qté ${fr(f.quantite)}`, f.dimensions ? `${f.dimensions} mm` : null, f.finition].filter(Boolean).join(" · ");
+      doc.text(meta, W - M - 2, y, { align: "right" });
+      y += 6;
+      const bloc = (etiquette: string, lignes: string[]) => {
+        if (!lignes.length) return;
+        doc.setFont("helvetica", "bold"); doc.setFontSize(7.8); doc.setTextColor(...BLEU); doc.text(etiquette, M + 2, y); y += 3.8;
+        doc.setFont("helvetica", "normal"); doc.setFontSize(8.4); doc.setTextColor(...ENCRE);
+        for (const t of lignes) { if (y > BAS) { doc.addPage(); y = 16; piedPage(); } doc.text(t, M + 2, y); y += 3.6; }
+        y += 1;
+      };
+      bloc("Description synthétique", desc);
+      bloc("Commentaire", com);
+      if (!desc.length && !com.length && !imgs.length) { doc.setFontSize(8); doc.setTextColor(...GRIS); doc.text("Aucune description.", M + 2, y); y += 4; }
+      if (imgs.length) {
+        if (y + H_IMG > BAS) { doc.addPage(); y = 16; piedPage(); }
+        let x = M + 2;
+        for (const p of imgs) {
+          const img = images[p.chemin]!;
+          try {
+            const pr = doc.getImageProperties(img.bytes);
+            let h = H_IMG, w = (pr.width / pr.height) * h;
+            if (w > 80) { w = 80; h = (pr.height / pr.width) * w; }
+            if (x + w > W - M) { x = M + 2; y += H_IMG + 3; if (y + H_IMG > BAS) { doc.addPage(); y = 16; piedPage(); } }
+            doc.addImage(img.bytes, img.format, x, y, w, h); x += w + 3;
+          } catch { /* image illisible : omise */ }
+        }
+        y += H_IMG + 3;
+      }
+      y += 3;
+    }
+    doc.addPage(); y = 16; piedPage();
+  }
 
   titre("Heures par objet");
   table(res.objets);

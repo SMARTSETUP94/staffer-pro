@@ -14,6 +14,14 @@ import { ordreArbre } from "./arbre";
 export type LigneEquipe = {
   id: string; parent_id: string | null; type: string; ordre: number;
   libelle: string | null; quantite: number | null; option_incluse?: boolean | null; texte?: string | null;
+  descriptif_client?: string | null; interne?: boolean | null;
+  longueur_mm?: number | null; largeur_mm?: number | null; hauteur_mm?: number | null; finition?: string | null;
+};
+export type PhotoEquipe = { ligne_id: string; chemin: string; legende: string | null; mime: string | null };
+/** Fiche descriptive d'un objet : texte synthétique, commentaires et images (chemins de stockage). */
+export type FicheObjet = {
+  numero: string; libelle: string; type: string; quantite: number; dimensions: string | null; finition: string | null;
+  descriptif: string | null; commentaires: string[]; photos: { chemin: string; legende: string | null }[];
 };
 export type HeureEquipe = {
   ligne_id: string; heures: number; par_unite: boolean; metier_id: number | null;
@@ -32,6 +40,7 @@ export type DonneesEquipe = {
   client: string | null; affaire: string | null; date_devis: string | null; date_validite: string | null;
   total_ht: number; net_ht: number;
   lignes: LigneEquipe[]; heures: HeureEquipe[]; materiaux: MateriauEquipe[]; libres: LibreEquipe[];
+  photos?: PhotoEquipe[];
   metiers: { id: number; libelle: string }[];
 };
 
@@ -48,6 +57,8 @@ export type ResultatEquipe = {
   objets: Cellule[][];
   detail: Cellule[][];
   materiaux: Cellule[][];
+  descriptions: Cellule[][];
+  fiches_objets: FicheObjet[];
   fiche: FicheEquipe;
 };
 
@@ -163,6 +174,24 @@ export function construireExportEquipe(d: DonneesEquipe): ResultatEquipe {
     } else for (const [cle, h] of own) totalParMetier.set(cle, r2((totalParMetier.get(cle) ?? 0) + h));
   }
 
+  // Fiches objets : descriptif synthétique, commentaires (enfants « commentaire » et texte propre) et images.
+  const photos = (d.photos ?? []).filter((p) => parId.has(p.ligne_id) && p.mime !== "application/pdf");
+  const fichesObjets: FicheObjet[] = [];
+  const lignesDesc: Cellule[][] = [["N°", "Désignation", "Type", "Qté", "Dimensions (mm)", "Finition", "Description synthétique", "Commentaire", "Images"]];
+  for (const l of visibles) {
+    if (l.type === "zone" || l.type === "chapitre_suivi") continue;
+    const commentaires = [l.texte, ...d.lignes.filter((k) => k.parent_id === l.id && k.type === "commentaire").sort((a, b) => a.ordre - b.ordre).map((k) => k.texte)]
+      .map((t) => (t ?? "").trim()).filter(Boolean);
+    const dims = [l.longueur_mm, l.largeur_mm, l.hauteur_mm].some((v) => v) ? [l.longueur_mm, l.largeur_mm, l.hauteur_mm].map((v) => (v ? String(v) : "—")).join(" × ") : null;
+    const ph = photos.filter((p) => p.ligne_id === l.id).map((p) => ({ chemin: p.chemin, legende: p.legende }));
+    const descriptif = l.descriptif_client?.trim() || null;
+    const fiche: FicheObjet = { numero: numeros.get(l.id) ?? "", libelle: l.libelle?.trim() || LABEL_TYPE[l.type] || "Ligne", type: LABEL_TYPE[l.type] ?? l.type,
+      quantite: qte(l), dimensions: dims, finition: l.finition?.trim() || null, descriptif, commentaires, photos: ph };
+    if (l.type !== "objet" && !descriptif && !commentaires.length && !ph.length) continue;
+    fichesObjets.push(fiche);
+    lignesDesc.push([fiche.numero, fiche.libelle, fiche.type, fiche.quantite, dims ?? "—", fiche.finition ?? "—", descriptif ?? "—", commentaires.join("\n\n") || "—", ph.length || null]);
+  }
+
   // Détail : une ligne par saisie d'heure, puis par ligne libre portant des heures.
   const objetDe = (ligneId: string) => {
     const l = parId.get(ligneId);
@@ -209,7 +238,7 @@ export function construireExportEquipe(d: DonneesEquipe): ResultatEquipe {
     ["Total HT", r2(d.total_ht)],
     ["Net HT", r2(d.net_ht)],
     ["", ""],
-    ["Contient", "Heures par objet, détail des heures, matériaux (désignation, fournisseur, réf, unité, quantité)"],
+    ["Contient", "Descriptions et commentaires des objets, heures par objet, détail des heures, matériaux (désignation, fournisseur, réf, unité, quantité)"],
     ["Ne contient pas", "Taux, coûts de revient, prix d'achat, coefficients, marges"],
   ];
 
@@ -218,6 +247,8 @@ export function construireExportEquipe(d: DonneesEquipe): ResultatEquipe {
     objets: lignesObjets,
     detail: lignesDetail,
     materiaux: lignesMat,
+    descriptions: lignesDesc,
+    fiches_objets: fichesObjets,
     fiche: {
       numero: d.numero, version: d.version, client: d.client, affaire: d.affaire,
       nb_lignes: visibles.length,

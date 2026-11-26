@@ -103,3 +103,21 @@ describe("Version équipe : nom de fichier", () => {
     expect(nomFichierEquipe({ numero: "9524-R2", version: 2 })).toBe("Équipe 9524-R2.xlsx");
   });
 });
+
+describe("export équipe — descriptions des objets", () => {
+  it("reprend la description synthétique, les commentaires et les images de chaque objet", async () => {
+    const { construireExportEquipe } = await import("../export-equipe");
+    const r = construireExportEquipe({
+      numero: "1-R1", version: 1, libelle: null, client: null, affaire: null, date_devis: null, date_validite: null, total_ht: 0, net_ht: 0,
+      lignes: [
+        { id: "o", parent_id: null, type: "objet", ordre: 1, libelle: "Comptoir", quantite: 2, descriptif_client: "Comptoir laqué", texte: null, longueur_mm: 1200, largeur_mm: 600, hauteur_mm: 1100 },
+        { id: "c", parent_id: "o", type: "commentaire", ordre: 2, libelle: null, quantite: 1, texte: "Prévoir passe-câbles" },
+      ],
+      heures: [], materiaux: [], libres: [], metiers: [],
+      photos: [{ ligne_id: "o", chemin: "a/b.jpg", legende: null, mime: "image/jpeg" }, { ligne_id: "zz", chemin: "x.jpg", legende: null, mime: "image/jpeg" }],
+    });
+    expect(r.fiches_objets).toHaveLength(1);
+    expect(r.fiches_objets[0]).toMatchObject({ numero: "1", descriptif: "Comptoir laqué", commentaires: ["Prévoir passe-câbles"], dimensions: "1200 × 600 × 1100", photos: [{ chemin: "a/b.jpg" }] });
+    expect(r.descriptions[1]?.[7]).toBe("Prévoir passe-câbles");
+  });
+});

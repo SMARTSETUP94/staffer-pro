@@ -37,6 +37,8 @@ export async function lireDonneesEquipe(sb: SupabaseClient<Database>, devisId: s
       id: String(l.id), parent_id: (l.parent_id as string | null) ?? null, type: String(l.type),
       ordre: Number(l.ordre ?? 0), libelle: (l.libelle as string | null) ?? null,
       quantite: l.quantite == null ? 1 : Number(l.quantite), option_incluse: !!l.option_incluse, texte: (l.texte as string | null) ?? null,
+      descriptif_client: (l.descriptif_client as string | null) ?? null, interne: !!l.interne, finition: (l.finition as string | null) ?? null,
+      longueur_mm: l.longueur_mm == null ? null : Number(l.longueur_mm), largeur_mm: l.largeur_mm == null ? null : Number(l.largeur_mm), hauteur_mm: l.hauteur_mm == null ? null : Number(l.hauteur_mm),
     })),
     heures: ((d.heures ?? []) as Json[]).map((h) => ({
       ligne_id: String(h.ligne_id), heures: Number(h.heures ?? 0), par_unite: !!h.par_unite,
@@ -54,12 +56,16 @@ export async function lireDonneesEquipe(sb: SupabaseClient<Database>, devisId: s
       par_unite: !!f.par_unite, heures_info: f.heures_info == null ? null : Number(f.heures_info),
       metier_id: f.poste_info_id ? metierDePoste.get(String(f.poste_info_id)) ?? null : null,
     })),
+    photos: ((d.photos ?? []) as Json[]).map((p) => ({
+      ligne_id: String(p.ligne_id), chemin: String(p.thumb_path ?? p.storage_path ?? ""),
+      legende: (p.legende as string | null) ?? null, mime: (p.mime as string | null) ?? null,
+    })).filter((p) => p.chemin),
     metiers: ((metiersRes.data ?? []) as { id: number; libelle: string }[]).map((m) => ({ id: m.id, libelle: m.libelle })),
   };
 }
 
 const LARGEURS: Record<string, number[]> = {
-  Synthèse: [26, 60], "Heures par objet": [8, 46, 14, 8, 14, 12, 12, 12, 14], "Détail heures": [8, 40, 26, 12, 10, 10, 10],
+  Synthèse: [26, 60], "Descriptions objets": [8, 36, 12, 6, 18, 18, 60, 60, 8], "Heures par objet": [8, 46, 14, 8, 14, 12, 12, 12, 14], "Détail heures": [8, 40, 26, 12, 10, 10, 10],
   Matériaux: [8, 36, 44, 22, 16, 10, 12],
 };
 
@@ -68,7 +74,7 @@ export async function classeurEquipe(res: ResultatEquipe): Promise<Uint8Array> {
   const XLSX = await import("xlsx-js-style");
   const wb = XLSX.utils.book_new();
   const feuilles: [string, Cellule[][]][] = [
-    ["Synthèse", res.synthese], ["Heures par objet", res.objets], ["Détail heures", res.detail], ["Matériaux", res.materiaux],
+    ["Synthèse", res.synthese], ["Descriptions objets", res.descriptions], ["Heures par objet", res.objets], ["Détail heures", res.detail], ["Matériaux", res.materiaux],
   ];
   for (const [nom, cellules] of feuilles) {
     const ws = XLSX.utils.aoa_to_sheet(cellules);
@@ -89,4 +95,18 @@ export async function exporterDevisEquipe(sb: SupabaseClient<Database>, devisId:
   const res = construireExportEquipe(donnees);
   const bytes = await classeurEquipe(res);
   return { bytes, nom: nomFichierEquipe(donnees), fiche: res.fiche };
+}
+
+/** Images des objets (vignettes) pour le PDF équipe ; une image illisible ou non JPEG/PNG est omise. */
+export async function chargerImagesEquipe(sb: SupabaseClient<Database>, res: ResultatEquipe) {
+  const out: Record<string, { bytes: Uint8Array; format: "PNG" | "JPEG" }> = {};
+  const chemins = [...new Set(res.fiches_objets.flatMap((f) => f.photos.map((p) => p.chemin)))];
+  await Promise.all(chemins.map(async (c) => {
+    const { data } = await sb.storage.from("devis-photos").download(c);
+    if (!data) return;
+    const bytes = new Uint8Array(await data.arrayBuffer());
+    const format = bytes[0] === 0x89 && bytes[1] === 0x50 ? "PNG" : bytes[0] === 0xff && bytes[1] === 0xd8 ? "JPEG" : null;
+    if (format) out[c] = { bytes, format };
+  }));
+  return out;
 }
