@@ -89,10 +89,10 @@ describe("Version équipe : aucune donnée de coût", () => {
     expect(cellulesInterdites(res)).toEqual([]);
   });
 
-  it("la synthèse rappelle le total HT et la composition du fichier", () => {
+  it("la synthèse ne donne aucun montant et décrit le fichier", () => {
     const synthese = res.synthese.map((l) => l.join(" | ")).join("\n");
     expect(synthese).toContain("Total heures | 50");
-    expect(synthese).toContain("Total HT | 1000");
+    expect(synthese).not.toContain("Total HT");
     expect(synthese).toContain("Ne contient pas");
   });
 });

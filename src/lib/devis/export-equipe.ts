@@ -58,6 +58,8 @@ export type ResultatEquipe = {
   detail: Cellule[][];
   materiaux: Cellule[][];
   descriptions: Cellule[][];
+  /** Heures par ligne (ligne + enfants), options non incluses comprises pour leur propre sous-arbre. */
+  heures_par_ligne: Record<string, number>;
   fiches_objets: FicheObjet[];
   fiche: FicheEquipe;
 };
@@ -151,6 +153,7 @@ export function construireExportEquipe(d: DonneesEquipe): ResultatEquipe {
   const numeros = new Map<string, string>();
   const totalParMetier = new Map<string, number>();
   const optionsHors: { libelle: string; heures: number }[] = [];
+  const heuresParLigne: Record<string, number> = {};
 
   for (const l of visibles) {
     compteurs[l.profondeur] = (compteurs[l.profondeur] ?? 0) + 1;
@@ -161,6 +164,7 @@ export function construireExportEquipe(d: DonneesEquipe): ResultatEquipe {
     const hors = horsTotal(l);
     const totalOwn = r2([...own.values()].reduce((s, h) => s + h, 0));
     const totalSous = r2([...sousArbre(l.id).values()].reduce((s, h) => s + h, 0));
+    heuresParLigne[l.id] = totalSous;
     lignesObjets.push([
       n, l.libelle?.trim() || LABEL_TYPE[l.type] || "Ligne", LABEL_TYPE[l.type] ?? l.type, qte(l),
       hors ? "non (option)" : "oui",
@@ -235,9 +239,6 @@ export function construireExportEquipe(d: DonneesEquipe): ResultatEquipe {
     ["Options hors total", "Heures"],
     ...(optionsHors.length ? optionsHors.map((o) => [o.libelle, o.heures] as Cellule[]) : [["Aucune", null] as Cellule[]]),
     ["", ""],
-    ["Total HT", r2(d.total_ht)],
-    ["Net HT", r2(d.net_ht)],
-    ["", ""],
     ["Contient", "Descriptions et commentaires des objets, heures par objet, détail des heures, matériaux (désignation, fournisseur, réf, unité, quantité)"],
     ["Ne contient pas", "Taux, coûts de revient, prix d'achat, coefficients, marges"],
   ];
@@ -248,6 +249,7 @@ export function construireExportEquipe(d: DonneesEquipe): ResultatEquipe {
     detail: lignesDetail,
     materiaux: lignesMat,
     descriptions: lignesDesc,
+    heures_par_ligne: heuresParLigne,
     fiches_objets: fichesObjets,
     fiche: {
       numero: d.numero, version: d.version, client: d.client, affaire: d.affaire,
@@ -276,4 +278,16 @@ export function cellulesInterdites(res: ResultatEquipe): string[] {
     }
   }
   return fautes;
+}
+
+/** Synthèse imprimée en tête de la version équipe PDF : jamais de montant. */
+export function syntheseEquipePdf(r: ResultatEquipe): [string, string][] {
+  const h = (v: number) => `${v.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/[\u202f\u00a0]/g, " ")} h`;
+  return [
+    ["Objets", String(r.fiche.nb_objets)],
+    ...r.fiche.heures_par_metier.map((m) => [`Heures ${m.metier}`, h(m.heures)] as [string, string]),
+    ["Total heures (hors options)", h(r.fiche.total_heures)],
+    ["Matériaux", `${r.fiche.nb_materiaux} ligne${r.fiche.nb_materiaux > 1 ? "s" : ""} (voir export Excel)`],
+    ...r.fiche.options_hors_total.map((o) => [`Option non comprise ${o.libelle}`, h(o.heures)] as [string, string]),
+  ];
 }

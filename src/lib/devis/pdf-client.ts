@@ -241,7 +241,9 @@ export const CHARTE = {
   points: [[228, 80, 26], [247, 196, 48], [141, 193, 85], [125, 203, 238]] as RGB[],
 };
 export type PolicesPdf = { interRegular: string; interBold: string; interItalic: string; soraBold: string };
-export type OptionsPdf = { polices?: PolicesPdf; logo?: ImagePdf | null };
+/** Version équipe : même lecture que le PDF client, sans aucun montant ; la colonne de droite porte les heures. */
+export type EquipePdf = { heuresParLigne: Record<string, number>; synthese: [string, string][] };
+export type OptionsPdf = { polices?: PolicesPdf; logo?: ImagePdf | null; equipe?: EquipePdf };
 
 export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: Record<string, ImagePdf> = {}, opts: OptionsPdf = {}): ArrayBuffer {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -288,7 +290,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
 
   // ── En-tête droit : devis, chantier, travaux, validité, début, signataire
   const X = W - M;
-  font("h", 14, C.bleu); doc.text(`Devis n° ${ref}`, X, 20, { align: "right" });
+  font("h", 14, C.bleu); doc.text(opts.equipe ? `Version équipe · ${ref}` : `Devis n° ${ref}`, X, 20, { align: "right" });
   font("t", 9, C.gris); doc.text(`du ${datePdf(vc.date_devis) || "—"}`, X, 25, { align: "right" });
   const debut = vc.chantier?.debut ?? null;
   const lignesD: [string, string][] = [
@@ -327,12 +329,23 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   y += hc + 6;
 
   // ── Encadré des mentions
+  const eq = opts.equipe;
+  if (eq) {
+    font("h", 10.5, C.bleu); doc.text("Synthèse", M, y); y += 2;
+    autoTable(doc, { startY: y, margin: { left: M, right: M }, body: eq.synthese.map(([k, v]) => [{ content: k, styles: { fontStyle: "bold" } }, v]),
+      styles: { font: T, fontSize: 8.6, cellPadding: { top: 1.4, bottom: 1.4, left: 2, right: 2 }, textColor: C.encre, lineColor: C.filet, lineWidth: { bottom: 0.15 } },
+      columnStyles: { 0: { cellWidth: 60 } } });
+    y = (doc as any).lastAutoTable.finalY + 6;
+    font("t", 8, C.gris); doc.text("Document interne : lecture du devis objet par objet, sans prix, coûts ni marges. Heures = objet et ses sous-lignes.", M, y); y += 6;
+  }
   const mentions = vc.mentions_devis?.trim() ? vc.mentions_devis.trim().split(/\r?\n/).filter(Boolean) : MENTIONS_MODELE;
+  if (!eq) {
   font("t", 8); const lm = doc.splitTextToSize(mentions.join("\n"), W - 2 * M - 10);
   const hm = lm.length * 3.6 + 5;
   doc.setDrawColor(...C.filet); doc.setFillColor(255, 255, 255); doc.setLineWidth(0.3); doc.roundedRect(M, y, W - 2 * M, hm, 1.5, 1.5, "S");
   doc.setFillColor(...C.points[1]); doc.rect(M, y + 2, 1, hm - 4, "F");
   font("t", 8, C.gris); doc.text(lm, M + 5, y + 4.6); y += hm + 6;
+  }
 
   // ── Tableau
   const racines = trierRacines(vc.lignes.filter((l) => !l.parent_id && l.type !== "commentaire" && !(l.type === "option" && !l.option_incluse)));
@@ -352,13 +365,13 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
     if (r.style === "commentaire") { descr(r.designation); return; }
     if (r.style === "sous") {
       const st = { font: H, fontStyle: "bold", textColor: C.encre, fontSize: 8.8, cellPadding: { top: 2.6, bottom: 1.2, left: 2, right: 2 } };
-      corps.push([{ content: r.n, styles: { ...st, textColor: C.gris } }, { content: r.designation, colSpan: 4, styles: st }, { content: r.total, styles: { ...st, halign: "right" } }]);
+      corps.push(Object.assign([{ content: r.n, styles: { ...st, textColor: C.gris } }, { content: r.designation, colSpan: 4, styles: st }, { content: r.total, styles: { ...st, halign: "right" } }], { ligneId: r.ligneId }));
       if (r.detail) descr(r.detail);
       return;
     }
     const fond = r.style === "objet" || r.style === "forfait" ? { fillColor: C.bleuClair } : {};
-    corps.push([{ content: r.n, styles: { ...fond, textColor: C.gris } }, { content: r.designation, styles: { ...fond, fontStyle: "bold" } }, { content: r.unite, styles: fond }, { content: r.qte, styles: fond },
-      { content: r.pu, styles: fond }, { content: r.total, styles: { ...fond, fontStyle: "bold" } }]);
+    corps.push(Object.assign([{ content: r.n, styles: { ...fond, textColor: C.gris } }, { content: r.designation, styles: { ...fond, fontStyle: "bold" } }, { content: r.unite, styles: fond }, { content: r.qte, styles: fond },
+      { content: r.pu, styles: fond }, { content: r.total, styles: { ...fond, fontStyle: "bold" } }], { ligneId: r.ligneId }));
     if (r.detail) descr(r.detail);
     vignettes(r.ligneId);
   };
@@ -395,9 +408,9 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
       continue;
     }
     // Intertitre sobre de zone ou de chapitre détaillé
-    corps.push([{ content: n, styles: { font: H, fontStyle: "bold", textColor: C.bleu, fontSize: 9.5, cellPadding: { top: 3.5, bottom: 1.5, left: 2, right: 2 }, lineWidth: { bottom: 0.4 }, lineColor: C.bleu } },
+    corps.push(Object.assign([{ content: n, styles: { font: H, fontStyle: "bold", textColor: C.bleu, fontSize: 9.5, cellPadding: { top: 3.5, bottom: 1.5, left: 2, right: 2 }, lineWidth: { bottom: 0.4 }, lineColor: C.bleu } },
       { content: suffixeOptions(r, titre), colSpan: 4, styles: { font: H, fontStyle: "bold", textColor: C.bleu, fontSize: 9.5, cellPadding: { top: 3.5, bottom: 1.5, left: 2, right: 2 }, lineWidth: { bottom: 0.4 }, lineColor: C.bleu } },
-      { content: seulementOptions(r) ? eurHt(optionsNonIncluses(vc, r)) : eurPdf(total), styles: { font: H, fontStyle: seulementOptions(r) ? "italic" : "bold", textColor: seulementOptions(r) ? C.gris : C.bleu, fontSize: 8.6, halign: "right", cellPadding: { top: 3.5, bottom: 1.5, left: 2, right: 2 }, lineWidth: { bottom: 0.4 }, lineColor: C.bleu } }]);
+      { content: seulementOptions(r) ? eurHt(optionsNonIncluses(vc, r)) : eurPdf(total), styles: { font: H, fontStyle: seulementOptions(r) ? "italic" : "bold", textColor: seulementOptions(r) ? C.gris : C.bleu, fontSize: 8.6, halign: "right", cellPadding: { top: 3.5, bottom: 1.5, left: 2, right: 2 }, lineWidth: { bottom: 0.4 }, lineColor: C.bleu } }], { ligneId: r.id }));
     if (dchap) descr(dchap);
     const forfait = chap ? Number(r.montant ?? 0) : 0;
     let decal = 0;
@@ -431,9 +444,23 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
       try { const pr = doc.getImageProperties(img.bytes); const h = 26, w = Math.min(40, (pr.width / pr.height) * h); doc.addImage(img.bytes, img.format, x, data.cell.y + 2, w, (pr.height / pr.width) * w > h ? h : (pr.height / pr.width) * w); x += w + 3; } catch { /* image illisible : omise */ }
     }
   };
+  /** Version équipe : toute cellule de montant est vidée ; la dernière cellule d'une ligne porte ses heures. */
+  const heuresTxt = (id?: string) => { const h = id ? eq?.heuresParLigne[id] : 0; return h ? `${h.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/[\u202f\u00a0]/g, " ")} h` : ""; };
+  const sansPrix = (rows: any[]) => {
+    if (!eq) return rows;
+    for (const row of rows) {
+      row.forEach((c: any, i: number) => {
+        const txt = c && typeof c === "object" ? c.content : c;
+        if (i >= 2 && typeof txt === "string" && /€/.test(txt)) { if (c && typeof c === "object") c.content = ""; else row[i] = ""; }
+      });
+      if (row.ligneId && row.length >= 3) { const last = row[row.length - 1]; const h = heuresTxt(row.ligneId); if (last && typeof last === "object") last.content = h; else row[row.length - 1] = h; }
+    }
+    return rows;
+  };
+  sansPrix(corps);
   autoTable(doc, {
     startY: y, margin: { left: M, right: M, bottom: 300 - BAS },
-    head: [["N°", "Désignation", "U", "Qté", "PU HT", "Total HT"]],
+    head: [eq ? ["N°", "Désignation", "U", "Qté", "", "Heures"] : ["N°", "Désignation", "U", "Qté", "PU HT", "Total HT"]],
     body: corps.length ? grouper(corps) : [[vide, { content: "Aucune ligne chiffrée", colSpan: 5 }]], rowPageBreak: "avoid",
     styles: tableStyles, headStyles: { fillColor: C.bleu, textColor: [255, 255, 255], font: T, fontStyle: "bold", lineWidth: 0 },
     columnStyles: colonnes, didDrawCell: dessinerImages,
@@ -444,26 +471,27 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   // ── Options (non comprises dans le total)
   const opts2 = optionsDevis(vc);
   if (opts2.length) {
-    place(20); font("h", 10, C.bleu); doc.text("Options HT (non comprises dans le total)", M, y); y += 2;
+    place(20); font("h", 10, C.bleu); doc.text(eq ? "Options (non comprises)" : "Options HT (non comprises dans le total)", M, y); y += 2;
     const corpsO: any[] = [];
     const opt = { fillColor: C.fond };
     opts2.forEach((o, i) => {
       const q = Number(o.ligne.quantite ?? 1) > 0 ? Number(o.ligne.quantite) : 1;
-      corpsO.push([{ content: `O${i + 1}`, styles: { textColor: C.gris } }, { content: o.ligne.libelle ?? "Option", styles: { fontStyle: "bold" } }, "ens", String(q),
-        detaille ? eurPdf(Math.round((o.montant / q) * 100) / 100) : "", { content: eurPdf(o.montant), styles: { fontStyle: "bold" } }]);
+      corpsO.push(Object.assign([{ content: `O${i + 1}`, styles: { textColor: C.gris } }, { content: o.ligne.libelle ?? "Option", styles: { fontStyle: "bold" } }, "ens", String(q),
+        detaille ? eurPdf(Math.round((o.montant / q) * 100) / 100) : "", { content: eurPdf(o.montant), styles: { fontStyle: "bold" } }], { ligneId: o.ligne.id }));
       if (!detaille) return; // synthétique : la seule ligne d'option avec son total
       const d = (o.ligne.descriptif_client ?? "").trim(); if (d) corpsO.push(rattache([vide, { content: d, colSpan: 5, styles: { fontStyle: "italic", textColor: C.gris, fontSize: 8 } }]));
       // Objets de l'option (n°, désignation, descriptif, U, Qté, PU, Total), marqués « option ».
       for (const r of lignesTableau(vc, o.ligne, niveau, `O${i + 1}`)) {
         if (r.style === "commentaire") { corpsO.push([vide, { content: r.designation, colSpan: 5, styles: { fontStyle: "italic", textColor: C.gris, fontSize: 8 } }]); continue; }
-        corpsO.push([{ content: r.n, styles: { ...opt, textColor: C.gris } }, { content: `${r.designation}  · option`, styles: opt }, { content: r.unite, styles: opt }, { content: r.qte, styles: opt }, { content: r.pu, styles: opt }, { content: r.total, styles: opt }]);
+        corpsO.push(Object.assign([{ content: r.n, styles: { ...opt, textColor: C.gris } }, { content: `${r.designation}  · option`, styles: opt }, { content: r.unite, styles: opt }, { content: r.qte, styles: opt }, { content: r.pu, styles: opt }, { content: r.total, styles: opt }], { ligneId: r.ligneId }));
         if (r.detail) corpsO.push(rattache([vide, { content: r.detail, colSpan: 5, styles: { fontStyle: "italic", textColor: C.gris, fontSize: 8 } }]));
       }
     });
-    autoTable(doc, { startY: y, margin: { left: M, right: M, bottom: 300 - BAS }, body: grouper(corpsO), rowPageBreak: "avoid", styles: tableStyles, columnStyles: colonnes });
+    autoTable(doc, { startY: y, margin: { left: M, right: M, bottom: 300 - BAS }, body: grouper(sansPrix(corpsO)), rowPageBreak: "avoid", styles: tableStyles, columnStyles: colonnes });
     y = (doc as any).lastAutoTable.finalY + 6;
   }
 
+  if (!eq) {
   // ── Totaux : tableau TVA + encadré
   const remise = Math.abs(Number(vc.remise ?? 0)), net = Number(vc.net_ht ?? vc.total_ht);
   // Totaux et récapitulatif des options restent sur la même page : s'ils ne tiennent pas, le bloc entier passe.
@@ -526,6 +554,8 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
     for (const l of doc.splitTextToSize(vc.cgv.trim(), W - 2 * M)) { if (y > BAS) { doc.addPage(); y = 20; font("t", 7.4); } doc.text(l, M, y); y += 3.3; }
   }
 
+  }
+
   // ── Pied de page + filigrane
   const pied = [[s.raison_sociale, ml.forme, ml.capital ? `au capital de ${capitalFr(ml.capital)}` : null, ml.telephone ? `Tél. ${ml.telephone}` : null, ml.email].filter(Boolean).join(" · "),
     [ml.ape ? `APE ${ml.ape}` : null, s.siret ? `SIRET ${s.siret}` : null, ml.tva ? `TVA intracom. ${ml.tva}` : null, ml.iban ? `IBAN ${ml.iban}` : null, ml.bic ? `BIC ${ml.bic}` : null].filter(Boolean).join(" · ")].filter(Boolean);
@@ -535,6 +565,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
     doc.setDrawColor(...C.filet); doc.setLineWidth(0.3); doc.line(M, 276, W - M, 276);
     font("t", 6.6, C.gris); doc.text(pied, W / 2, 280, { align: "center" });
     font("tb", 7.4, C.gris); doc.text(ref, M, 290); font("t", 7.4, C.gris); doc.text(`page ${i} / ${n}`, W - M, 290, { align: "right" });
+    if (eq) { font("tb", 7.4, C.bleu); doc.text("Version équipe — sans prix", W / 2, 290, { align: "center" }); }
     if (avecFiligrane(vc.statut_redaction)) {
       doc.saveGraphicsState();
       doc.setGState(new (doc as any).GState({ opacity: 0.1 }));

@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { construireExportEquipe, nomFichierEquipe, refEquipe, type FicheEquipe, type ResultatEquipe } from "@/lib/devis/export-equipe";
-import { chargerImagesEquipe, classeurEquipe, lireDonneesEquipe } from "@/lib/devis/export-equipe-io";
+import { classeurEquipe, lireDonneesEquipe } from "@/lib/devis/export-equipe-io";
 import { eur } from "@/components/devis/editeur/api";
 
 function telecharger(bytes: Uint8Array | ArrayBuffer, nom: string, type: string) {
@@ -45,8 +45,8 @@ export function ExportEquipeDialog({ devisId, open, onOpenChange }: { devisId: s
         const bytes = await classeurEquipe(r);
         telecharger(bytes, nomFichierEquipe({ numero: r.fiche.numero, version: r.fiche.version }), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
       } else {
-        const { construirePdfEquipe } = await import("@/lib/devis/export-equipe-pdf");
-        telecharger(await construirePdfEquipe(r, await chargerImagesEquipe(supabase, r)), nomFichierEquipe({ numero: r.fiche.numero, version: r.fiche.version }).replace(/\.xlsx$/, ".pdf"), "application/pdf");
+        const [{ construirePdfEquipeClient }, { syntheseEquipePdf }] = await Promise.all([import("@/lib/devis/pdf-export"), import("@/lib/devis/export-equipe")]);
+        telecharger(await construirePdfEquipeClient(supabase, devisId, { heuresParLigne: r.heures_par_ligne, synthese: syntheseEquipePdf(r) }), nomFichierEquipe({ numero: r.fiche.numero, version: r.fiche.version }).replace(/\.xlsx$/, ".pdf"), "application/pdf");
       }
       toast.success(format === "excel" ? "Excel équipe téléchargé" : "PDF équipe téléchargé");
     } catch (e) { toast.error(e instanceof Error ? e.message : "Export impossible"); } finally { setBusy(null); }

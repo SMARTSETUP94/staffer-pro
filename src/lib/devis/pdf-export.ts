@@ -1,7 +1,7 @@
 /** Génère le PDF client d'un devis, l'enregistre dans le stockage privé des exports et l'historique. */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-import { champsClientManquants, construireDevisPdf, nomFichierPdf, type DevisClient, type ImagePdf, type NiveauPdf } from "./pdf-client";
+import { champsClientManquants, construireDevisPdf, type EquipePdf, nomFichierPdf, type DevisClient, type ImagePdf, type NiveauPdf } from "./pdf-client";
 
 export const BUCKET_EXPORTS = "devis-exports";
 
@@ -50,4 +50,21 @@ export async function exporterDevisPdf(sb: SupabaseClient<Database>, devisId: st
   const reg = await sb.rpc("devis_export_enregistrer", { _devis_id: devisId, _niveau: niveau, _storage_path: path, _taille: bytes.byteLength });
   if (reg.error) throw new Error("Historique d'export indisponible");
   return { vc, bytes, avertissements: champsClientManquants(vc.client), path, nom: nomFichierPdf(vc, niveau), export: reg.data as { id: string; version: number; filigrane: boolean } };
+}
+
+/** Version équipe : le devis dans sa lecture client (lignes, descriptifs, images), sans aucun montant. Non enregistrée dans l'historique des exports. */
+export async function construirePdfEquipeClient(sb: SupabaseClient<Database>, devisId: string, equipe: EquipePdf): Promise<ArrayBuffer> {
+  const vc = await lireDevisClient(sb, devisId);
+  const images = await chargerImages(sb, vc);
+  let logo: ImagePdf | null = null;
+  if (vc.logo_storage_path) {
+    const { data } = await sb.storage.from("devis-photos").download(vc.logo_storage_path);
+    if (data) {
+      const bytes = new Uint8Array(await data.arrayBuffer());
+      const format = bytes[0] === 0x89 && bytes[1] === 0x50 ? "PNG" : bytes[0] === 0xff && bytes[1] === 0xd8 ? "JPEG" : null;
+      if (format) logo = { bytes, format };
+    }
+  }
+  const polices = await import("./polices-pdf");
+  return construireDevisPdf({ ...vc, cgv: null } as DevisClient, "detaille", images, { polices, logo, equipe });
 }
