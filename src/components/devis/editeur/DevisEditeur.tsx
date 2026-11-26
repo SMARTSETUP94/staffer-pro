@@ -256,7 +256,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
         <span className="ml-auto text-sm text-muted-foreground">Total HT <strong className="text-base tabular-nums text-foreground">{eur(calc.remise !== 0 ? calc.net_ht : calc.total_ht)}</strong>{calc.remise !== 0 && <span className="text-xs"> (net)</span>}</span>
         {!d.devis.est_modele && (() => {
           const v = d.droits.valider && st !== "remplace", e = d.droits.ecrire, aff = !!d.devis.affaire_id, nonSigne = !d.devis.signe_vers_fabrication_le;
-          const valideOuEnvoye = ["valide", "transfere"].includes(st);
+          const valideOuEnvoye = ["valide", "transfere", "signe"].includes(st);
           const peutEnvoyer = (st === "valide" || (st === "transfere" && !!d.devis.numero_progbat && !d.devis.date_envoi)) && v && aff;
           const ouvrirEnvoi = () => { setEnvoiDate(new Date().toISOString().slice(0, 10)); setEnvoiDlg(true); };
           const cta = (st === "brouillon" || st === "a_valider") && v ? <Button size="sm" onClick={() => setAvantValider("valide")}><CheckCircle2 className="mr-1 h-3.5 w-3.5" />Finaliser le devis</Button>

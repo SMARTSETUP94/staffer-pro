@@ -1107,6 +1107,13 @@
       "when": 1795683859452,
       "tag": "0157_opportunites_cloture_manuelle",
       "breakpoints": true
+    },
+    {
+      "idx": 158,
+      "version": "7",
+      "when": 1795684055921,
+      "tag": "0158_progbat_export_devis_signes",
+      "breakpoints": true
     }
   ]
 }
