@@ -140,7 +140,7 @@ export async function construirePdfEquipe(res: ResultatEquipe, images: Record<st
             let h = H_IMG, w = (pr.width / pr.height) * h;
             if (w > 80) { w = 80; h = (pr.height / pr.width) * w; }
             if (x + w > W - M) { x = M + 2; y += H_IMG + 3; if (y + H_IMG > BAS) { doc.addPage(); y = 16; piedPage(); } }
-            doc.addImage(img.bytes, img.format, x, y, w, h); x += w + 3;
+            doc.addImage(img.bytes, img.format, x, y, w, h, undefined, "FAST"); x += w + 3;
           } catch { /* image illisible : omise */ }
         }
         y += H_IMG + 3;

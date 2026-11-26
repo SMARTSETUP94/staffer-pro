@@ -233,10 +233,34 @@ export function reglementDevis(vc: Pick<DevisClient, "ttc" | "reglement">) {
   return { pct, acompte: Math.round(Number(vc.ttc) * pct) / 100, mode: vc.reglement?.mode ?? "virement", delai: vc.reglement?.delai_jours ?? 30 };
 }
 
+/** Descriptifs : 8,4 pt, gris foncé (contraste ≥ 4,5:1 sur fond bleu clair et gris). */
+export const TAILLE_DESCRIPTIF = 8.4;
+export const LARGEUR_ENTETE_DROITE = 95;
+/** Évite un dernier mot court isolé (« 02/12 ») : le mot précédent descend avec lui. */
+export function sansOrphelin(lignes: string[], minCar = 8): string[] {
+  if (lignes.length < 2) return lignes;
+  const l = [...lignes], der = l[l.length - 1]!.trim(), avant = l[l.length - 2]!.trim();
+  if (der.length >= minCar) return l;
+  const i = avant.lastIndexOf(" ");
+  if (i <= 0) return l;
+  l[l.length - 2] = avant.slice(0, i); l[l.length - 1] = `${avant.slice(i + 1)} ${der}`;
+  return l;
+}
+/** Cadre « Pour SET UP » : signataire, sinon interlocuteur Set Up (nom + e-mail pro). */
+export function pourSetUp(vc: Pick<DevisClient, "signataire" | "interlocuteur">): string[] {
+  if (vc.signataire?.nom?.trim()) return [vc.signataire.nom.trim()];
+  const i = vc.interlocuteur;
+  return i?.nom?.trim() ? [i.nom.trim(), ...(i.email?.trim() ? [i.email.trim()] : [])] : [];
+}
+/** Rappel en haut des pages 2 et suivantes. */
+export function rappelEntete(vc: Pick<DevisClient, "client">, ref: string, equipe = false): string {
+  return [equipe ? `Version équipe · ${ref}` : `Devis n° ${ref}`, vc.client?.nom?.trim()].filter(Boolean).join(" · ");
+}
+
 /** Charte SET UP. */
 type RGB = [number, number, number];
 export const CHARTE = {
-  encre: [29, 29, 27] as RGB, bleu: [21, 56, 169] as RGB, bleuVif: [47, 91, 255] as RGB, gris: [92, 96, 104] as RGB,
+  encre: [29, 29, 27] as RGB, bleu: [21, 56, 169] as RGB, bleuVif: [47, 91, 255] as RGB, gris: [92, 96, 104] as RGB, grisTexte: [62, 66, 74] as RGB,
   filet: [221, 225, 230] as RGB, fond: [244, 246, 248] as RGB, bleuClair: [232, 237, 251] as RGB,
   points: [[228, 80, 26], [247, 196, 48], [141, 193, 85], [125, 203, 238]] as RGB[],
 };
@@ -276,7 +300,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   // ── En-tête gauche : logo (ou marque) + émetteur
   let yL = 14;
   if (opts.logo) {
-    try { const pr = doc.getImageProperties(opts.logo.bytes); const w = 46, h = Math.min(22, (pr.height / pr.width) * w); doc.addImage(opts.logo.bytes, opts.logo.format, M, yL, (pr.width / pr.height) * h, h); yL += h + 4; }
+    try { const pr = doc.getImageProperties(opts.logo.bytes); const w = 46, h = Math.min(22, (pr.height / pr.width) * w); doc.addImage(opts.logo.bytes, opts.logo.format, M, yL, (pr.width / pr.height) * h, h, "logo", "FAST"); yL += h + 4; }
     catch { yL += 0; }
   } else {
     font("h", 20); doc.text("SET UP", M, yL + 7);
@@ -303,7 +327,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   ];
   let yR = 31;
   for (const [k, v] of lignesD) {
-    font("t", 8.8); const lv = doc.splitTextToSize(v, 70);
+    font("t", 8.8); const lv = sansOrphelin(doc.splitTextToSize(v, LARGEUR_ENTETE_DROITE));
     doc.text(lv, X, yR, { align: "right" });
     font("tb", 8.8, C.gris); doc.text(`${k} : `, X - Math.max(...lv.map((x: string) => { font("t", 8.8); return doc.getTextWidth(x); })), yR, { align: "right" });
     yR += lv.length * 4.1;
@@ -355,7 +379,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   const vide = { content: "" };
   /** Ligne rattachée à la ligne qui la précède (descriptif, vignettes) : jamais séparée d'elle par un saut de page. */
   const rattache = (row: any[]) => Object.assign(row, { att: true });
-  const descr = (texte: string) => corps.push(rattache([vide, { content: texte, colSpan: 5, styles: { font: T, fontStyle: "italic", textColor: C.gris, fontSize: 8, cellPadding: { top: 0.6, bottom: 2.4, left: 3, right: 3 } } }]));
+  const descr = (texte: string) => corps.push(rattache([vide, { content: texte, colSpan: 5, styles: { font: T, fontStyle: "italic", textColor: C.grisTexte, fontSize: TAILLE_DESCRIPTIF, cellPadding: { top: 0.6, bottom: 2.4, left: 3, right: 3 } } }]));
   const vignettes = (ligneId?: string) => {
     if (!detaille || !ligneId) return;
     const ph = vc.photos.filter((p) => p.ligne_id === ligneId && images[p.thumb_path ?? p.storage_path]).slice(0, 3);
@@ -441,7 +465,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
     if (!imgs?.length || data.section !== "body") return;
     let x = data.cell.x + 3;
     for (const img of imgs) {
-      try { const pr = doc.getImageProperties(img.bytes); const h = 26, w = Math.min(40, (pr.width / pr.height) * h); doc.addImage(img.bytes, img.format, x, data.cell.y + 2, w, (pr.height / pr.width) * w > h ? h : (pr.height / pr.width) * w); x += w + 3; } catch { /* image illisible : omise */ }
+      try { const pr = doc.getImageProperties(img.bytes); const h = 26, w = Math.min(40, (pr.width / pr.height) * h); doc.addImage(img.bytes, img.format, x, data.cell.y + 2, w, (pr.height / pr.width) * w > h ? h : (pr.height / pr.width) * w, undefined, "FAST"); x += w + 3; } catch { /* image illisible : omise */ }
     }
   };
   /** Version équipe : toute cellule de montant est vidée ; la dernière cellule d'une ligne porte ses heures. */
@@ -479,12 +503,12 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
       corpsO.push(Object.assign([{ content: `O${i + 1}`, styles: { textColor: C.gris } }, { content: o.ligne.libelle ?? "Option", styles: { fontStyle: "bold" } }, "ens", String(q),
         detaille ? eurPdf(Math.round((o.montant / q) * 100) / 100) : "", { content: eurPdf(o.montant), styles: { fontStyle: "bold" } }], { ligneId: o.ligne.id }));
       if (!detaille) return; // synthétique : la seule ligne d'option avec son total
-      const d = (o.ligne.descriptif_client ?? "").trim(); if (d) corpsO.push(rattache([vide, { content: d, colSpan: 5, styles: { fontStyle: "italic", textColor: C.gris, fontSize: 8 } }]));
+      const d = (o.ligne.descriptif_client ?? "").trim(); if (d) corpsO.push(rattache([vide, { content: d, colSpan: 5, styles: { fontStyle: "italic", textColor: C.grisTexte, fontSize: TAILLE_DESCRIPTIF } }]));
       // Objets de l'option (n°, désignation, descriptif, U, Qté, PU, Total), marqués « option ».
       for (const r of lignesTableau(vc, o.ligne, niveau, `O${i + 1}`)) {
-        if (r.style === "commentaire") { corpsO.push([vide, { content: r.designation, colSpan: 5, styles: { fontStyle: "italic", textColor: C.gris, fontSize: 8 } }]); continue; }
+        if (r.style === "commentaire") { corpsO.push([vide, { content: r.designation, colSpan: 5, styles: { fontStyle: "italic", textColor: C.grisTexte, fontSize: TAILLE_DESCRIPTIF } }]); continue; }
         corpsO.push(Object.assign([{ content: r.n, styles: { ...opt, textColor: C.gris } }, { content: `${r.designation}  · option`, styles: opt }, { content: r.unite, styles: opt }, { content: r.qte, styles: opt }, { content: r.pu, styles: opt }, { content: r.total, styles: opt }], { ligneId: r.ligneId }));
-        if (r.detail) corpsO.push(rattache([vide, { content: r.detail, colSpan: 5, styles: { fontStyle: "italic", textColor: C.gris, fontSize: 8 } }]));
+        if (r.detail) corpsO.push(rattache([vide, { content: r.detail, colSpan: 5, styles: { fontStyle: "italic", textColor: C.grisTexte, fontSize: TAILLE_DESCRIPTIF } }]));
       }
     });
     autoTable(doc, { startY: y, margin: { left: M, right: M, bottom: 300 - BAS }, body: grouper(sansPrix(corpsO)), rowPageBreak: "avoid", styles: tableStyles, columnStyles: colonnes });
@@ -500,7 +524,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   const ligneTot = (l: string, v: string, fort = false): RowInput => [{ content: l, styles: fort ? { fontStyle: "bold" } : {} }, { content: v, styles: { halign: "right", ...(fort ? { fontStyle: "bold" } : {}) } }];
   autoTable(doc, {
     startY: y, margin: { left: xT, right: M }, tableWidth: 72,
-    body: [ligneTot("Total HT", eurPdf(vc.total_ht)), ligneTot("Remise", eurPdf(-remise)), ligneTot("Total net HT", eurPdf(net), true), ligneTot(`TVA ${Number(vc.tva_pct)} %`, eurPdf(vc.tva)),
+    body: [ligneTot("Total HT", eurPdf(vc.total_ht)), ...(remise >= 0.005 ? [ligneTot("Remise", eurPdf(-remise))] : []), ligneTot("Total net HT", eurPdf(net), true), ligneTot(`TVA ${Number(vc.tva_pct)} %`, eurPdf(vc.tva)),
       [{ content: "Total TTC", styles: { fontStyle: "bold", fillColor: C.bleu, textColor: [255, 255, 255], font: H } }, { content: eurPdf(vc.ttc), styles: { halign: "right", fontStyle: "bold", fillColor: C.bleu, textColor: [255, 255, 255], font: H } }]],
     styles: { ...tableStyles, fontSize: 9, fillColor: C.fond },
   });
@@ -544,7 +568,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   font("h", 9.5); doc.text("Signature du client", M + 4, y + 6.5); doc.text("Pour SET UP", M + bw + 10, y + 6.5);
   font("t", 7.6, C.gris);
   doc.text(doc.splitTextToSize("Bon pour accord — date, mention « lu et approuvé », signature et cachet. Les travaux ne pourront pas débuter sans devis signé ou bon de commande.", bw - 8), M + 4, y + 11.5);
-  if (vc.signataire) { font("t", 8.5); doc.text(vc.signataire.nom, M + bw + 10, y + 11.5); }
+  { const p = pourSetUp(vc); if (p.length) { font("t", 8.5); doc.text(p, M + bw + 10, y + 11.5); } }
 
   // ── Conditions générales de vente
   if (vc.cgv?.trim()) {
@@ -562,6 +586,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   const n = doc.getNumberOfPages();
   for (let i = 1; i <= n; i++) {
     doc.setPage(i);
+    if (i > 1) { font("tb", 7.4, C.gris); doc.text(textePdf(rappelEntete(vc, ref, !!eq)), M, 9); }
     doc.setDrawColor(...C.filet); doc.setLineWidth(0.3); doc.line(M, 276, W - M, 276);
     font("t", 6.6, C.gris); doc.text(pied, W / 2, 280, { align: "center" });
     font("tb", 7.4, C.gris); doc.text(ref, M, 290); font("t", 7.4, C.gris); doc.text(`page ${i} / ${n}`, W - M, 290, { align: "right" });

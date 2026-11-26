@@ -102,11 +102,9 @@ export async function chargerImagesEquipe(sb: SupabaseClient<Database>, res: Res
   const out: Record<string, { bytes: Uint8Array; format: "PNG" | "JPEG" }> = {};
   const chemins = [...new Set(res.fiches_objets.flatMap((f) => f.photos.map((p) => p.chemin)))];
   await Promise.all(chemins.map(async (c) => {
-    const { data } = await sb.storage.from("devis-photos").download(c);
-    if (!data) return;
-    const bytes = new Uint8Array(await data.arrayBuffer());
-    const format = bytes[0] === 0x89 && bytes[1] === 0x50 ? "PNG" : bytes[0] === 0xff && bytes[1] === 0xd8 ? "JPEG" : null;
-    if (format) out[c] = { bytes, format };
+    const { telechargerImagePdf, PHOTO_MAX_PX } = await import("./images-pdf");
+    const img = await telechargerImagePdf(() => sb.storage.from("devis-photos").download(c), PHOTO_MAX_PX);
+    if (img) out[c] = img;
   }));
   return out;
 }

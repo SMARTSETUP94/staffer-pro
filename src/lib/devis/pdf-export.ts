@@ -1,6 +1,7 @@
 /** Génère le PDF client d'un devis, l'enregistre dans le stockage privé des exports et l'historique. */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { LOGO_MAX_PX, PHOTO_MAX_PX, telechargerImagePdf } from "./images-pdf";
 import { champsClientManquants, construireDevisPdf, type EquipePdf, nomFichierPdf, type DevisClient, type ImagePdf, type NiveauPdf } from "./pdf-client";
 
 export const BUCKET_EXPORTS = "devis-exports";
@@ -18,13 +19,16 @@ export async function chargerImages(sb: SupabaseClient<Database>, vc: DevisClien
   const out: Record<string, ImagePdf> = {};
   await Promise.all(vc.photos.filter((p) => p.mime !== "application/pdf").map(async (p) => {
     const path = p.thumb_path ?? p.storage_path;
-    const { data } = await sb.storage.from("devis-photos").download(path);
-    if (!data) return;
-    const bytes = new Uint8Array(await data.arrayBuffer());
-    const format = bytes[0] === 0x89 && bytes[1] === 0x50 ? "PNG" : bytes[0] === 0xff && bytes[1] === 0xd8 ? "JPEG" : null;
-    if (format) out[path] = { bytes, format };
+    const img = await telechargerImagePdf(() => sb.storage.from("devis-photos").download(path), PHOTO_MAX_PX);
+    if (img) out[path] = img;
   }));
   return out;
+}
+
+/** Logo de l'émetteur, réduit à LOGO_MAX_PX de large. */
+export async function chargerLogo(sb: SupabaseClient<Database>, vc: DevisClient): Promise<ImagePdf | null> {
+  const p = vc.logo_storage_path;
+  return p ? telechargerImagePdf(() => sb.storage.from("devis-photos").download(p), LOGO_MAX_PX) : null;
 }
 
 /** `transformer` : variante du contenu (ex. options retenues pour Pennylane), même rendu et même historique. */
@@ -32,15 +36,7 @@ export async function exporterDevisPdf(sb: SupabaseClient<Database>, devisId: st
   const lu = await lireDevisClient(sb, devisId);
   const vc = transformer ? { ...transformer(lu), numero_progbat: lu.numero_progbat } : lu;
   const images = niveau === "detaille" ? await chargerImages(sb, vc) : {};
-  let logo: ImagePdf | null = null;
-  if (vc.logo_storage_path) {
-    const { data } = await sb.storage.from("devis-photos").download(vc.logo_storage_path);
-    if (data) {
-      const bytes = new Uint8Array(await data.arrayBuffer());
-      const format = bytes[0] === 0x89 && bytes[1] === 0x50 ? "PNG" : bytes[0] === 0xff && bytes[1] === 0xd8 ? "JPEG" : null;
-      if (format) logo = { bytes, format };
-    }
-  }
+  const logo = await chargerLogo(sb, vc);
   const polices = await import("./polices-pdf");
   const buf = construireDevisPdf(vc, niveau, images, { polices, logo });
   const bytes = new Uint8Array(buf);
@@ -56,15 +52,7 @@ export async function exporterDevisPdf(sb: SupabaseClient<Database>, devisId: st
 export async function construirePdfEquipeClient(sb: SupabaseClient<Database>, devisId: string, equipe: EquipePdf): Promise<ArrayBuffer> {
   const vc = await lireDevisClient(sb, devisId);
   const images = await chargerImages(sb, vc);
-  let logo: ImagePdf | null = null;
-  if (vc.logo_storage_path) {
-    const { data } = await sb.storage.from("devis-photos").download(vc.logo_storage_path);
-    if (data) {
-      const bytes = new Uint8Array(await data.arrayBuffer());
-      const format = bytes[0] === 0x89 && bytes[1] === 0x50 ? "PNG" : bytes[0] === 0xff && bytes[1] === 0xd8 ? "JPEG" : null;
-      if (format) logo = { bytes, format };
-    }
-  }
+  const logo = await chargerLogo(sb, vc);
   const polices = await import("./polices-pdf");
   return construireDevisPdf({ ...vc, cgv: null } as DevisClient, "detaille", images, { polices, logo, equipe });
 }
