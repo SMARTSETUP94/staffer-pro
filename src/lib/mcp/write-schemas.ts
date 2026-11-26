@@ -44,7 +44,7 @@ export const writeSchemas = {
     source: z.object({ boite: text, message_id: text, sujet: text.optional() }).strict().optional(),
     email_ids: z.array(uuid).min(1).max(20).optional().describe("Demandes devis en attente à rattacher à l’opportunité créée (mêmes règles que traiter_demande)."), cle_externe: z.string().min(1).max(255).optional(), ...confirmationSchema,
   },
-  ajouter_action_opportunite: { ...affaireReference, type: z.enum(["email_envoye", "email_recu", "rdv_planifie", "rdv_realise", "relance_tel", "relance_email", "note_interne", "devis_envoye", "echantillon_presente", "autre"]), note, echeance: dateSchema.optional(), ...confirmationSchema },
+  ajouter_action_opportunite: { ...affaireReference, type: z.enum(["email_envoye", "email_recu", "rdv_planifie", "rdv_realise", "relance_tel", "relance_email", "relance_autre", "note_interne", "devis_envoye", "echantillon_presente", "autre"]), note, echeance: dateSchema.optional(), ...confirmationSchema },
   mettre_a_jour_opportunite: { ...affaireReference, champs: opportunitePatch, ...confirmationSchema },
   modifier_chantier: { affaire_id: uuid.optional(), numero: z.string().regex(/^\d{4,5}$/).optional(), champs: chantierPatch, ...confirmationSchema },
   ajouter_note_chantier: { affaire_id: uuid, texte: z.string().trim().min(1).max(5000), ...confirmationSchema },

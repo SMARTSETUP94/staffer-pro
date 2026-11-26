@@ -86,6 +86,7 @@ export const CAPABILITY_CATALOG = {
     { key: "opportunites.read.mine", label: "Voir mes opportunités" },
   ],
   "devis": [
+    { key: "devis.pennylane", label: "Transférer les devis vers Pennylane" },
     { key: "devis.view", label: "Voir les devis" },
     { key: "devis.import", label: "Importer un devis" },
     { key: "devis.delete", label: "Supprimer un devis" },
@@ -137,6 +138,8 @@ export const CAPABILITY_CATALOG = {
     { key: "demandes_clients.view", label: "Demandes clients : voir" },
   ],
   "logistique": [
+    { key: "dispos.view", label: "Voir les dispos" },
+    { key: "dispos.edit", label: "Corriger les dispos" },
     { key: "logistique.planning.view", label: "Voir le planning logistique" },
     { key: "logistique.etape.edit", label: "Modifier les étapes logistiques" },
     { key: "logistique.proposition.view", label: "Voir les propositions IA" },
@@ -167,6 +170,8 @@ export const CAPABILITY_CATALOG = {
   ],
   "opportunites": [
     { key: "opportunites.read.all", label: "Lire toutes opportunités" },
+    { key: "opportunites.planning.view", label: "Planning prévisionnel des opportunités" },
+    { key: "commercial.relances", label: "Relances commerciales" },
   ],
   "parametres": [
     { key: "parametres.view", label: "Voir les paramètres" },

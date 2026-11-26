@@ -35,6 +35,7 @@ const TYPE_LABEL: Record<OppActionType, string> = {
   rdv_realise: "RDV réalisé",
   relance_tel: "Relance téléphonique",
   relance_email: "Relance email",
+  relance_autre: "Relance (autre canal)",
   note_interne: "Note interne",
   devis_envoye: "Devis envoyé",
   echantillon_presente: "Échantillon présenté",

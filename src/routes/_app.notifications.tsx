@@ -50,6 +50,7 @@ const TYPE_LABEL: Record<NotifType, string> = {
   staffing_publie: "Staffing publié",
   system: "Système",
   mission_probleme: "Problème mission",
+  relances_semaine: "Relances de la semaine",
 };
 
 const TYPE_ICON: Record<NotifType, string> = {
@@ -70,6 +71,7 @@ const TYPE_ICON: Record<NotifType, string> = {
   staffing_publie: "📋",
   system: "🔔",
   mission_probleme: "🚨",
+  relances_semaine: "📞",
 };
 
 const PAGE_SIZE = 50;

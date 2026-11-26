@@ -287,12 +287,13 @@ export function BaremeTableur() {
             <thead><tr><th className={`${TH} text-left`}>Paramètre</th><th className={`${TH} text-left`}>Unité</th><th className={`${TH} text-right`}>Valeur</th><th className={`${TH} text-center`}>Depuis</th><th className={TH} /></tr></thead>
             <tbody>{PARAMS_DEVIS.map((p) => {
               const x = pmap.get(p.cle); const cl = `param:${p.cle}`;
+              const uniteDefaut = "unite" in p ? p.unite : null; const defaut = "defaut" in p ? p.defaut : null;
               return (
                 <tr key={p.cle} className="hover:bg-muted/40">
                   <td className={`${TD} whitespace-normal font-medium`}>{p.libelle}</td>
-                  <td className={`${TD} text-xs text-muted-foreground`}>{x?.unite ?? ""}</td>
+                  <td className={`${TD} text-xs text-muted-foreground`}>{x?.unite ?? uniteDefaut ?? ""}{!x && defaut != null && <span className="block">défaut {defaut}</span>}</td>
                   <td className={`${TD} w-28 p-0.5`}><NumCell grid="pa" col="valeur" label={p.libelle} valeur={val(cl, "valeur", x?.valeur ?? null)} modifiee={mod.has(`${cl}|valeur`)}
-                    onCommit={(n) => changer({ type: "parametre", cleLigne: cl, libelle: p.libelle, cle: p.cle, champ: "valeur", avant: x?.valeur ?? null, apres: n, unite: x?.unite ?? null })} /></td>
+                    onCommit={(n) => changer({ type: "parametre", cleLigne: cl, libelle: p.libelle, cle: p.cle, champ: "valeur", avant: x?.valeur ?? null, apres: n, unite: x?.unite ?? uniteDefaut })} /></td>
                   <td className={`${TD} text-center text-xs text-muted-foreground`}>{dateFr(x?.date_effet)}</td>
                   <td className={`${TD} text-center`}><Button variant="ghost" size="icon" className="h-6 w-6" aria-label={`Historique ${p.libelle}`} onClick={() => setHisto({ titre: p.libelle, cle: p.cle })}><History className="h-3.5 w-3.5" /></Button></td>
                 </tr>

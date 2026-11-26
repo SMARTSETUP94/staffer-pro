@@ -12,7 +12,7 @@
 - [x] Sept libellés de statuts distincts dans filtres, badges et MCP (statut_libelle) ; tests verts.
 - [ ] Écran admin Articles sans prix : recherche/famille, saisie différée groupée et historique, aucune saisie réelle par l’agent.
 - [ ] Vérifier les sources société du PDF ; tests, captures 390/1366 et PDF 9524-R1 inspectés sans export enregistré.
-- Relances commerciales puis listes de chantier IA : lots suivants, non démarrés.
+- Relances commerciales : livré le 26 nov. (page « À relancer », brouillon sans envoi, accueil, cloche du lundi, délais, outil Claude). Reste : listes de chantier IA.
 
 ## Pipeline commercial juste — 20 novembre, P1/P2 approuvées avec corrections
 - [x] P1/P2 corrigées appliquées + P3 verrou et ouverture ; Actif 82, Clos 26, UI/MCP partagent le retenu, 9503 ouvre la R1 refusée sans doublon.

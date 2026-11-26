@@ -1,4 +1,4 @@
-import { Clock, Inbox, Trophy, FileText, UsersRound, Building2, GanttChart, Calendar, CalendarRange, Send, CalendarCheck, Users, Wallet, BadgeCheck, UserCircle, Settings, Warehouse, type LucideIcon } from "lucide-react";
+import { PhoneCall, Clock, Inbox, Trophy, FileText, UsersRound, Building2, GanttChart, Calendar, CalendarRange, Send, CalendarCheck, Users, Wallet, BadgeCheck, UserCircle, Settings, Warehouse, type LucideIcon } from "lucide-react";
 
 export interface NavItem { title: string; url: string; icon: LucideIcon; cap?: string; flag?: string; subtitle?: string }
 export interface NavSection { label: string; items: NavItem[] }
@@ -7,6 +7,7 @@ export const SIDEBAR_SECTIONS: NavSection[] = [
   { label: "Commercial", items: [
     { title: "Demandes clients", url: "/demandes-clients", icon: Inbox, cap: "demandes_clients.view" },
     { title: "Opportunités", url: "/opportunites", icon: Trophy, cap: "section.pipeline_opportunites" },
+    { title: "À relancer", url: "/relances", icon: PhoneCall, cap: "commercial.relances" },
     { title: "Devis", url: "/devis-staffing", icon: FileText, cap: "devis.view", flag: "devis_staffing_v1" },
     { title: "Clients", url: "/clients", icon: UsersRound, cap: "clients.view" },
   ] },

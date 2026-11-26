@@ -7345,6 +7345,61 @@ export type Database = {
           },
         ]
       }
+      relances_reports: {
+        Row: {
+          affaire_id: string
+          annule_le: string | null
+          auteur_id: string
+          created_at: string
+          id: string
+          jusqu_au: string
+          motif: string | null
+          type: string
+        }
+        Insert: {
+          affaire_id: string
+          annule_le?: string | null
+          auteur_id: string
+          created_at?: string
+          id?: string
+          jusqu_au: string
+          motif?: string | null
+          type: string
+        }
+        Update: {
+          affaire_id?: string
+          annule_le?: string | null
+          auteur_id?: string
+          created_at?: string
+          id?: string
+          jusqu_au?: string
+          motif?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relances_reports_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "relances_reports_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaire_consommation"
+            referencedColumns: ["affaire_id"]
+          },
+          {
+            foreignKeyName: "relances_reports_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "v_affaires_avec_plan_status"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_capabilities: {
         Row: {
           capability: string
@@ -10550,6 +10605,15 @@ export type Database = {
         Returns: undefined
       }
       refresh_user_quiz_stats: { Args: never; Returns: undefined }
+      relances_a_faire: {
+        Args: { p_charge_id?: string; p_date?: string; p_tous?: boolean }
+        Returns: Json
+      }
+      relances_notifier_semaine: { Args: never; Returns: number }
+      relances_perimetre_ok: {
+        Args: { _affaire_id: string; _uid: string }
+        Returns: boolean
+      }
       replace_user_roles: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]
@@ -10931,6 +10995,7 @@ export type Database = {
         | "staffing_publie"
         | "system"
         | "mission_probleme"
+        | "relances_semaine"
       objet_fab_statut_chef: "a_faire" | "en_cours" | "bloque" | "fini"
       objet_journal_event_type:
         | "journal_started"
@@ -10958,6 +11023,7 @@ export type Database = {
         | "devis_envoye"
         | "echantillon_presente"
         | "autre"
+        | "relance_autre"
       opp_jalon_etape:
         | "qualification"
         | "devis_envoye"
@@ -11290,6 +11356,7 @@ export const Constants = {
         "staffing_publie",
         "system",
         "mission_probleme",
+        "relances_semaine",
       ],
       objet_fab_statut_chef: ["a_faire", "en_cours", "bloque", "fini"],
       objet_journal_event_type: [
@@ -11319,6 +11386,7 @@ export const Constants = {
         "devis_envoye",
         "echantillon_presente",
         "autre",
+        "relance_autre",
       ],
       opp_jalon_etape: [
         "qualification",

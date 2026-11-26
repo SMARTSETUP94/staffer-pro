@@ -436,6 +436,40 @@
         "outputSchema": null
       },
       {
+        "name": "relances_a_faire",
+        "title": "Relances à faire",
+        "description": "Opportunités actives à relancer (mêmes règles et montants HT retenus que le pipeline), triées par priorité : devis envoyé sans réponse, prochaine action en retard, validité proche, inactivité, sans prochaine action. Périmètre « mes affaires » ; tous=true réservé aux administrateurs. Aucun coût ni marge. Lecture seule : tracer une relance avec ajouter_action_opportunite ; ne jamais envoyer d'e-mail.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "tous": {
+              "type": "boolean",
+              "default": false
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "cursor": {
+              "type": "string",
+              "pattern": "^\\d{1,8}$",
+              "default": "0"
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
         "name": "rechercher_clients",
         "title": "Rechercher les clients",
         "description": "Rechercher les clients. Lecture seule sous les permissions du compte, pagination limit/cursor.",
@@ -825,6 +859,7 @@
                 "rdv_realise",
                 "relance_tel",
                 "relance_email",
+                "relance_autre",
                 "note_interne",
                 "devis_envoye",
                 "echantillon_presente",

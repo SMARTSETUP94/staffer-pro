@@ -58,6 +58,7 @@ import {
   SEVERITY_STYLES,
 } from "@/lib/inbox";
 import { useCapabilitiesSet, useCapability } from "@/hooks/use-capability";
+import { RelancesAccueilEncart } from "@/components/relances/RelancesAccueilEncart";
 import { useMesHeures } from "@/hooks/use-mes-heures";
 import { EmployeAujourdhuiView } from "@/components/aujourdhui/EmployeAujourdhuiView";
 import { SanteDonneesWidget } from "@/components/admin/SanteDonneesWidget";
@@ -293,6 +294,7 @@ function AdminChefHomeView() {
 
       {/* Tuile « Mes heures » retirée de l’accueil (ancienne page mobile). */}
       <SanteDonneesWidget />
+      <RelancesAccueilEncart />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {MES_WIDGETS.map((spec) => (

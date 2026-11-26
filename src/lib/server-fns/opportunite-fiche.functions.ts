@@ -21,6 +21,7 @@ const OPP_ACTION_TYPES = [
   "rdv_realise",
   "relance_tel",
   "relance_email",
+  "relance_autre",
   "note_interne",
   "devis_envoye",
   "echantillon_presente",

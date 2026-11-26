@@ -62,6 +62,7 @@ import { Route as AppPlanningGeneralRouteImport } from './routes/_app.planning-g
 import { Route as AppPlanningOpportunitesRouteImport } from './routes/_app.planning-opportunites'
 import { Route as AppPlanningPilotageRouteImport } from './routes/_app.planning-pilotage'
 import { Route as AppQuiEstOuRouteImport } from './routes/_app.qui-est-ou'
+import { Route as AppRelancesRouteImport } from './routes/_app.relances'
 import { Route as AppRoadmapRouteImport } from './routes/_app.roadmap'
 import { Route as AppSaisiePourEquipeRouteImport } from './routes/_app.saisie-pour-equipe'
 import { Route as AppSignalementsRouteImport } from './routes/_app.signalements'
@@ -418,6 +419,11 @@ const AppPlanningPilotageRoute = AppPlanningPilotageRouteImport.update({
 const AppQuiEstOuRoute = AppQuiEstOuRouteImport.update({
   id: '/qui-est-ou',
   path: '/qui-est-ou',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRelancesRoute = AppRelancesRouteImport.update({
+  id: '/relances',
+  path: '/relances',
   getParentRoute: () => AppRoute,
 } as any)
 const AppRoadmapRoute = AppRoadmapRouteImport.update({
@@ -964,6 +970,7 @@ export interface FileRoutesByFullPath {
   '/planning-opportunites': typeof AppPlanningOpportunitesRoute
   '/planning-pilotage': typeof AppPlanningPilotageRoute
   '/qui-est-ou': typeof AppQuiEstOuRoute
+  '/relances': typeof AppRelancesRoute
   '/roadmap': typeof AppRoadmapRoute
   '/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
   '/signalements': typeof AppSignalementsRoute
@@ -1105,6 +1112,7 @@ export interface FileRoutesByTo {
   '/planning-opportunites': typeof AppPlanningOpportunitesRoute
   '/planning-pilotage': typeof AppPlanningPilotageRoute
   '/qui-est-ou': typeof AppQuiEstOuRoute
+  '/relances': typeof AppRelancesRoute
   '/roadmap': typeof AppRoadmapRoute
   '/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
   '/signalements': typeof AppSignalementsRoute
@@ -1250,6 +1258,7 @@ export interface FileRoutesById {
   '/_app/planning-opportunites': typeof AppPlanningOpportunitesRoute
   '/_app/planning-pilotage': typeof AppPlanningPilotageRoute
   '/_app/qui-est-ou': typeof AppQuiEstOuRoute
+  '/_app/relances': typeof AppRelancesRoute
   '/_app/roadmap': typeof AppRoadmapRoute
   '/_app/saisie-pour-equipe': typeof AppSaisiePourEquipeRoute
   '/_app/signalements': typeof AppSignalementsRoute
@@ -1397,6 +1406,7 @@ export interface FileRouteTypes {
     | '/planning-opportunites'
     | '/planning-pilotage'
     | '/qui-est-ou'
+    | '/relances'
     | '/roadmap'
     | '/saisie-pour-equipe'
     | '/signalements'
@@ -1538,6 +1548,7 @@ export interface FileRouteTypes {
     | '/planning-opportunites'
     | '/planning-pilotage'
     | '/qui-est-ou'
+    | '/relances'
     | '/roadmap'
     | '/saisie-pour-equipe'
     | '/signalements'
@@ -1682,6 +1693,7 @@ export interface FileRouteTypes {
     | '/_app/planning-opportunites'
     | '/_app/planning-pilotage'
     | '/_app/qui-est-ou'
+    | '/_app/relances'
     | '/_app/roadmap'
     | '/_app/saisie-pour-equipe'
     | '/_app/signalements'
@@ -2165,6 +2177,13 @@ declare module '@tanstack/react-router' {
       path: '/qui-est-ou'
       fullPath: '/qui-est-ou'
       preLoaderRoute: typeof AppQuiEstOuRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/relances': {
+      id: '/_app/relances'
+      path: '/relances'
+      fullPath: '/relances'
+      preLoaderRoute: typeof AppRelancesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/roadmap': {
@@ -2964,6 +2983,7 @@ interface AppRouteChildren {
   AppPlanningOpportunitesRoute: typeof AppPlanningOpportunitesRoute
   AppPlanningPilotageRoute: typeof AppPlanningPilotageRoute
   AppQuiEstOuRoute: typeof AppQuiEstOuRoute
+  AppRelancesRoute: typeof AppRelancesRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
   AppSaisiePourEquipeRoute: typeof AppSaisiePourEquipeRoute
   AppSignalementsRoute: typeof AppSignalementsRoute
@@ -3066,6 +3086,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPlanningOpportunitesRoute: AppPlanningOpportunitesRoute,
   AppPlanningPilotageRoute: AppPlanningPilotageRoute,
   AppQuiEstOuRoute: AppQuiEstOuRoute,
+  AppRelancesRoute: AppRelancesRoute,
   AppRoadmapRoute: AppRoadmapRoute,
   AppSaisiePourEquipeRoute: AppSaisiePourEquipeRoute,
   AppSignalementsRoute: AppSignalementsRoute,

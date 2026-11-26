@@ -72,6 +72,17 @@ export async function readData(ctx: McpAppContext, name: ToolName, args: Args): 
     const roles = await rowsOf(db.from("user_roles").select("role").eq("user_id", ctx.userId));
     return { rows: [{ ...profile[0], roles: roles.map(r => r.role), capabilities: [...ctx.caps].sort() }] };
   }
+  if (name === "relances_a_faire") {
+    // Lecteur partagé avec la page « À relancer » : périmètre et montants du pipeline, aucun coût ni marge.
+    const { data, error } = await db.rpc("relances_a_faire", { p_tous: !!args.tous });
+    if (error) throw new ToolError("Relances inaccessibles avec vos droits.");
+    const res = (data ?? {}) as { lignes?: Row[]; parametres?: unknown; nb_actives?: number; date?: string };
+    const lignes = (Array.isArray(res.lignes) ? res.lignes : []).map(l => ({ affaire_id: l.affaire_id, numero: l.numero, titre: l.titre, client: l.client, contact: l.contact,
+      charge_affaires: l.charge_affaires_nom, statut: l.statut, devis_numero: l.devis_numero, version: l.version, statut_devis: l.statut_redaction,
+      date_envoi: l.date_envoi, validite_le: l.validite_le, montant_retenu_ht: l.montant_ht, source_montant: l.source_montant,
+      motifs: l.motifs, derniere_action: l.derniere_action, jours_attente: l.jours_attente, prochaine_action_due_le: l.prochaine_action_due_le }));
+    return { ...pageRows(lignes, args), date: res.date ?? null, parametres: res.parametres ?? null, nb_actives: res.nb_actives ?? null, nb: lignes.length };
+  }
   if (name === "pipeline_opportunites") {
     let query = db.rpc("list_opportunites_active").select("id,numero,nom,client,charge_affaires_id,statut_opportunite,date_opportunite,last_jalon_etape,next_action_due_le,next_action_text,taille");
     if (!ctx.caps.has("opportunites.read.all")) {

@@ -13,7 +13,11 @@ export const PARAMS_DEVIS = [
   { cle: "validite_jours", libelle: "Validité du devis" },
   { cle: "heures_par_jour_be", libelle: "Heures par jour bureau d'études" },
   { cle: "seuil_alerte_taux_pct", libelle: "Seuil d'alerte taux modifié" },
-] as const;
+  // Relances commerciales : absentes = valeurs par défaut de src/lib/relances/regles.ts (7 / 7 / 14 jours).
+  { cle: "relance_delai_envoi", libelle: "Relance : devis envoyé sans réponse depuis", unite: "jours", defaut: 7 },
+  { cle: "relance_delai_validite", libelle: "Relance : validité du devis expirant dans", unite: "jours", defaut: 7 },
+  { cle: "relance_delai_inactivite", libelle: "Relance : « À l'étude » / « Presque gagné » sans action depuis", unite: "jours", defaut: 14 },
+] as const satisfies readonly { cle: string; libelle: string; unite?: string; defaut?: number }[];
 
 /** Clés gérées hors de ce tableur (pipeline, planning opportunités). */
 export const estParametreHorsBareme = (cle: string) => cle.startsWith("opp_plan_") || cle.startsWith("proba_");

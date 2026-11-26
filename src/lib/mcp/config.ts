@@ -10,5 +10,6 @@ export const TOOL_CAPS = {
   pipeline_opportunites: "section.pipeline_opportunites", qui_est_ou: "planning.view",
   charge_atelier: "section.fabrication", heures_affaire: "heures.audit",
   echeances: "section.affaires", documents_affaire: "section.affaires", demandes_clients: "demandes_clients.view", mon_profil: "api.mcp",
+  relances_a_faire: "commercial.relances",
 } as const;
 export type ToolName = keyof typeof TOOL_CAPS;
