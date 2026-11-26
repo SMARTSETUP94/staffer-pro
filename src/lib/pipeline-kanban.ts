@@ -59,7 +59,7 @@ export function trierCartes<T extends Carte>(items: T[], tri: TriCartes, montant
 /** Gagné et Perdu repliés par défaut ; Presque gagné replié quand vide. Le choix de l'utilisateur prime. */
 export function colonneRepliee(statut: string, nb: number, choix: Record<string, boolean>) {
   if (statut in choix) return choix[statut];
-  return statut === "gagne" || statut === "perdu" || (statut === "presque_gagne" && nb === 0);
+  return statut === "presque_gagne" && nb === 0;
 }
 
 /** Brouillon Claude à relire : dernier devis créé par Claude, brouillon ou à valider, jamais repris par un humain. */

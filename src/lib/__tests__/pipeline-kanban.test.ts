@@ -32,9 +32,9 @@ describe("tri urgence", () => {
 });
 
 describe("repli des colonnes", () => {
-  it("replie Gagné, Perdu et Presque gagné vide par défaut", () => {
-    expect(colonneRepliee("gagne", 5, {})).toBe(true);
-    expect(colonneRepliee("perdu", 5, {})).toBe(true);
+  it("garde Gagné et Perdu dépliés, replie Presque gagné vide par défaut", () => {
+    expect(colonneRepliee("gagne", 5, {})).toBe(false);
+    expect(colonneRepliee("perdu", 5, {})).toBe(false);
     expect(colonneRepliee("presque_gagne", 0, {})).toBe(true);
     expect(colonneRepliee("presque_gagne", 2, {})).toBe(false);
     expect(colonneRepliee("gagne", 5, { gagne: false })).toBe(false);
