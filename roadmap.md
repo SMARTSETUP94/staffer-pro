@@ -268,6 +268,7 @@
 - [ ] Écrans : Marquer envoyé le…, Signer cette version, liste des écarts, captures 390/1366.
 
 ## Export « Version équipe » des devis — 26 novembre 2026
+- [x] Correction approuvée : afficher les heures de Suivi et plans, Pose et Dépose sans objet enfant, dans les deux niveaux PDF ; vérification sans écriture devis.
 - [x] Module pur `export-equipe.ts` : heures par objet (métiers, total avec enfants), détail des heures, matériaux sans prix, synthèse ; options non incluses affichées mais hors total.
 - [x] Classeur Excel (xlsx-js-style chargé à la demande) + fenêtre « Version équipe » dans l'éditeur.
 - [x] PDF de la même synthèse (heures + matériaux par objet + synthèse) — landscape A4, jsPDF chargé à la demande.

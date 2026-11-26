@@ -382,9 +382,9 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
   for (const r of racines) {
     N += 1; const n = String(N);
     if (!detaille) {
-      corps.push([{ content: n }, { content: suffixeOptions(r, titreCourt(r)), styles: { fontStyle: "bold", fillColor: C.bleuClair } }, "ens", "1", "", seulementOptions(r)
+      corps.push(Object.assign([{ content: n }, { content: suffixeOptions(r, titreCourt(r)), styles: { fontStyle: "bold", fillColor: C.bleuClair } }, "ens", "1", "", seulementOptions(r)
         ? { content: eurHt(optionsNonIncluses(vc, r)), styles: { halign: "right", fontStyle: "italic", textColor: C.gris } }
-        : { content: eurPdf(totalAffiche(vc, r)), styles: { halign: "right", fontStyle: "bold" } }]);
+        : { content: eurPdf(totalAffiche(vc, r)), styles: { halign: "right", fontStyle: "bold" } }], { ligneId: r.id }));
       continue;
     }
     const kids = enfants(vc, r.id).filter((k) => k.type !== "commentaire" && !(k.type === "option" && !k.option_incluse));
@@ -403,7 +403,7 @@ export function construireDevisPdf(vc: DevisClient, niveau: NiveauPdf, images: R
       continue;
     }
     if (chap && kids.length === 0) {
-      ligne({ n, designation: titre, unite: "ens", qte: "1", pu: eurPdf(total), total: eurPdf(total), style: "forfait" });
+      ligne({ n, designation: titre, ligneId: r.id, unite: "ens", qte: "1", pu: eurPdf(total), total: eurPdf(total), style: "forfait" });
       if (dchap) descr(dchap);
       continue;
     }
