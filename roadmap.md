@@ -266,3 +266,9 @@
 ## Suivi des devis (25 nov. 2026)
 - [x] Migration appliquée (envoi daté, signature d une version avec Remplacé décochable, refus Envoyé sans devis, lecture des écarts).
 - [ ] Écrans : Marquer envoyé le…, Signer cette version, liste des écarts, captures 390/1366.
+
+## Export « Version équipe » des devis — 26 novembre 2026
+- [x] Module pur `export-equipe.ts` : heures par objet (métiers, total avec enfants), détail des heures, matériaux sans prix, synthèse ; options non incluses affichées mais hors total.
+- [x] Classeur Excel (xlsx-js-style chargé à la demande) + fenêtre « Version équipe » dans l'éditeur.
+- [x] PDF de la même synthèse (heures + matériaux par objet + synthèse) — landscape A4, jsPDF chargé à la demande.
+- [x] Entrée depuis la liste des devis + captures 390/1366 px + 11 tests (heures par unité, option hors total, ligne à la corbeille écartée, zéro mention de coût).

@@ -21,6 +21,7 @@ import { libelleNumeroProgbat } from "@/lib/devis/progbat-export";
 import { SupprimerDevisDialog, SUPPRESSION_REFUSEE, devisSupprimable } from "@/components/devis/SupprimerDevis";
 import { useModelesDevis } from "@/components/devis/useModelesDevis";
 import { ExportPdfDialog } from "@/components/devis/DevisPdfEnvoi";
+import { ExportEquipeDialog } from "@/components/devis/ExportEquipeDialog";
 import { STATUTS_DEVIS_VISIBLES, statutDevisVisible } from "@/lib/devis/statuts";
 
 export const Route = createFileRoute("/_app/devis-staffing/")({
@@ -56,6 +57,7 @@ function DevisGlobal() {
   const [open, setOpen] = useState(false);
   const [aSupprimer, setASupprimer] = useState<{ id: string; numero: string } | null>(null);
   const [pdfId, setPdfId] = useState<string | null>(null);
+  const [eqId, setEqId] = useState<string | null>(null);
 
   const liste = useQuery({
     queryKey: ["devis-staffing-global"],
@@ -147,6 +149,7 @@ function DevisGlobal() {
                         <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" className="h-7 w-7" aria-label={`Actions ${r.numero}`}><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onSelect={() => setPdfId(r.id)}>Exporter en PDF</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => setEqId(r.id)}>Version équipe (PDF ou Excel)</DropdownMenuItem>
                           {canWrite && <>
                           <DropdownMenuItem disabled={!devisSupprimable(r.statut_redaction)} className="text-destructive"
                             onSelect={() => setASupprimer({ id: r.id, numero: r.numero })}>Supprimer le devis</DropdownMenuItem>
@@ -165,6 +168,7 @@ function DevisGlobal() {
       <p className="text-xs text-muted-foreground">Anciens devis importés de ProGBat : <Link to="/devis" className="underline">historique des imports</Link>.</p>
       <NouveauDevisDialog open={open} onOpenChange={setOpen} />
       {pdfId && <ExportPdfDialog devisId={pdfId} open onOpenChange={(o) => { if (!o) setPdfId(null); }} />}
+      {eqId && <ExportEquipeDialog devisId={eqId} open onOpenChange={(o) => { if (!o) setEqId(null); }} />}
       <SupprimerDevisDialog devis={aSupprimer} open={!!aSupprimer} onOpenChange={(o) => { if (!o) setASupprimer(null); }} onDone={() => void liste.refetch()} />
     </div>
   );

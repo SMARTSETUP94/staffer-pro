@@ -3,7 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { trierRacines } from "@/lib/devis/arbre";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, PanelLeft, CheckCircle2, Circle, Maximize2, Minimize2, Eye, FileDown, Mail, Library, MessageSquarePlus, PenLine, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, PanelLeft, CheckCircle2, Circle, Maximize2, Minimize2, Eye, FileDown, FileSpreadsheet, Mail, Library, MessageSquarePlus, PenLine, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useDevisClaude, BadgeClaude } from "@/components/devis/RedactionClaude";
 import { NoteDevis, HistoriqueTextes, STATUTS_TEXTE_EDITABLES } from "./NoteDevis";
@@ -26,6 +26,7 @@ import { DevisInterlocuteurs } from "@/components/devis/DevisInterlocuteurs";
 import { PennylaneTransfert } from "@/components/devis/PennylaneTransfert";
 import { ExportPdfDialog, EnvoiEmailDialog } from "@/components/devis/DevisPdfEnvoi";
 import { ProgbatExportDialog, EnregistrerTransfertDialog } from "@/components/devis/ProgbatTransfert";
+import { ExportEquipeDialog } from "@/components/devis/ExportEquipeDialog";
 import { libelleNumeroProgbat, libelleStatutDevis, NUMERO_PROGBAT_PROVISOIRE_RE } from "@/lib/devis/progbat-export";
 import { BibliothequeDialog } from "./BibliothequeDialog";
 import { AvantValiderDialog } from "./AvantValiderDialog";
@@ -68,6 +69,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
   const [pdfDlg, setPdfDlg] = useState(false);
   const [avantValider, setAvantValider] = useState<null | "valide" | "a_valider">(null);
   const [pgDlg, setPgDlg] = useState(false);
+  const [eqDlg, setEqDlg] = useState(false);
   const [trDlg, setTrDlg] = useState(false);
   const [mailDlg, setMailDlg] = useState(false);
   const [envoiDate, setEnvoiDate] = useState("");
@@ -292,6 +294,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
                   Joindre les CGV au PDF{st !== "brouillon" ? " (brouillon seulement)" : ""}
                 </DropdownMenuCheckboxItem>
                 {v && aff && <DropdownMenuItem disabled={!valideOuEnvoye} onClick={() => setMailDlg(true)}><Mail className="mr-2 h-4 w-4" />Envoyer par email{!valideOuEnvoye && " (après finalisation)"}</DropdownMenuItem>}
+                <DropdownMenuItem onClick={() => setEqDlg(true)}><FileSpreadsheet className="mr-2 h-4 w-4" />Version équipe (PDF ou Excel)</DropdownMenuItem>
                 {aff && <DropdownMenuItem disabled={!valideOuEnvoye} onClick={() => setPgDlg(true)}><FileDown className="mr-2 h-4 w-4" />Vers ProGBat{!valideOuEnvoye && " (après finalisation)"}</DropdownMenuItem>}
                 <DropdownMenuSeparator />
                 {st !== "brouillon" && e && <DropdownMenuItem onClick={() => void nouvelleVersion()}>Nouvelle version</DropdownMenuItem>}
@@ -608,6 +611,7 @@ export function DevisEditeur({ affaireId, devisId }: { affaireId: string | null;
       <DevisVueClient open={vueClient} onOpenChange={setVueClient} devisId={devisId} />
       <ExportPdfDialog open={pdfDlg} onOpenChange={setPdfDlg} devisId={devisId} />
       <ProgbatExportDialog open={pgDlg} onOpenChange={setPgDlg} devisId={devisId} peutTransferer={st === "valide" && d.droits.valider} onTransfert={() => setTrDlg(true)} />
+      <ExportEquipeDialog open={eqDlg} onOpenChange={setEqDlg} devisId={devisId} />
       <EnregistrerTransfertDialog open={trDlg} onOpenChange={setTrDlg} devisId={devisId} netHt={calc?.net_ht ?? 0} numeroActuel={d.devis.numero_progbat ?? null}
         onDone={() => { void q.refetch(); window.dispatchEvent(new Event("affaire-updated")); }} />
       <EnvoiEmailDialog open={mailDlg} onOpenChange={setMailDlg} devisId={devisId} onSent={() => void q.refetch()} />
