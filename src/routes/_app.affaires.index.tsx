@@ -34,6 +34,13 @@ import { cn } from "@/lib/utils";
 import { AffaireResponsablePicker } from "@/components/affaire/AffaireResponsablePicker";
 import { ResponsableCombobox } from "@/components/affaire/ResponsableCombobox";
 import { canAssignDessinateur } from "@/lib/affaire-affectations";
+import {
+  CHANTIER_SENS_DEFAUT,
+  CHANTIER_TRI_DEFAUT,
+  sortChantiers,
+  type ChantierTriKey,
+  type ChantierTriSens,
+} from "@/lib/chantiers-tri";
 
 type AffaireStatut = "prospect" | "en_cours" | "termine" | "annule";
 
@@ -91,9 +98,9 @@ const STATUTS: { value: AffaireStatut; label: string }[] = [
   { value: "annule", label: "Annulée" },
 ];
 
-/** LOT 2 — colonnes triables. */
-type TriKey = "numero" | "nom" | "client" | "montage" | "demontage" | "statut";
-type TriSens = "asc" | "desc";
+/** LOT 2 — colonnes triables (règle partagée : src/lib/chantiers-tri.ts). */
+type TriKey = ChantierTriKey;
+type TriSens = ChantierTriSens;
 /** LOT 2 — filtre échéance montage. */
 type EcheanceKey = "toutes" | "14j" | "1m" | "3m" | "sans";
 
@@ -105,21 +112,17 @@ const ECHEANCES: { value: EcheanceKey; label: string }[] = [
   { value: "sans", label: "Sans date" },
 ];
 
-const STATUT_ORDER: Record<AffaireStatut, number> = {
-  en_cours: 0, prospect: 1, termine: 2, annule: 3,
-};
-
 const SEARCH_DEFAULTS = {
   typo: [] as AffaireTypologie[],
-  tri: "montage" as TriKey,
-  sens: "asc" as TriSens,
+  tri: CHANTIER_TRI_DEFAUT as TriKey,
+  sens: CHANTIER_SENS_DEFAUT as TriSens,
   echeance: "toutes" as EcheanceKey,
 };
 
 const searchSchema = z.object({
   typo: fallback(z.array(z.enum(AFFAIRE_TYPOLOGIES as [AffaireTypologie, ...AffaireTypologie[]])), []).default([]),
-  tri: fallback(z.string(), "montage").default("montage"),
-  sens: fallback(z.string(), "asc").default("asc"),
+  tri: fallback(z.string(), CHANTIER_TRI_DEFAUT).default(CHANTIER_TRI_DEFAUT),
+  sens: fallback(z.string(), CHANTIER_SENS_DEFAUT).default(CHANTIER_SENS_DEFAUT),
   echeance: fallback(z.string(), "toutes").default("toutes"),
   creer_numero: z.string().max(20).optional(),
   creer_nom: z.string().max(300).optional(),
@@ -160,8 +163,8 @@ function AffairesPage() {
   const navigate = useNavigate({ from: "/affaires/" });
   const rawSearch = Route.useSearch();
   const typoFilter = rawSearch.typo;
-  const tri: TriKey = TRI_KEYS.includes(rawSearch.tri as TriKey) ? (rawSearch.tri as TriKey) : "montage";
-  const sens: TriSens = rawSearch.sens === "desc" ? "desc" : "asc";
+  const tri: TriKey = TRI_KEYS.includes(rawSearch.tri as TriKey) ? (rawSearch.tri as TriKey) : CHANTIER_TRI_DEFAUT;
+  const sens: TriSens = rawSearch.sens === "asc" ? "asc" : CHANTIER_SENS_DEFAUT;
   const echeance: EcheanceKey = ECHEANCES.some((e) => e.value === rawSearch.echeance)
     ? (rawSearch.echeance as EcheanceKey)
     : "toutes";
@@ -181,7 +184,7 @@ function AffairesPage() {
     const { data, error } = await supabase
       .from("affaires")
       .select("id, numero, nom, client, client_id, lieu, statut, date_debut, date_fin_prevue, date_montage, date_demontage, chef_projet_id, dessinateur_id, charge_affaires_id, typologie")
-      .order("date_montage", { ascending: true, nullsFirst: false });
+      .order("date_montage", { ascending: false, nullsFirst: false });
     if (error) {
       toast.error("Chargement impossible", { description: error.message });
       setLoading(false);
@@ -241,27 +244,7 @@ function AffairesPage() {
       return d >= 0 && d <= max;
     });
 
-    const dir = sens === "asc" ? 1 : -1;
-    const cmpText = (a: string, b: string) => a.localeCompare(b, "fr", { numeric: true, sensitivity: "base" });
-    const cmpDate = (a: string | null, b: string | null) => {
-      // Nulls toujours en dernier, quel que soit le sens.
-      if (!a && !b) return 0;
-      if (!a) return 1;
-      if (!b) return -1;
-      return (a < b ? -1 : a > b ? 1 : 0) * dir;
-    };
-
-    return [...withEcheance].sort((a, b) => {
-      switch (tri) {
-        case "numero": return cmpText(a.numero, b.numero) * dir;
-        case "nom": return cmpText(a.nom, b.nom) * dir;
-        case "client": return cmpText(a.client ?? "", b.client ?? "") * dir;
-        case "demontage": return cmpDate(a.date_demontage, b.date_demontage);
-        case "statut": return (STATUT_ORDER[a.statut] - STATUT_ORDER[b.statut]) * dir;
-        case "montage":
-        default: return cmpDate(a.date_montage, b.date_montage);
-      }
-    });
+    return sortChantiers(withEcheance, tri, sens);
   }, [baseFiltered, echeance, tri, sens]);
 
   const setTypoFilter = (next: AffaireTypologie[]) => {
