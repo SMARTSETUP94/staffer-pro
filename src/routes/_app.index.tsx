@@ -57,6 +57,7 @@ import {
   SOURCE_TO_CAP,
   SEVERITY_STYLES,
 } from "@/lib/inbox";
+import { grouperInbox } from "@/lib/inbox-groupes";
 import { useCapabilitiesSet, useCapability } from "@/hooks/use-capability";
 import { RelancesAccueilEncart } from "@/components/relances/RelancesAccueilEncart";
 import { useMesHeures } from "@/hooks/use-mes-heures";
@@ -268,6 +269,16 @@ function AdminChefHomeView() {
     });
   }, [capFiltered, sourceFilter, sevFilter]);
 
+  const groupes = useMemo(() => grouperInbox(filtered), [filtered]);
+  const [ouverts, setOuverts] = useState<Set<InboxSource>>(new Set());
+  const basculer = (src: InboxSource) =>
+    setOuverts((prev) => {
+      const n = new Set(prev);
+      if (n.has(src)) n.delete(src);
+      else n.add(src);
+      return n;
+    });
+
   const sourceCounts = useMemo(() => {
     const counts = new Map<InboxSource, number>();
     for (const i of capFiltered) counts.set(i.source, (counts.get(i.source) ?? 0) + 1);
@@ -381,8 +392,29 @@ function AdminChefHomeView() {
               )}
             </div>
           ) : (
-            <ul className="divide-y">
-              {filtered.map((item) => (
+            <div className="divide-y">
+              {groupes.map((g) => {
+                const ouvert = ouverts.has(g.source) || sourceFilter !== "all";
+                return (
+                  <section key={g.source}>
+                    <button
+                      type="button"
+                      onClick={() => basculer(g.source)}
+                      className="flex w-full items-center gap-3 bg-muted/40 px-4 py-2.5 text-left text-sm font-medium hover:bg-muted/60"
+                      aria-expanded={ouvert}
+                    >
+                      <span className="flex-1">{SOURCE_LABELS[g.source]}</span>
+                      {g.hautes > 0 && (
+                        <Badge variant="outline" className={`text-[10px] ${SEVERITY_STYLES.high}`}>
+                          {g.hautes} urgente{g.hautes > 1 ? "s" : ""}
+                        </Badge>
+                      )}
+                      <Badge variant="secondary" className="tabular-nums">{g.items.length}</Badge>
+                      <span className="text-xs text-muted-foreground">{ouvert ? "Masquer" : "Voir"}</span>
+                    </button>
+                    {ouvert && (
+                      <ul className="divide-y">
+                        {g.items.map((item) => (
                 <li
                   key={item.item_key}
                   className="flex flex-col gap-2 px-4 py-3 hover:bg-muted/30 sm:flex-row sm:items-center sm:gap-4"
@@ -423,8 +455,13 @@ function AdminChefHomeView() {
                     </Button>
                   </div>
                 </li>
-              ))}
-            </ul>
+                        ))}
+                      </ul>
+                    )}
+                  </section>
+                );
+              })}
+            </div>
           )}
         </CardContent>
       </Card>
